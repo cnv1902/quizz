@@ -93,7 +93,7 @@ async def serve_pages_html(request: Request, page_path: str):
     if os.path.isfile(full):
         return render_template(request, rel)
 
-    raise HTTPException(status_code=404, detail="Page not found")
+    return templates.TemplateResponse(request, "404.html", {"v": SERVER_BOOT_TIME}, status_code=404)
 
 
 @app.get("/{full_path:path}")
@@ -106,7 +106,7 @@ async def serve_spa(request: Request, full_path: str):
     rel_path = full_path
     if rel_path.startswith("pages/"):
         rel_path = rel_path[6:]
-    elif rel_path == "pages":
+    elif rel_path in ("pages", "", "index"):
         rel_path = "index.html"
 
     candidates = [
@@ -118,12 +118,26 @@ async def serve_spa(request: Request, full_path: str):
         if os.path.isfile(full) and full.endswith(".html"):
             return render_template(request, c)
 
-    # Fallback về index.html
-    index_path = os.path.join(PAGES_DIR, "index.html")
-    if os.path.exists(index_path):
-        return render_template(request, "index.html")
+    # Nếu truy cập URL không tồn tại -> chuyển đến trang 404.html
+    return templates.TemplateResponse(request, "404.html", {"v": SERVER_BOOT_TIME}, status_code=404)
 
-    raise HTTPException(status_code=404, detail="Not found")
+
+@app.exception_handler(404)
+async def custom_404_handler(request: Request, exc: HTTPException):
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept:
+        return templates.TemplateResponse(request, "404.html", {"v": SERVER_BOOT_TIME}, status_code=404)
+    from fastapi.responses import JSONResponse
+    return JSONResponse(status_code=404, content={"detail": exc.detail or "Not Found"})
+
+
+@app.exception_handler(403)
+async def custom_403_handler(request: Request, exc: HTTPException):
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept:
+        return templates.TemplateResponse(request, "404.html", {"v": SERVER_BOOT_TIME}, status_code=403)
+    from fastapi.responses import JSONResponse
+    return JSONResponse(status_code=403, content={"detail": exc.detail or "Forbidden"})
 
 
 @app.on_event("startup")

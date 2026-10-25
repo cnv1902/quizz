@@ -14,80 +14,14 @@
   overflow-x: hidden;
 }
 
-/* === Game Top Bar (§5.1) === */
-.pikachu-top-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 56px;
-  padding: 0 var(--s-5);
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 40;
-}
-
-.game-back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s-1);
-  color: var(--text-2);
-  text-decoration: none;
-  font-size: var(--fs-sm);
-  font-weight: 500;
-  min-height: 36px;
-  padding: 0 var(--s-3);
-  border-radius: var(--r-sm);
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  transition: background-color 150ms cubic-bezier(.2,.7,.2,1),
-              color 150ms cubic-bezier(.2,.7,.2,1);
-}
-
-.game-back-btn:hover {
-  color: var(--text);
-  border-color: var(--border-strong);
-}
-
-.pikachu-hud-center {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-}
-
-.hud-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  padding: 4px var(--s-3);
-  border-radius: var(--r-sm);
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-
-.hud-timer {
-  color: var(--text);
-}
-
-.hud-combo {
-  background: var(--warning-soft);
-  color: var(--warning);
-  border-color: var(--warning);
-}
-
-/* === Game Board Stage === */
+/* === Game Top Bar & HUD === */
 .pikachu-stage {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: var(--s-6) var(--s-4);
+  justify-content: flex-start;
+  padding: var(--s-5) var(--s-4);
   max-width: 860px;
   width: 100%;
   margin: 0 auto;
@@ -103,10 +37,72 @@
   margin: 0 auto;
 }
 
-@media (max-width: 600px) {
+@media (min-width: 641px) and (min-height: 700px) {
+  .pikachu-stage {
+    min-height: calc(100vh - 65px);
+  }
+}
+
+@media (max-width: 640px) {
+  /* 1. Mobile (Điện thoại) */
+  .pikachu-stage {
+    padding: 8px 8px 24px;
+  }
+  .pikachu-title-wrap {
+    margin-bottom: 8px !important;
+  }
+  #quizName {
+    font-size: 1.1rem !important;
+    margin-bottom: 2px !important;
+  }
+  .pikachu-instruction {
+    display: none !important;
+  }
   .tiles-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--s-2);
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+    max-width: 100% !important;
+  }
+  .match-tile {
+    min-height: 60px !important;
+    aspect-ratio: 1 / 1;
+    padding: 3px 2px !important;
+  }
+  .tile-hanzi,
+  .tile-hanzi-text {
+    font-size: clamp(1.15rem, 5vw, 1.45rem) !important;
+  }
+  .tile-meaning,
+  .tile-viet-text {
+    font-size: 0.68rem !important;
+    line-height: 1.15 !important;
+  }
+  .tile-pinyin,
+  .tile-pinyin-text {
+    font-size: 0.62rem !important;
+  }
+  .tile-badge {
+    font-size: 0.52rem !important;
+    padding: 0 3px !important;
+    margin-bottom: 2px !important;
+  }
+}
+
+@media (max-width: 350px) {
+  .tiles-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  /* 2. Tablet (Máy tính bảng) */
+  .pikachu-stage {
+    max-width: 700px;
+    padding: 16px 16px 32px;
+  }
+  .tiles-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
   }
 }
 

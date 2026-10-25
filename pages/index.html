@@ -381,7 +381,7 @@
           <img src="/static/img/HanziQuizz-Favicon.png" alt="HanziQuizz Logo" />
           <span>HanziQuizz</span>
         </a>
-        <div style="display: flex; align-items: center; gap: var(--s-2)">
+        <div class="nav-links-wrap" style="display: flex; align-items: center; gap: var(--s-2)">
           <a
             href="/"
             class="btn btn-ghost btn-sm"
@@ -791,6 +791,7 @@
     <script src="/static/js/components/toast.js?v={{ v }}"></script>
     <script src="/static/js/api/quizApi.js?v={{ v }}"></script>
     <script src="/static/js/services/syncService.js?v={{ v }}"></script>
+    <script src="/static/js/components/navbar.js?v={{ v }}"></script>
     <script>
       (function () {
         const user = Auth.getUser();

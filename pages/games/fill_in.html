@@ -97,35 +97,7 @@
         flex: 1;
       }
 
-      /* HUD Bar */
-      .game-hud {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: var(--s-3);
-      }
-      .hud-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--r-md);
-        padding: var(--s-3) var(--s-4);
-        text-align: center;
-      }
-      .hud-label {
-        font-size: var(--fs-xs);
-        color: var(--text-2);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        font-weight: 600;
-        margin-bottom: 2px;
-      }
-      .hud-value {
-        font-size: 1.25rem;
-        font-weight: 800;
-        color: var(--text);
-      }
-      .hud-value.timer { color: var(--accent); }
-      .hud-value.mistakes { color: #f43f5e; }
-      .hud-value.score { color: #10b981; }
+
 
       /* Prompt Card (Hiển thị chữ Hán & Nghĩa Việt) */
       .fi-prompt-card {
@@ -192,12 +164,12 @@
         font-size: 1.25rem;
         font-weight: 700;
         color: var(--accent-light);
-        min-height: 32px;
         letter-spacing: 0.04em;
         transition: all 250ms ease;
-        display: inline-block;
+        display: none;
       }
       .fi-pinyin-full.show-pinyin {
+        display: inline-block;
         color: #10b981;
         background: rgba(16, 185, 129, 0.12);
         padding: 4px 18px;
@@ -208,6 +180,78 @@
       @keyframes pinyinPop {
         0% { transform: scale(0.9); opacity: 0; }
         100% { transform: scale(1); opacity: 1; }
+      }
+
+      /* Responsive 3 Thiết bị: Mobile, Tablet, Desktop & Căn giữa chống lệch trên */
+      @media (min-width: 641px) and (min-height: 720px) {
+        .fi-container {
+          justify-content: center;
+          min-height: calc(100vh - 65px);
+        }
+      }
+
+      @media (max-width: 640px) {
+        /* 1. Mobile (Điện thoại) */
+        .game-nav {
+          padding: 8px 12px;
+        }
+        .nav-brand span {
+          font-size: 0.95rem;
+        }
+        .fi-container {
+          padding: 8px 10px 24px;
+          gap: 12px;
+        }
+        .game-hud {
+          gap: 6px;
+        }
+        .hud-card {
+          padding: 6px 4px;
+        }
+        .hud-label {
+          font-size: 0.65rem;
+        }
+        .hud-value {
+          font-size: 1.05rem;
+        }
+        .fi-prompt-card {
+          padding: 16px 12px;
+        }
+        .prompt-audio-btn {
+          width: 34px;
+          height: 34px;
+          font-size: 0.95rem;
+          right: 10px;
+          top: 10px;
+        }
+        .fi-hanzi-char {
+          font-size: clamp(2.4rem, 8vw, 3.4rem);
+          margin-bottom: 4px;
+        }
+        .fi-vietnamese-meaning {
+          font-size: 1.05rem;
+          margin-bottom: 4px;
+        }
+        .fi-slots-card {
+          padding: 16px 10px;
+        }
+        .pinyin-slot {
+          width: clamp(32px, 8vw, 42px) !important;
+          height: clamp(42px, 10.5vw, 52px) !important;
+          font-size: clamp(1.2rem, 3.8vw, 1.5rem) !important;
+        }
+        .fi-actions-bar {
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+      }
+
+      @media (min-width: 641px) and (max-width: 1024px) {
+        /* 2. Tablet (Máy tính bảng) */
+        .fi-container {
+          max-width: 680px;
+          padding: 16px 20px 32px;
+        }
       }
 
       /* Vùng Ô Nhập Ký Tự Pinyin (Slots Area) */
@@ -414,6 +458,21 @@
         display: flex;
         flex-direction: column;
         gap: var(--s-2);
+        width: 100%;
+      }
+      @media (max-width: 640px) {
+        .game-over-modal {
+          padding: 12px;
+        }
+        .game-over-card {
+          padding: 20px 14px !important;
+          width: 100% !important;
+        }
+        .game-over-actions .btn {
+          width: 100% !important;
+          min-height: 44px !important;
+          justify-content: center !important;
+        }
       }
       .btn {
         display: inline-flex;
@@ -587,6 +646,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const quizId = urlParams.get("quiz_id");
         const mode = urlParams.get("mode");
+        const dir = urlParams.get("dir") || "hanzi_pinyin";
         const isPriority = urlParams.get("priority") === "true";
         const round = parseInt(urlParams.get("round") || "1", 10);
         const rawCards = urlParams.get("cards") || "10";
@@ -740,9 +800,30 @@
           hudMistakes.textContent = totalMistakes;
           hudScore.textContent = currentScore;
 
-          // Hiển thị chữ Hán & Nghĩa Việt
-          promptHanzi.textContent = currentCard.hanzi;
-          promptMeaning.textContent = currentCard.vietnamese || currentCard.meaning || "";
+          // Phân biệt theo chiều câu hỏi: Trung -> Pinyin hoặc Việt -> Pinyin
+          const fiBadge = document.querySelector(".fi-badge");
+          if (dir === "viet_pinyin") {
+            if (fiBadge) fiBadge.textContent = "NHÌN TIẾNG VIỆT ĐIỀN PINYIN";
+            promptMeaning.textContent = currentCard.vietnamese || currentCard.meaning || "";
+            promptMeaning.style.display = "block";
+            promptMeaning.style.fontSize = "clamp(1.8rem, 5.5vw, 2.6rem)";
+            promptMeaning.style.fontWeight = "700";
+            promptMeaning.style.color = "var(--text)";
+            promptMeaning.style.marginBottom = "8px";
+
+            promptHanzi.textContent = currentCard.hanzi;
+            promptHanzi.style.display = "none";
+          } else {
+            // Mặc định hoặc Trung -> Pinyin
+            if (fiBadge) fiBadge.textContent = "NHÌN CHỮ HÁN ĐIỀN PINYIN";
+            promptHanzi.textContent = currentCard.hanzi;
+            promptHanzi.style.display = "block";
+            promptHanzi.style.fontSize = "clamp(3rem, 10vw, 4.5rem)";
+            promptHanzi.style.color = "var(--text)";
+
+            promptMeaning.textContent = currentCard.vietnamese || currentCard.meaning || "";
+            promptMeaning.style.display = "none";
+          }
           promptPinyin.textContent = "";
           promptPinyin.classList.remove("show-pinyin");
 
@@ -880,6 +961,17 @@
             promptPinyin.textContent = currentCard.pinyin || targetCleanPinyin;
             promptPinyin.classList.add("show-pinyin");
 
+            // Hiển thị bổ sung trường còn lại khi trả lời đúng
+            if (dir === "viet_pinyin") {
+              promptHanzi.style.display = "block";
+              promptHanzi.style.fontSize = "clamp(1.8rem, 5vw, 2.2rem)";
+              promptHanzi.style.color = "var(--accent)";
+            } else {
+              promptMeaning.style.display = "block";
+              promptMeaning.style.fontSize = "1.25rem";
+              promptMeaning.style.color = "var(--text-2)";
+            }
+
             // Phát âm thanh chuẩn của từ
             if (soundEnabled) {
               AudioPlayer.play(currentCard.audio_url, currentCard.hanzi);
@@ -944,7 +1036,7 @@
             btnNext.style.display = "inline-flex";
             btnNext.href = `/pages/games/fill_in.html?` +
               (quizId ? `quiz_id=${quizId}&` : "mode=all&") +
-              `cards=${cardsLimit}&round=${round + 1}`;
+              `cards=${cardsLimit}&dir=${dir}&round=${round + 1}`;
           } else {
             btnNext.style.display = "none";
           }

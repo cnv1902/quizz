@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  hanziquizz:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hanziquizz-app
+    restart: unless-stopped
+    ports:
+      - "8002:8000"
+    env_file:
+      - .env
+    volumes:
+      # Mount database SQLite để lưu trữ bền vững (persistent data)
+      - ./hanziquizz.db:/app/hanziquizz.db
+      # Mount thư mục giao diện tĩnh (hỗ trợ cập nhật giao diện nhanh nếu cần)
+      - ./pages:/app/pages
+      - ./static:/app/static
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

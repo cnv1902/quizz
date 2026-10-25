@@ -135,22 +135,50 @@
   margin: 0 auto;
 }
 
+@media (min-width: 641px) and (min-height: 700px) {
+  .game-stage {
+    min-height: calc(100vh - 65px);
+  }
+}
+
 /* 3D Flip Card Container */
 .flashcard-3d-wrap {
   perspective: 1200px;
+  -webkit-perspective: 1200px;
   width: 100%;
   max-width: 520px;
   aspect-ratio: 4 / 3;
-  min-height: 320px;
+  min-height: 280px;
   cursor: pointer;
   position: relative;
   margin-bottom: var(--s-5);
+  z-index: 1;
 }
 
 @media (max-width: 640px) {
+  .game-stage {
+    justify-content: flex-start !important;
+    padding: 6px 12px calc(20px + env(safe-area-inset-bottom, 16px)) !important;
+  }
   .flashcard-3d-wrap {
-    aspect-ratio: 3 / 4;
-    min-height: 340px;
+    aspect-ratio: 4 / 3 !important;
+    min-height: 200px !important;
+    max-height: clamp(210px, 36vh, 260px) !important;
+    margin-bottom: 14px !important;
+  }
+  .flashcard-face {
+    padding: 10px 14px !important;
+  }
+  .card-hero-text,
+  .hanzi-main {
+    font-size: clamp(2.4rem, 8vw, 3.6rem) !important;
+  }
+  .card-hero-text.viet-hero-text,
+  .viet-main {
+    font-size: clamp(1.35rem, 5vw, 2rem) !important;
+  }
+  .flip-prompt {
+    font-size: 0.7rem !important;
   }
 }
 
@@ -159,12 +187,14 @@
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
   transition: transform 300ms cubic-bezier(.2,.7,.2,1);
   border-radius: var(--r-lg);
 }
 
 .flashcard-3d-wrap.is-flipped .flashcard-3d-inner {
   transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
 }
 
 /* Card Faces */
@@ -172,6 +202,7 @@
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   border-radius: var(--r-lg);
   border: 1px solid var(--border-strong);
   background: var(--surface);
@@ -317,11 +348,30 @@
   gap: var(--s-3);
   width: 100%;
   max-width: 520px;
+  position: relative;
+  z-index: 50;
+  transform: translateZ(10px);
+  -webkit-transform: translateZ(10px);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .game-controls {
-    grid-template-columns: 1fr;
+    gap: 8px;
+    z-index: 100 !important;
+    transform: translateZ(20px) !important;
+    -webkit-transform: translateZ(20px) !important;
+  }
+  .btn-game-action {
+    min-height: 48px !important;
+    padding: 6px 8px !important;
+    font-size: 0.92rem !important;
+    font-weight: 700 !important;
+  }
+  .action-sub {
+    display: none !important;
+  }
+  .keyboard-legend {
+    display: none !important;
   }
 }
 

@@ -149,7 +149,7 @@ const Auth = {
       return false;
     }
     if (!this.isAdmin()) {
-      window.location.href = "/";
+      window.location.href = "/pages/404.html";
       return false;
     }
     return true;

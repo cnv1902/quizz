@@ -13,14 +13,31 @@
     <style>
       .setup-page {
         min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
         background: var(--bg);
         color: var(--text);
       }
 
       .setup-content {
-        max-width: 680px;
+        max-width: 760px;
+        width: 100%;
         margin: 0 auto;
-        padding: var(--s-6) var(--s-4) var(--s-8);
+        padding: clamp(16px, 3.5vh, 40px) var(--s-4) var(--s-8);
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Desktop: Căn giữa theo tầm mắt, không dồn lệch trên */
+      @media (min-height: 750px) and (min-width: 900px) {
+        .setup-content {
+          justify-content: center;
+          min-height: calc(100vh - 65px);
+          padding-top: var(--s-5);
+          padding-bottom: var(--s-6);
+        }
       }
 
       .back-link {
@@ -30,8 +47,9 @@
         color: var(--text-2);
         text-decoration: none;
         font-size: var(--fs-sm);
-        margin-bottom: var(--s-5);
+        margin-bottom: var(--s-4);
         transition: color 150ms cubic-bezier(0.2, 0.7, 0.2, 1);
+        width: fit-content;
       }
 
       .back-link:hover {
@@ -39,13 +57,13 @@
       }
 
       .setup-header {
-        margin-bottom: var(--s-6);
+        margin-bottom: clamp(16px, 2.5vh, 28px);
       }
 
       .quiz-badge {
         display: inline-block;
-        font-size: 0.75rem;
-        font-weight: 600;
+        font-size: 0.72rem;
+        font-weight: 700;
         letter-spacing: 0.05em;
         text-transform: uppercase;
         padding: 3px 10px;
@@ -56,30 +74,33 @@
       }
 
       .setup-header h1 {
-        font-size: var(--fs-h1);
-        font-weight: 600;
+        font-size: clamp(1.4rem, 4vw, 2rem);
+        font-weight: 700;
         letter-spacing: -0.02em;
         margin-bottom: var(--s-1);
+        line-height: 1.25;
       }
 
       .setup-header p {
         color: var(--text-2);
         font-size: var(--fs-sm);
+        line-height: 1.4;
       }
 
       .config-card {
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: var(--r-md);
-        padding: var(--s-5);
-        margin-bottom: var(--s-5);
+        padding: clamp(14px, 2vh, 22px);
+        margin-bottom: clamp(14px, 2vh, 22px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
       }
 
       .config-title {
-        font-size: 1rem;
+        font-size: clamp(0.92rem, 2vw, 1.05rem);
         font-weight: 700;
         color: var(--text);
-        margin-bottom: var(--s-2);
+        margin-bottom: var(--s-1);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -90,14 +111,25 @@
       .config-subtitle {
         font-size: var(--fs-xs);
         color: var(--text-2);
-        margin-bottom: var(--s-4);
+        margin-bottom: clamp(10px, 1.5vh, 16px);
+        line-height: 1.4;
       }
 
       /* === Game Modes Grid (Bước 1) === */
       .games-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
         gap: var(--s-3);
+      }
+
+      /* Khi chỉ có 1 game duy nhất (Bộ câu): căn giữa đẹp mắt, không bị kéo dãn kì dị */
+      .games-grid:has(.game-btn:only-child) {
+        display: flex;
+        justify-content: center;
+      }
+      .games-grid:has(.game-btn:only-child) .game-btn {
+        max-width: 280px;
+        width: 100%;
       }
 
       .game-btn {
@@ -105,7 +137,7 @@
         flex-direction: column;
         align-items: center;
         gap: var(--s-2);
-        padding: var(--s-4) var(--s-2);
+        padding: clamp(10px, 1.8vh, 16px) var(--s-2);
         background: var(--surface-2);
         border: 1.5px solid var(--border);
         border-radius: var(--r-md);
@@ -142,7 +174,7 @@
 
       .game-btn-name {
         font-size: var(--fs-sm);
-        font-weight: 600;
+        font-weight: 700;
         text-align: center;
       }
 
@@ -156,23 +188,26 @@
       /* === Rounds Grid (Bước 2) === */
       .rounds-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-        gap: var(--s-2);
+        grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+        gap: 8px;
+        max-height: 280px;
+        overflow-y: auto;
+        padding-right: 4px;
       }
 
       .round-tile {
         background: var(--surface-2);
         border: 1px solid var(--border);
         border-radius: var(--r-sm);
-        padding: 10px 8px;
-        min-height: 42px;
+        padding: 8px 6px;
+        min-height: 40px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
         font-size: var(--fs-sm);
-        font-weight: 500;
+        font-weight: 600;
         color: var(--text);
         font-family: inherit;
         white-space: nowrap;
@@ -189,18 +224,22 @@
         border-color: var(--accent);
         background: var(--accent-soft);
         color: var(--accent);
-        font-weight: 600;
+        font-weight: 700;
         box-shadow: 0 0 0 1px var(--accent);
       }
 
       .round-tile.practice-tile {
-        border: 1px dashed var(--border-strong);
+        grid-column: span 2;
+        min-width: 100px;
+        border: 1.5px dashed var(--border-strong);
         color: var(--text);
+        background: rgba(30, 168, 150, 0.04);
       }
 
       .round-tile.practice-tile:hover {
         border-color: var(--accent);
         color: var(--accent);
+        background: var(--accent-soft);
       }
 
       .round-tile.practice-tile.active {
@@ -208,17 +247,19 @@
         border-color: var(--accent);
         background: var(--accent-soft);
         color: var(--accent);
+        font-weight: 700;
+        box-shadow: 0 0 0 1px var(--accent);
       }
 
       /* Nút Bắt đầu chơi */
       .btn-start-game {
         width: 100%;
-        padding: 14px 24px;
+        padding: clamp(12px, 1.8vh, 16px) 20px;
         background: var(--accent);
         color: #fff;
         border: none;
         border-radius: var(--r-md);
-        font-size: 1.15rem;
+        font-size: clamp(1rem, 2vw, 1.15rem);
         font-weight: 700;
         cursor: pointer;
         display: inline-flex;
@@ -236,6 +277,48 @@
         box-shadow: 0 6px 20px rgba(30, 168, 150, 0.45);
       }
 
+      /* === Responsive Breakpoints (3 dạng thiết bị) === */
+      @media (max-width: 640px) {
+        /* 1. ĐIỆN THOẠI (Mobile) */
+        .setup-content {
+          padding: 12px 12px 32px;
+        }
+        .config-card {
+          padding: 14px 12px;
+          margin-bottom: 12px;
+        }
+        .games-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 8px;
+        }
+        .rounds-grid {
+          grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+          gap: 6px;
+        }
+        .round-tile {
+          min-height: 36px;
+          padding: 6px 2px;
+          font-size: 0.78rem;
+        }
+        .setup-nav {
+          padding: 8px 12px;
+        }
+        .nav-links-wrap {
+          display: none !important;
+        }
+      }
+
+      @media (min-width: 641px) and (max-width: 1024px) {
+        /* 2. MÁY TÍNH BẢNG (Tablet) */
+        .setup-content {
+          padding: 20px 20px 40px;
+          max-width: 680px;
+        }
+        .games-grid {
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        }
+      }
+
       /* === Modal Cấu hình (§5.1) === */
       .modal-backdrop {
         position: fixed;
@@ -245,6 +328,7 @@
         align-items: center;
         justify-content: center;
         z-index: 1000;
+        padding: 16px;
       }
       .modal-card {
         background: var(--surface);
@@ -309,7 +393,7 @@
             <img src="/static/img/HanziQuizz-Favicon.png" alt="HanziQuizz Logo" />
             <span>HanziQuizz</span>
           </a>
-          <div style="display: flex; align-items: center; gap: var(--s-2);">
+          <div class="nav-links-wrap" style="display: flex; align-items: center; gap: var(--s-2);">
             <a href="/" class="btn btn-ghost btn-sm">Học từ</a>
             <a href="/pages/measure-words.html" class="btn btn-ghost btn-sm">Lượng từ</a>
             <a href="/pages/grammar.html" class="btn btn-ghost btn-sm">Ngữ pháp</a>
@@ -475,6 +559,64 @@
                 </div>
               </div>
             </label>
+
+            <label
+              id="dirLabelHanziPinyin"
+              style="
+                display: none;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 12px;
+                background: var(--surface-2);
+                border: 1px solid var(--border);
+                border-radius: var(--r-sm);
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="directionRadio"
+                value="hanzi_pinyin"
+                style="accent-color: var(--accent)"
+              />
+              <div>
+                <div style="font-weight: 600; font-size: var(--fs-sm); color: var(--text);">
+                  Trung → Pinyin
+                </div>
+                <div style="font-size: var(--fs-xs); color: var(--text-2)">
+                  Nhìn chữ Hán điền Pinyin
+                </div>
+              </div>
+            </label>
+
+            <label
+              id="dirLabelVietPinyin"
+              style="
+                display: none;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 12px;
+                background: var(--surface-2);
+                border: 1px solid var(--border);
+                border-radius: var(--r-sm);
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="directionRadio"
+                value="viet_pinyin"
+                style="accent-color: var(--accent)"
+              />
+              <div>
+                <div style="font-weight: 600; font-size: var(--fs-sm); color: var(--text);">
+                  Việt → Pinyin
+                </div>
+                <div style="font-size: var(--fs-xs); color: var(--text-2)">
+                  Nhìn nghĩa Việt điền Pinyin
+                </div>
+              </div>
+            </label>
           </div>
         </div>
 
@@ -528,6 +670,7 @@
     <script src="/static/js/core/auth.js?v={{ v }}"></script>
     <script src="/static/js/api/quizApi.js?v={{ v }}"></script>
     <script src="/static/js/components/toast.js?v={{ v }}"></script>
+    <script src="/static/js/components/navbar.js?v={{ v }}"></script>
 
     <script>
       (function () {
@@ -718,19 +861,44 @@
           const dirHanziViet = document.getElementById("dirLabelHanziViet");
           const dirPinyinViet = document.getElementById("dirLabelPinyinViet");
           const dirVietHanzi = document.getElementById("dirLabelVietHanzi");
+          const dirHanziPinyin = document.getElementById("dirLabelHanziPinyin");
+          const dirVietPinyin = document.getElementById("dirLabelVietPinyin");
           const vietHanziDesc = document.getElementById("vietHanziDesc");
 
           if (isSentenceContext || selectedGameId === "sentence") {
             // Với Ghép câu: Chỉ áp dụng chiều Việt → Hán (dịch tiếng Việt và ghép câu chữ Hán)
             dirHanziViet.style.display = "none";
             dirPinyinViet.style.display = "none";
+            dirHanziPinyin.style.display = "none";
+            dirVietPinyin.style.display = "none";
+            dirVietHanzi.style.display = "flex";
             dirVietHanzi.querySelector("input").checked = true;
             vietHanziDesc.textContent = "Đọc tiếng Việt, nhấp ghép câu tiếng Trung hoàn chỉnh";
+          } else if (selectedGameId === "fill_in") {
+            // Với Điền Pinyin: Chỉ hiển thị Trung → Pinyin hoặc Việt → Pinyin
+            dirHanziViet.style.display = "none";
+            dirPinyinViet.style.display = "none";
+            dirVietHanzi.style.display = "none";
+            dirHanziPinyin.style.display = "flex";
+            dirVietPinyin.style.display = "flex";
+
+            const checkedVal = document.querySelector('input[name="directionRadio"]:checked')?.value;
+            if (checkedVal !== "hanzi_pinyin" && checkedVal !== "viet_pinyin") {
+              dirHanziPinyin.querySelector("input").checked = true;
+            }
           } else {
-            // Với thẻ từ vựng của Bộ Quiz: Hiển thị đầy đủ 3 chiều
+            // Với các trò chơi từ vựng còn lại (Lật thẻ, Ghép cặp, Trắc nghiệm):
+            dirHanziPinyin.style.display = "none";
+            dirVietPinyin.style.display = "none";
             dirHanziViet.style.display = "flex";
             dirPinyinViet.style.display = "flex";
+            dirVietHanzi.style.display = "flex";
             vietHanziDesc.textContent = "Nhìn nghĩa nhớ chữ Hán";
+
+            const checkedVal = document.querySelector('input[name="directionRadio"]:checked')?.value;
+            if (checkedVal === "hanzi_pinyin" || checkedVal === "viet_pinyin") {
+              dirHanziViet.querySelector("input").checked = true;
+            }
           }
         }
 

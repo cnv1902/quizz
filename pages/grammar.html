@@ -282,6 +282,46 @@
         margin: var(--s-4) auto;
         box-sizing: border-box;
       }
+
+      /* === Responsive 3 Thiết bị: Mobile, Tablet, Desktop === */
+      @media (max-width: 640px) {
+        .app-container {
+          padding: 12px 10px 32px;
+        }
+        .welcome-bar {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        .welcome-title {
+          font-size: 1.5rem;
+        }
+        .section-header-bar {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 10px;
+        }
+        .search-box {
+          width: 100%;
+          min-width: unset;
+        }
+        .grammar-card {
+          padding: 14px 12px;
+        }
+        .grammar-title {
+          font-size: 1.1rem;
+        }
+        .grammar-formula {
+          font-size: 0.85rem;
+          padding: 8px 10px;
+        }
+      }
+
+      @media (min-width: 641px) and (max-width: 1024px) {
+        .app-container {
+          padding: 20px 16px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -292,7 +332,7 @@
           <img src="/static/img/HanziQuizz-Favicon.png" alt="HanziQuizz Logo" />
           <span>HanziQuizz</span>
         </a>
-        <div style="display: flex; align-items: center; gap: var(--s-2);">
+        <div class="nav-links-wrap" style="display: flex; align-items: center; gap: var(--s-2);">
           <a href="/" class="btn btn-ghost btn-sm">Học từ</a>
           <a href="/pages/measure-words.html" class="btn btn-ghost btn-sm">Lượng từ</a>
           <a href="/pages/grammar.html" class="btn btn-ghost btn-sm" style="color:var(--accent); font-weight:600;">Ngữ pháp</a>
@@ -384,6 +424,7 @@
     <script src="/static/js/core/auth.js?v={{ v }}"></script>
     <script src="/static/js/components/toast.js?v={{ v }}"></script>
     <script src="/static/js/components/audioPlayer.js?v={{ v }}"></script>
+    <script src="/static/js/components/navbar.js?v={{ v }}"></script>
     <script>
       (function() {
         const user = Auth.getUser();

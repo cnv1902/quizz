@@ -27,57 +27,66 @@
       "
     ></canvas>
 
-    <!-- Game Top Bar -->
-    <header class="game-top-bar">
-      <a href="#" id="btnExitGame" class="game-back-btn"> ← Thoát </a>
-
-      <div class="game-title-center">
-        <div class="game-quiz-name">
-          <span id="gameQuizTitle">Đang tải...</span>
-          <span class="game-round-badge" id="gameRoundBadge">Màn 1 / 1</span>
-        </div>
-      </div>
-
-      <div class="game-stats-counters">
-        <span class="counter-item counter-correct" title="Số thẻ đã thuộc">
-          ✓ <span id="counterCorrect">0</span>
+    <!-- Game Top Nav -->
+    <nav class="game-nav">
+      <a href="/" class="nav-brand">
+        <img
+          src="/static/img/HanziQuizz-Favicon.png"
+          alt="HanziQuizz Logo"
+          style="height: 30px; width: auto; object-fit: contain"
+        />
+        <span>HanziQuizz</span>
+        <span style="font-size: var(--fs-xs); background: var(--surface-2); padding: 2px 8px; border-radius: 4px; color: var(--accent); border: 1px solid var(--border);">
+          Lật thẻ
         </span>
-        <span class="counter-item counter-wrong" title="Số thẻ chưa nhớ">
-          ✗ <span id="counterWrong">0</span>
-        </span>
-      </div>
-    </header>
+      </a>
 
-    <!-- Sub Bar Progress -->
-    <div class="game-progress-wrap">
-      <div class="progress-info">
-        <span
-          >Tiến độ màn:
-          <strong id="progressCardIndex" style="color: var(--text)">1</strong> /
-          <span id="progressCardTotal">10</span> thẻ</span
-        >
+      <div class="nav-actions">
         <span
           id="priorityModeBadge"
           style="
             display: none;
             font-size: var(--fs-xs);
-            font-weight: 600;
+            font-weight: 700;
             padding: 2px 8px;
-            border-radius: var(--r-sm);
-            background: var(--accent-soft);
+            border-radius: 4px;
+            background: rgba(30, 168, 150, 0.15);
             color: var(--accent);
             border: 1px solid var(--accent);
           "
-          >Bổ Túc</span
+          >🎯 Bổ Túc</span
         >
+        <span id="gameQuizTitle" style="display: none;">Đang tải...</span>
+        <a href="#" id="btnExitGame" class="btn-text">Thoát</a>
       </div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progressBarFill" style="width: 0%"></div>
-      </div>
-    </div>
+    </nav>
 
     <!-- Game Arena / Stage -->
     <main class="game-stage">
+      <!-- HUD Bar: Hiển thị kết quả & tiến độ bên dưới header -->
+      <div class="game-hud" style="width: 100%; max-width: 520px; margin-bottom: 12px;">
+        <div class="hud-card">
+          <div class="hud-label">Tiến trình</div>
+          <div class="hud-value"><span id="progressCardIndex">1</span> / <span id="progressCardTotal">10</span></div>
+        </div>
+        <div class="hud-card">
+          <div class="hud-label">Đã thuộc</div>
+          <div class="hud-value" style="color: #10b981;" id="counterCorrect">0</div>
+        </div>
+        <div class="hud-card">
+          <div class="hud-label">Chưa nhớ</div>
+          <div class="hud-value" style="color: #f43f5e;" id="counterWrong">0</div>
+        </div>
+        <div class="hud-card">
+          <div class="hud-label">Màn chơi</div>
+          <div class="hud-value" style="font-size: 1.05rem;" id="gameRoundBadge">Màn 1</div>
+        </div>
+      </div>
+
+      <!-- Thin Progress Bar -->
+      <div class="progress-bar" style="max-width: 520px; width: 100%; margin-bottom: 14px;">
+        <div class="progress-fill" id="progressBarFill" style="width: 0%"></div>
+      </div>
       <!-- 3D Flip Card -->
       <div
         class="flashcard-3d-wrap"

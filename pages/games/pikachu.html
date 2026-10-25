@@ -28,59 +28,58 @@
       "
     ></canvas>
 
-    <!-- Top Bar HUD -->
-    <header class="pikachu-top-bar">
-      <a href="#" id="btnExitGame" class="game-back-btn"> ← Thoát </a>
+    <!-- Game Top Nav -->
+    <nav class="game-nav">
+      <a href="/" class="nav-brand">
+        <img
+          src="/static/img/HanziQuizz-Favicon.png"
+          alt="HanziQuizz Logo"
+          style="height: 30px; width: auto; object-fit: contain"
+        />
+        <span>HanziQuizz</span>
+        <span
+          style="
+            font-size: var(--fs-xs);
+            background: var(--surface-2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: var(--accent);
+            border: 1px solid var(--border);
+          "
+        >
+          Pikachu
+        </span>
+      </a>
 
-      <div class="pikachu-hud-center">
-        <div class="hud-pill">
-          <span>Còn:</span>
-          <span id="pairsLeft" style="color: var(--accent)">0</span> cặp
-        </div>
-        <div class="hud-pill hud-timer">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-          </svg>
-          <span id="timerDisplay">00:00</span>
-        </div>
-        <div class="hud-pill hud-combo" id="comboWrap" style="display: none">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-          </svg>
-          Combo <span id="comboMultiplier">x1</span>
-        </div>
+      <div class="nav-actions">
+        <a href="#" id="btnExitGame" class="btn-text">Thoát</a>
       </div>
-
-      <div
-        style="font-size: var(--fs-xs); color: var(--text-2); font-weight: 600"
-        id="roundIndicator"
-      >
-        Màn 1 / 1
-      </div>
-    </header>
+    </nav>
 
     <!-- Main Board Stage -->
     <main class="pikachu-stage">
-      <div style="text-align: center; margin-bottom: var(--s-5)">
+      <!-- HUD Bar: Hiển thị kết quả & tiến độ bên dưới header -->
+      <div class="game-hud" style="width: 100%; max-width: 720px; margin-bottom: 14px;">
+        <div class="hud-card">
+          <div class="hud-label">Còn lại</div>
+          <div class="hud-value"><span id="pairsLeft" style="color: var(--accent);">0</span> cặp</div>
+        </div>
+        <div class="hud-card">
+          <div class="hud-label">Thời gian</div>
+          <div class="hud-value" id="timerDisplay">00:00</div>
+        </div>
+        <div class="hud-card" id="hudCardCombo">
+          <div class="hud-label">Combo</div>
+          <div class="hud-value" style="color: var(--warning);" id="comboDisplay">x0</div>
+          <span id="comboWrap" style="display: none"><span id="comboMultiplier">x1</span></span>
+        </div>
+        <div class="hud-card">
+          <div class="hud-label">Màn chơi</div>
+          <div class="hud-value" style="font-size: 1rem;" id="roundIndicator">Màn 1 / 1</div>
+        </div>
+      </div>
+
+      <div class="pikachu-title-wrap" style="text-align: center; margin-bottom: var(--s-4)">
         <h2
           style="
             font-size: var(--fs-h2);
@@ -92,7 +91,7 @@
         >
           Ghép Đôi Chữ Hán &amp; Nghĩa
         </h2>
-        <p style="color: var(--text-2); font-size: var(--fs-sm)">
+        <p class="pikachu-instruction" style="color: var(--text-2); font-size: var(--fs-sm)">
           Chọn 1 ô Chữ Hán và 1 ô Nghĩa tương ứng để nối cặp biến mất
         </p>
       </div>
@@ -502,13 +501,10 @@
         }
 
         function updateComboHUD() {
-          const wrap = document.getElementById("comboWrap");
-          if (combo > 1) {
-            wrap.style.display = "inline-flex";
-            document.getElementById("comboMultiplier").textContent =
-              `x${combo}`;
-          } else {
-            wrap.style.display = "none";
+          const comboDisp = document.getElementById("comboDisplay");
+          if (comboDisp) {
+            comboDisp.textContent = combo > 1 ? `x${combo}` : "x0";
+            comboDisp.style.fontWeight = combo > 1 ? "800" : "600";
           }
         }
 

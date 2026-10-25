@@ -14,13 +14,25 @@ cd d:\quizz
 pip install -r requirements.txt
 ```
 
-### Bước 2: Chạy server
+### Bước 2: Chạy server (Local)
 ```powershell
 python run.py
 ```
 hoặc
 ```powershell
 uvicorn app.main:app --reload --port 8000
+```
+
+### Cách 2: Chạy bằng Docker & Docker Compose (Khuyên dùng)
+```bash
+# Khởi chạy toàn bộ hệ thống ở chế độ nền
+docker compose up -d --build
+
+# Xem log hệ thống
+docker compose logs -f
+
+# Dừng hệ thống
+docker compose down
 ```
 
 ### Bước 3: Truy cập
@@ -33,7 +45,7 @@ uvicorn app.main:app --reload --port 8000
 - **Game Setup:** http://localhost:8000/pages/game-setup.html?mode=all
 - **Flashcard Game:** http://localhost:8000/pages/games/flashcard.html?mode=all&cards=10&priority=false&round=1
 
-> 💡 **Lưu ý:** Người dùng đầu tiên đăng ký sẽ tự động được cấp quyền **Admin**.
+> 💡 **Lưu ý:** Người dùng đầu tiên đăng ký sẽ tự động được cấp quyền **Admin**. Dữ liệu SQLite được mount ra file `hanziquizz.db` trên máy host nên dữ liệu luôn được bảo toàn khi khởi động lại Docker.
 
 ---
 
