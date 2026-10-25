@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lật Thẻ Flashcard — HanziQuizz</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/img/HanziQuizz-Favicon.png"
+    />
+    <link rel="stylesheet" href="/static/css/game/theme.css?v={{ v }}" />
+    <link rel="stylesheet" href="/static/css/game/flashcard.css?v={{ v }}" />
+  </head>
+  <body class="game-layout">
+    <!-- Confetti Canvas (Fixed Overlay, không chiếm diện tích layout) -->
+    <canvas
+      id="confettiCanvas"
+      style="
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 9999;
+        display: none;
+      "
+    ></canvas>
+
+    <!-- Game Top Bar -->
+    <header class="game-top-bar">
+      <a href="#" id="btnExitGame" class="game-back-btn"> ← Thoát </a>
+
+      <div class="game-title-center">
+        <div class="game-quiz-name">
+          <span id="gameQuizTitle">Đang tải...</span>
+          <span class="game-round-badge" id="gameRoundBadge">Màn 1 / 1</span>
+        </div>
+      </div>
+
+      <div class="game-stats-counters">
+        <span class="counter-item counter-correct" title="Số thẻ đã thuộc">
+          ✓ <span id="counterCorrect">0</span>
+        </span>
+        <span class="counter-item counter-wrong" title="Số thẻ chưa nhớ">
+          ✗ <span id="counterWrong">0</span>
+        </span>
+      </div>
+    </header>
+
+    <!-- Sub Bar Progress -->
+    <div class="game-progress-wrap">
+      <div class="progress-info">
+        <span
+          >Tiến độ màn:
+          <strong id="progressCardIndex" style="color: var(--text)">1</strong> /
+          <span id="progressCardTotal">10</span> thẻ</span
+        >
+        <span
+          id="priorityModeBadge"
+          style="
+            display: none;
+            font-size: var(--fs-xs);
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: var(--r-sm);
+            background: var(--accent-soft);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+          "
+          >Bổ Túc</span
+        >
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressBarFill" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Game Arena / Stage -->
+    <main class="game-stage">
+      <!-- 3D Flip Card -->
+      <div
+        class="flashcard-3d-wrap"
+        id="flashcardWrap"
+        title="Nhấp chuột hoặc bấm Space để lật thẻ"
+      >
+        <div class="flashcard-3d-inner" id="flashcardInner">
+          <!-- Mặt trước (Front) -->
+          <div class="flashcard-face flashcard-front" id="cardFrontFace">
+            <div class="card-face-top">
+              <span class="card-prompt-label" id="frontPromptLabel">
+                Hán tự → Tiếng Việt
+              </span>
+            </div>
+            <div class="card-face-center">
+              <div class="card-hero-text" id="frontMain">...</div>
+            </div>
+            <div class="card-face-bottom">
+              <div class="flip-prompt">
+                <span>Nhấn <strong>Space</strong> hoặc chạm để lật thẻ</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mặt sau (Back): Đối xứng tuyệt đối với Mặt trước -->
+          <div class="flashcard-face flashcard-back" id="cardBackFace">
+            <div class="card-face-top">
+              <div class="back-meta-bar" id="backMetaBar">
+                <span class="back-pinyin-pill" id="backPinyin">...</span>
+                <button
+                  class="btn-audio-speak"
+                  id="btnAudioBack"
+                  title="Nghe lại phát âm (Phím W)"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polygon
+                      points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"
+                    ></polygon>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="card-face-center">
+              <div class="card-hero-text viet-hero-text" id="backViet">...</div>
+            </div>
+            <div class="card-face-bottom">
+              <div class="flip-prompt">
+                <span>Đánh giá: [←] Chưa nhớ &nbsp;|&nbsp; [→] Đã thuộc</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="game-controls">
+        <button
+          class="btn-game-action btn-action-wrong"
+          id="btnMarkWrong"
+          title="Phím mũi tên Trái hoặc A"
+        >
+          <span>Chưa nhớ</span>
+          <span class="action-sub">[←] Phím Trái</span>
+        </button>
+
+        <button
+          class="btn-game-action btn-action-flip"
+          id="btnFlipCard"
+          title="Phím Space"
+        >
+          <span>Lật thẻ</span>
+          <span class="action-sub">[Space]</span>
+        </button>
+
+        <button
+          class="btn-game-action btn-action-correct"
+          id="btnMarkCorrect"
+          title="Phím mũi tên Phải hoặc D"
+        >
+          <span>Đã thuộc</span>
+          <span class="action-sub">[→] Phím Phải</span>
+        </button>
+      </div>
+
+      <!-- Keyboard Shortcuts Legend -->
+      <div class="keyboard-legend">
+        <div class="key-hint">
+          <span class="key-cap">Space</span>
+          <span>Lật thẻ</span>
+        </div>
+        <div class="key-hint">
+          <span class="key-cap">←</span> hoặc <span class="key-cap">A</span>
+          <span>Chưa nhớ</span>
+        </div>
+        <div class="key-hint">
+          <span class="key-cap">→</span> hoặc <span class="key-cap">D</span>
+          <span>Đã thuộc</span>
+        </div>
+        <div class="key-hint">
+          <span class="key-cap">W</span> hoặc <span class="key-cap">↑</span>
+          <span>Phát âm</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Game Over Screen -->
+    <div class="game-over-overlay" id="gameOverModal">
+      <div class="game-over-card">
+        <div class="game-over-badge" id="overIcon" style="color: var(--accent)">
+          <svg
+            width="44"
+            height="44"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+            <path d="M4 22h16"></path>
+            <path
+              d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"
+            ></path>
+            <path
+              d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"
+            ></path>
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+          </svg>
+        </div>
+        <h2 class="game-over-title" id="overTitle">Hoàn thành màn chơi!</h2>
+        <p class="game-over-subtitle" id="overSubtitle">
+          Kết quả đã được đồng bộ tự động lên hệ thống
+        </p>
+
+        <!-- Score Circle -->
+        <div class="score-circle-wrap">
+          <svg class="score-circle-svg" viewBox="0 0 140 140">
+            <circle class="score-circle-bg" cx="70" cy="70" r="58"></circle>
+            <circle
+              class="score-circle-bar"
+              id="scoreCircleBar"
+              cx="70"
+              cy="70"
+              r="58"
+              stroke-dasharray="364.4"
+              stroke-dashoffset="364.4"
+            ></circle>
+          </svg>
+          <div class="score-circle-text">
+            <div id="overPercentage">0%</div>
+            <div class="score-circle-sub">Độ chính xác</div>
+          </div>
+        </div>
+
+        <!-- Breakdown Stats -->
+        <div class="game-over-stats-grid">
+          <div class="over-stat-box">
+            <div
+              class="over-stat-val"
+              style="color: var(--success)"
+              id="overStatCorrect"
+            >
+              0
+            </div>
+            <div class="over-stat-lbl">Từ đã thuộc</div>
+          </div>
+          <div class="over-stat-box">
+            <div
+              class="over-stat-val"
+              style="color: var(--danger)"
+              id="overStatWrong"
+            >
+              0
+            </div>
+            <div class="over-stat-lbl">Cần ôn lại</div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="game-over-actions">
+          <button
+            class="btn btn-primary btn-lg"
+            id="btnNextRound"
+            style="display: none"
+          >
+            Màn tiếp theo →
+          </button>
+          <button class="btn btn-secondary" id="btnReplayRound">
+            Chơi lại màn này
+          </button>
+          <button
+            class="btn btn-secondary"
+            id="btnStudyWrongCards"
+            style="
+              display: none;
+              border-color: var(--danger);
+              color: var(--danger);
+            "
+          >
+            Luyện tập từ chưa nhớ
+          </button>
+          <a href="/" class="btn btn-secondary" id="btnBackHome">
+            Về trang chủ
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/core/api.js?v={{ v }}"></script>
+    <script src="/static/js/core/auth.js?v={{ v }}"></script>
+    <script src="/static/js/components/toast.js?v={{ v }}"></script>
+    <script src="/static/js/components/audioPlayer.js?v={{ v }}"></script>
+    <script src="/static/js/api/quizApi.js?v={{ v }}"></script>
+    <script src="/static/js/services/syncService.js?v={{ v }}"></script>
+    <script>
+      (function () {
+        // 1. Check Auth (cho phép khách vãng lai chơi)
+        const isAuth = Auth.isLoggedIn();
+
+        // 2. Parse Query Params
+        const params = new URLSearchParams(window.location.search);
+        const quizId = params.get("quiz_id");
+        const mode = params.get("mode"); // 'all' hoặc null
+        const rawCards = params.get("cards");
+        const isAllCards = (rawCards === "all");
+        const cardsPerRound = isAllCards ? "all" : (parseInt(rawCards) || 10);
+        const isPriority = params.get("priority") === "true";
+        const currentRound = parseInt(params.get("round")) || 1;
+        const questionDir = params.get("dir") || "hanzi_viet"; // 'hanzi_viet' | 'viet_hanzi' | 'pinyin_hanzi'
+
+        if (!quizId && mode !== "all") {
+          Toast.show("Thiếu thông tin bộ quizz!", "error");
+          setTimeout(() => (window.location.href = "/"), 1500);
+          return;
+        }
+
+        // Exit button
+        document.getElementById("btnExitGame").href = quizId
+          ? `/pages/game-setup.html?quiz_id=${quizId}`
+          : `/pages/game-setup.html?mode=all`;
+
+        // 3. State
+        let allCards = [];
+        let roundCards = [];
+        let totalRounds = 1;
+        let currentIndex = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let isFlipped = false;
+        const roundResults = []; // [{ card_id, is_correct }]
+        const wrongCardsInRound = [];
+
+        // 4. Voice Audio Service & Speech Synthesis Fallback
+        function speakCard(card, btnElement) {
+          if (!card) return;
+          AudioPlayer.play(card.audio_url, card.hanzi, {
+            btnElement: btnElement,
+            rate: 0.88,
+          });
+        }
+
+        // 5. Load Cards
+        async function initGame() {
+          try {
+            if (mode === "all") {
+              document.getElementById("gameQuizTitle").textContent =
+                "Tất cả thẻ hệ thống";
+              allCards = await CardApi.getAll();
+            } else {
+              const quizInfo = await QuizApi.getById(quizId);
+              document.getElementById("gameQuizTitle").textContent =
+                quizInfo.title;
+
+              if (isPriority) {
+                if (Auth.isLoggedIn()) {
+                  try {
+                    allCards = await QuizApi.getCardsPriority(quizId);
+                  } catch {
+                    allCards = await QuizApi.getCards(quizId);
+                  }
+                } else {
+                  allCards = await QuizApi.getCards(quizId);
+                  allCards.sort(() => 0.5 - Math.random());
+                }
+                document.getElementById("priorityModeBadge").style.display =
+                  "inline";
+              } else {
+                allCards = await QuizApi.getCards(quizId);
+              }
+            }
+
+            if (!allCards || allCards.length === 0) {
+              Toast.show("Bộ quizz này hiện chưa có thẻ nào!", "error");
+              setTimeout(() => (window.location.href = "/"), 1500);
+              return;
+            }
+
+            // Slice cards for this round
+            if (isAllCards) {
+              totalRounds = 1;
+              roundCards = [...allCards];
+            } else {
+              const K = parseInt(cardsPerRound, 10) || 10;
+              totalRounds = Math.ceil(allCards.length / K) || 1;
+              if (isPriority) {
+                roundCards = allCards.slice(0, K);
+              } else {
+                const startIdx = (currentRound - 1) * K;
+                roundCards = allCards.slice(startIdx, startIdx + K);
+
+                // Màn cuối cùng: nếu thiếu thẻ thì random lấy thêm thẻ từ các màn trước để đủ K thẻ
+                if (
+                  roundCards.length > 0 &&
+                  roundCards.length < K &&
+                  allCards.length > roundCards.length
+                ) {
+                  const currentSet = new Set(roundCards.map((c) => c.id));
+                  const pool = allCards.filter((c) => !currentSet.has(c.id));
+                  const shuffled = [...pool].sort(() => 0.5 - Math.random());
+                  roundCards = roundCards.concat(
+                    shuffled.slice(0, K - roundCards.length),
+                  );
+                }
+              }
+            }
+
+            if (roundCards.length === 0) {
+              // Màn vượt quá giới hạn -> quay lại màn 1
+              window.location.href =
+                window.location.pathname +
+                `?quiz_id=${quizId || ""}&cards=${cardsPerRound}&priority=${isPriority}&round=1&dir=${questionDir}`;
+              return;
+            }
+
+            // Update HUD
+            document.getElementById("gameRoundBadge").textContent = isPriority
+              ? "🎯 Luyện tập"
+              : isAllCards
+                ? "Màn 1 / 1 (Tất cả)"
+                : `Màn ${currentRound} / ${totalRounds}`;
+            document.getElementById("progressCardTotal").textContent =
+              roundCards.length;
+
+            renderCurrentCard();
+          } catch (err) {
+            Toast.show(err.message || "Lỗi khi tải dữ liệu bài học", "error");
+          }
+        }
+
+        // 6. Render Card
+        const cardWrap = document.getElementById("flashcardWrap");
+        const frontMain = document.getElementById("frontMain");
+        const backViet = document.getElementById("backViet");
+        const backPinyin = document.getElementById("backPinyin");
+        const frontPromptLabel = document.getElementById("frontPromptLabel");
+
+        function renderCurrentCard() {
+          if (currentIndex >= roundCards.length) {
+            finishRound();
+            return;
+          }
+
+          const card = roundCards[currentIndex];
+          isFlipped = false;
+          cardWrap.classList.remove("is-flipped");
+
+          const cardMeaning = card.vietnamese || card.meaning || "";
+
+          // Căn chỉnh đối xứng hoàn hảo giữa Mặt trước và Mặt sau (§ cùng vị trí & kích thước lớn)
+          if (questionDir === "viet_hanzi") {
+            // Chiều: Tiếng Việt → Chữ Hán
+            if (frontPromptLabel)
+              frontPromptLabel.textContent = "Tiếng Việt → Hán tự";
+            frontMain.textContent = cardMeaning;
+            frontMain.className = "card-hero-text viet-hero-text";
+
+            // Mặt sau: Chữ Hán to ở chính giữa, Pinyin ở top bar
+            backViet.textContent = card.hanzi;
+            backViet.className = "card-hero-text";
+            backPinyin.textContent = card.pinyin;
+          } else if (questionDir === "pinyin_viet") {
+            // Chiều: Pinyin → Tiếng Việt
+            if (frontPromptLabel)
+              frontPromptLabel.textContent = "Pinyin → Tiếng Việt";
+            frontMain.textContent = card.pinyin;
+            frontMain.className = "card-hero-text pinyin-hero-text";
+
+            // Mặt sau: Tiếng Việt to ở chính giữa, Chữ Hán ở top bar
+            backViet.textContent = cardMeaning;
+            backViet.className = "card-hero-text viet-hero-text";
+            backPinyin.textContent = card.hanzi;
+          } else {
+            // Mặc định: Hán tự → Tiếng Việt (hanzi_viet)
+            if (frontPromptLabel)
+              frontPromptLabel.textContent = "Hán tự → Tiếng Việt";
+            // Mặt trước: Chữ Hán to căn chính giữa
+            frontMain.textContent = card.hanzi;
+            frontMain.className = "card-hero-text";
+
+            // Mặt sau: Nghĩa tiếng Việt to căn đúng cùng vị trí chính giữa đó, Pinyin ở top bar
+            backViet.textContent = cardMeaning;
+            backViet.className = "card-hero-text viet-hero-text";
+            backPinyin.textContent = card.pinyin;
+          }
+
+          // Dừng âm thanh cũ (không phát âm ở mặt trước để người dùng tự đoán)
+          AudioPlayer.stop();
+
+          // Cập nhật thanh tiến trình
+          document.getElementById("progressCardIndex").textContent =
+            currentIndex + 1;
+          const progressPercent = (currentIndex / roundCards.length) * 100;
+          document.getElementById("progressBarFill").style.width =
+            `${progressPercent}%`;
+        }
+
+        function flipCard() {
+          isFlipped = !isFlipped;
+          cardWrap.classList.toggle("is-flipped", isFlipped);
+
+          // KHI LẬT SANG MẶT SAU: Tự động phát âm tiếng Trung
+          if (isFlipped) {
+            const card = roundCards[currentIndex];
+            if (card) speakCard(card, document.getElementById("btnAudioBack"));
+          }
+        }
+
+        // 7. Answer Handlers
+        function handleAnswer(isCorrect) {
+          if (currentIndex >= roundCards.length) return;
+
+          // Dừng âm thanh đang đọc
+          AudioPlayer.stop();
+
+          const card = roundCards[currentIndex];
+          roundResults.push({ card_id: card.id, is_correct: isCorrect });
+
+          if (isCorrect) {
+            correctCount++;
+            document.getElementById("counterCorrect").textContent =
+              correctCount;
+          } else {
+            wrongCount++;
+            document.getElementById("counterWrong").textContent = wrongCount;
+            wrongCardsInRound.push(card);
+          }
+
+          currentIndex++;
+          renderCurrentCard();
+        }
+
+        // 8. Event Listeners
+        cardWrap.addEventListener("click", flipCard);
+        document
+          .getElementById("btnFlipCard")
+          .addEventListener("click", flipCard);
+
+        document
+          .getElementById("btnMarkCorrect")
+          .addEventListener("click", () => handleAnswer(true));
+        document
+          .getElementById("btnMarkWrong")
+          .addEventListener("click", () => handleAnswer(false));
+
+        document
+          .getElementById("btnAudioBack")
+          .addEventListener("click", (e) => {
+            e.stopPropagation();
+            const card = roundCards[currentIndex];
+            if (card) speakCard(card, document.getElementById("btnAudioBack"));
+          });
+
+        // Keyboard Controls
+        window.addEventListener("keydown", (e) => {
+          if (
+            document.getElementById("gameOverModal").classList.contains("show")
+          )
+            return;
+
+          if (e.code === "Space") {
+            e.preventDefault();
+            flipCard();
+          } else if (
+            e.code === "ArrowRight" ||
+            e.key === "d" ||
+            e.key === "D"
+          ) {
+            e.preventDefault();
+            handleAnswer(true);
+          } else if (e.code === "ArrowLeft" || e.key === "a" || e.key === "A") {
+            e.preventDefault();
+            handleAnswer(false);
+          } else if (e.code === "ArrowUp" || e.key === "w" || e.key === "W") {
+            e.preventDefault();
+            const card = roundCards[currentIndex];
+            if (card) speakCard(card, document.getElementById("btnAudioBack"));
+          }
+        });
+
+        // 9. Finish Round & Game Over Screen
+        async function finishRound() {
+          document.getElementById("progressBarFill").style.width = "100%";
+
+          const totalInRound = roundCards.length;
+          const accuracy = Math.round((correctCount / totalInRound) * 100) || 0;
+
+          // Cập nhật số liệu Game Over
+          document.getElementById("overStatCorrect").textContent = correctCount;
+          document.getElementById("overStatWrong").textContent = wrongCount;
+          document.getElementById("overPercentage").textContent =
+            `${accuracy}%`;
+
+          // SVG Circle Bar
+          const circumference = 2 * Math.PI * 58; // ~364.4
+          const offset = circumference - (accuracy / 100) * circumference;
+          setTimeout(() => {
+            document.getElementById("scoreCircleBar").style.strokeDashoffset =
+              offset;
+          }, 150);
+
+          // Danh hiệu / Icon
+          const overIcon = document.getElementById("overIcon");
+          const overTitle = document.getElementById("overTitle");
+          if (accuracy === 100) {
+            overIcon.textContent = "🌟";
+            overTitle.textContent = "Hoàn hảo tuyệt đối!";
+            startConfetti();
+          } else if (accuracy >= 80) {
+            overIcon.textContent = "🎉";
+            overTitle.textContent = "Làm rất tốt!";
+            startConfetti();
+          } else if (accuracy >= 50) {
+            overIcon.textContent = "💪";
+            overTitle.textContent = "Khá tốt! Hãy cố gắng thêm";
+          } else {
+            overIcon.textContent = "📚";
+            overTitle.textContent = "Cần luyện tập thêm!";
+          }
+
+          // Nút Màn tiếp theo
+          const btnNext = document.getElementById("btnNextRound");
+          if (currentRound < totalRounds && !isPriority) {
+            btnNext.style.display = "block";
+            btnNext.onclick = () => {
+              const nextUrl =
+                window.location.pathname +
+                `?` +
+                (quizId ? `quiz_id=${quizId}&` : "mode=all&") +
+                `cards=${cardsPerRound}&priority=${isPriority}&round=${currentRound + 1}&dir=${questionDir}`;
+              window.location.href = nextUrl;
+            };
+          } else {
+            btnNext.style.display = "none";
+          }
+
+          // Nút Chơi lại
+          document.getElementById("btnReplayRound").onclick = () => {
+            window.location.reload();
+          };
+
+          // Nút Bổ túc từ sai (nếu có từ sai)
+          const btnStudyWrong = document.getElementById("btnStudyWrongCards");
+          if (wrongCardsInRound.length > 0 && quizId) {
+            btnStudyWrong.style.display = "block";
+            btnStudyWrong.textContent = `🔥 Bổ Túc ${wrongCardsInRound.length} từ chưa nhớ`;
+            btnStudyWrong.onclick = () => {
+              window.location.href =
+                window.location.pathname +
+                `?quiz_id=${quizId}&cards=${cardsPerRound}&priority=true&round=1&dir=${questionDir}`;
+            };
+          }
+
+          // Hiện modal Game Over
+          document.getElementById("gameOverModal").classList.add("show");
+
+          // GỬI KẾT QUẢ ĐỒNG BỘ NGẦM (SYNC SERVICE)
+          try {
+            await SyncService.syncResults(
+              roundResults,
+              "flashcard",
+              quizId ? parseInt(quizId) : null,
+            );
+          } catch (err) {
+            console.error("[Flashcard] Sync failed:", err);
+          }
+        }
+
+        // 10. Self-contained Confetti Animation
+        function startConfetti() {
+          const canvas = document.getElementById("confettiCanvas");
+          canvas.style.display = "block";
+          const ctx = canvas.getContext("2d");
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+
+          const pieces = [];
+          const colors = [
+            "#6366f1",
+            "#8b5cf6",
+            "#06b6d4",
+            "#10b981",
+            "#f59e0b",
+            "#ec4899",
+            "#fde68a",
+          ];
+
+          for (let i = 0; i < 120; i++) {
+            pieces.push({
+              x: Math.random() * canvas.width,
+              y: Math.random() * canvas.height - canvas.height,
+              size: Math.random() * 8 + 4,
+              color: colors[Math.floor(Math.random() * colors.length)],
+              speedY: Math.random() * 3 + 2,
+              speedX: Math.random() * 2 - 1,
+              rotation: Math.random() * 360,
+              rotSpeed: Math.random() * 4 - 2,
+            });
+          }
+
+          let animationFrame;
+          let elapsed = 0;
+
+          function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            pieces.forEach((p) => {
+              p.y += p.speedY;
+              p.x += p.speedX;
+              p.rotation += p.rotSpeed;
+
+              ctx.save();
+              ctx.translate(p.x, p.y);
+              ctx.rotate((p.rotation * Math.PI) / 180);
+              ctx.fillStyle = p.color;
+              ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+              ctx.restore();
+            });
+
+            elapsed++;
+            if (elapsed < 240) {
+              animationFrame = requestAnimationFrame(animate);
+            } else {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+          }
+          animate();
+        }
+
+        // Init
+        initGame();
+      })();
+    </script>
+  </body>
+</html>

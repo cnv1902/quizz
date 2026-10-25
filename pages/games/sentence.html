@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ghép Câu Tiếng Trung — HanziQuizz</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/img/HanziQuizz-Favicon.png"
+    />
+    <link rel="stylesheet" href="/static/css/game/theme.css?v={{ v }}" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Serif+SC:wght@600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      .game-layout {
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Game Header Nav */
+      .game-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--s-3) var(--s-6);
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        text-decoration: none;
+        color: var(--text);
+        font-weight: 700;
+        font-size: 1.15rem;
+      }
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+      }
+      .btn-icon {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: var(--r-sm);
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 120ms ease;
+      }
+      .btn-icon:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .btn-text {
+        text-decoration: none;
+        color: var(--text-2);
+        font-size: var(--fs-sm);
+        padding: 6px 12px;
+        border-radius: var(--r-sm);
+        transition: all 120ms ease;
+      }
+      .btn-text:hover {
+        background: var(--surface-2);
+        color: var(--text);
+      }
+
+      /* Main Game Container */
+      .game-container {
+        flex: 1;
+        max-width: 840px;
+        width: 100%;
+        margin: 0 auto;
+        padding: var(--s-6) var(--s-4);
+        display: flex;
+        flex-direction: column;
+        gap: var(--s-5);
+      }
+
+      /* HUD Bar */
+      .game-hud {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--s-3);
+      }
+      .hud-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        padding: var(--s-3) var(--s-4);
+        text-align: center;
+      }
+      .hud-label {
+        font-size: var(--fs-xs);
+        color: var(--text-2);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+      .hud-value {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--text);
+      }
+      .hud-value.timer { color: var(--accent); }
+      .hud-value.mistakes { color: #f43f5e; }
+      .hud-value.score { color: #10b981; }
+
+      /* Prompt Card (Câu tiếng Việt) */
+      .prompt-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        padding: var(--s-6) var(--s-6);
+        text-align: center;
+        position: relative;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      }
+      .prompt-badge {
+        display: inline-block;
+        padding: 3px 12px;
+        background: rgba(30, 168, 150, 0.12);
+        color: var(--accent);
+        border: 1px solid rgba(30, 168, 150, 0.3);
+        border-radius: 999px;
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        margin-bottom: var(--s-3);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .prompt-meaning {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1.4;
+        margin-bottom: var(--s-2);
+      }
+      .prompt-pinyin {
+        font-size: 1.25rem;
+        color: var(--accent-light);
+        min-height: 32px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        transition: all 250ms ease;
+        display: inline-block;
+      }
+      .prompt-pinyin.show-pinyin {
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.12);
+        padding: 4px 16px;
+        border-radius: var(--r-full);
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+        animation: pinyinPop 350ms cubic-bezier(.2,.7,.2,1);
+      }
+      @keyframes pinyinPop {
+        0% { transform: scale(0.9); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      .prompt-audio-btn {
+        position: absolute;
+        right: 16px;
+        top: 16px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        color: var(--text-2);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.1rem;
+        transition: all 150ms ease;
+      }
+      .prompt-audio-btn:hover {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+        transform: scale(1.08);
+      }
+
+      /* Vùng Đặt Câu (Answer Slot Area) */
+      .answer-container {
+        background: var(--surface);
+        border: 2px dashed var(--border-strong);
+        border-radius: var(--r-lg);
+        padding: var(--s-5) var(--s-4);
+        min-height: 110px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: all 250ms ease;
+        position: relative;
+      }
+      .answer-container.correct-highlight {
+        border-color: #10b981 !important;
+        background: rgba(16, 185, 129, 0.08) !important;
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+      }
+      .answer-container.wrong-shake {
+        border-color: #f43f5e !important;
+        background: rgba(244, 63, 94, 0.08) !important;
+        animation: containerShake 400ms cubic-bezier(.2,.7,.2,1);
+      }
+
+      .answer-placeholder {
+        color: var(--text-2);
+        font-size: var(--fs-sm);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        user-select: none;
+      }
+      .placed-words {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--s-2);
+        justify-content: center;
+        width: 100%;
+      }
+
+      /* Khối từ ghép (Word Tiles) */
+      .word-tile {
+        font-family: var(--font-han, "Noto Serif SC", serif);
+        font-size: 1.45rem;
+        font-weight: 700;
+        padding: 8px 18px;
+        min-height: 52px;
+        border-radius: var(--r-md);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        user-select: none;
+        transition: all 150ms cubic-bezier(.2,.7,.2,1);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      }
+      /* Từ nằm ở kho từ (chưa chọn) */
+      .bank-word-tile {
+        background: var(--surface-2);
+        color: var(--text);
+        border: 1px solid var(--border-strong);
+      }
+      .bank-word-tile:hover {
+        background: var(--surface);
+        border-color: var(--accent);
+        color: var(--accent);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 14px rgba(30, 168, 150, 0.2);
+      }
+      .bank-word-tile.hidden-in-bank {
+        opacity: 0.15;
+        pointer-events: none;
+        border-style: dashed;
+        transform: scale(0.92);
+      }
+
+      /* Từ đã nằm trên vùng câu trả lời */
+      .placed-word-tile {
+        background: rgba(30, 168, 150, 0.15);
+        color: var(--accent-light);
+        border: 1.5px solid var(--accent);
+        animation: popIn 180ms ease;
+      }
+      .placed-word-tile:hover {
+        background: rgba(244, 63, 94, 0.15);
+        color: #f43f5e;
+        border-color: #f43f5e;
+        transform: translateY(-2px);
+      }
+      .placed-word-tile.correct {
+        background: #10b981 !important;
+        color: #fff !important;
+        border-color: #10b981 !important;
+        transform: scale(1.05);
+      }
+
+      /* Kho từ (Word Bank Area) */
+      .word-bank-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        padding: var(--s-5) var(--s-4);
+        text-align: center;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      }
+      .word-bank-title {
+        font-size: var(--fs-xs);
+        color: var(--text-2);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+        margin-bottom: var(--s-4);
+      }
+      .word-bank-tiles {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--s-3);
+        justify-content: center;
+      }
+
+      /* Action Bar phía dưới */
+      .game-actions-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 var(--s-2);
+      }
+      .btn-reset-puzzle {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-2);
+        padding: 8px 16px;
+        border-radius: var(--r-md);
+        font-size: var(--fs-sm);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 120ms ease;
+      }
+      .btn-reset-puzzle:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* Keyframes */
+      @keyframes containerShake {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-8px); }
+        40%, 80% { transform: translateX(8px); }
+      }
+      @keyframes popIn {
+        from { transform: scale(0.75); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+
+      /* Game Over Modal */
+      .game-over-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: var(--s-4);
+      }
+      .game-over-modal.active {
+        display: flex;
+      }
+      .game-over-card {
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--r-xl);
+        max-width: 480px;
+        width: 100%;
+        padding: var(--s-8) var(--s-6);
+        text-align: center;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+        animation: popIn 250ms ease;
+      }
+      .trophy-badge {
+        font-size: 3.5rem;
+        margin-bottom: var(--s-2);
+      }
+      .game-over-title {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: var(--s-1);
+      }
+      .game-over-sub {
+        font-size: var(--fs-sm);
+        color: var(--text-2);
+        margin-bottom: var(--s-6);
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--s-3);
+        margin-bottom: var(--s-6);
+      }
+      .stat-box {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        padding: var(--s-3);
+      }
+      .stat-val {
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin-bottom: 2px;
+      }
+      .stat-lbl {
+        font-size: var(--fs-xs);
+        color: var(--text-2);
+      }
+      .game-over-actions {
+        display: flex;
+        gap: var(--s-3);
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body class="game-layout">
+    <!-- Top Nav -->
+    <nav class="game-nav">
+      <a href="/" class="nav-brand">
+        <img
+          src="/static/img/HanziQuizz-Favicon.png"
+          alt="HanziQuizz Logo"
+          style="height: 32px; width: auto; object-fit: contain"
+        />
+        <span>HanziQuizz</span>
+        <span style="font-size: var(--fs-xs); background: var(--surface-2); padding: 2px 8px; border-radius: 4px; color: var(--accent); border: 1px solid var(--border);">
+          Ghép câu
+        </span>
+      </a>
+
+      <div class="nav-actions">
+        <button class="btn-icon" id="soundToggleBtn" title="Bật/Tắt âm thanh">
+          🔊
+        </button>
+        <a href="/" class="btn-text" id="btnExitGame">Thoát</a>
+      </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="game-container">
+      <!-- HUD -->
+      <div class="game-hud">
+        <div class="hud-card">
+          <div class="hud-label">Tiến trình</div>
+          <div class="hud-value" id="hudProgress">1 / 10</div>
+        </div>
+        <div class="hud-card">
+          <div class="hud-label">Thời gian</div>
+          <div class="hud-value timer" id="hudTimer">00:00</div>
+        </div>
+        <div class="hud-card">
+          <div class="hud-label">Lần sai</div>
+          <div class="hud-value mistakes" id="hudMistakes">0</div>
+        </div>
+        <div class="hud-card">
+          <div class="hud-label">Điểm số</div>
+          <div class="hud-value score" id="hudScore">0</div>
+        </div>
+      </div>
+
+      <!-- Prompt Card -->
+      <div class="prompt-card">
+        <button class="prompt-audio-btn" id="btnPlaySentenceAudio" title="Nghe phát âm chuẩn">
+          🔊
+        </button>
+        <span class="prompt-badge">Ghép câu theo nghĩa tiếng Việt</span>
+        <div class="prompt-meaning" id="promptVietnamese">Đang tải câu đố...</div>
+        <div class="prompt-pinyin" id="promptPinyin">&nbsp;</div>
+      </div>
+
+      <!-- Vùng Đặt Câu (Answer Area) -->
+      <div class="answer-container" id="answerContainer">
+        <div class="answer-placeholder" id="answerPlaceholder">
+          <span>👆 Nhấp vào các từ tiếng Trung bên dưới để ghép câu</span>
+        </div>
+        <div class="placed-words" id="placedWordsContainer" style="display: none;">
+          <!-- Các khối từ đã chọn sẽ nhảy vào đây -->
+        </div>
+      </div>
+
+      <!-- Action Bar -->
+      <div class="game-actions-bar">
+        <div style="font-size: var(--fs-xs); color: var(--text-2);">
+          💡 <em>Mẹo: Nhấp vào từ trên hàng để gỡ bỏ từ đó</em>
+        </div>
+        <button type="button" class="btn-reset-puzzle" id="btnResetPuzzle">
+          ↺ Xếp lại từ đầu
+        </button>
+      </div>
+
+      <!-- Kho Từ Xáo Trộn (Word Bank Area) -->
+      <div class="word-bank-card">
+        <div class="word-bank-title">Kho từ tiếng Trung (Nhấp chọn theo thứ tự)</div>
+        <div class="word-bank-tiles" id="wordBankTiles">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Game Over Modal -->
+    <div class="game-over-modal" id="gameOverModal">
+      <div class="game-over-card">
+        <div class="trophy-badge">🏆</div>
+        <h2 class="game-over-title">Hoàn thành bài luyện Ghép câu!</h2>
+        <p class="game-over-sub">Bạn đã xuất sắc vượt qua tất cả các câu đố.</p>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-val" id="statCompleted" style="color: var(--accent);">0</div>
+            <div class="stat-lbl">Câu hoàn thành</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="statMistakes" style="color: #f43f5e;">0</div>
+            <div class="stat-lbl">Tổng số lần sai</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="statTime" style="color: var(--text);">00:00</div>
+            <div class="stat-lbl">Thời gian chơi</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="statAccuracy" style="color: #10b981;">100%</div>
+            <div class="stat-lbl">Độ chính xác</div>
+          </div>
+        </div>
+
+        <div class="game-over-actions">
+          <button type="button" class="btn btn-secondary" id="btnPlayAgain">
+            ↺ Chơi lại
+          </button>
+          <a href="/pages/game-setup.html?game=sentence" class="btn btn-secondary" id="btnSelectOtherRound" style="text-decoration: none;">
+            📑 Chọn màn khác
+          </a>
+          <a href="/" class="btn btn-primary" style="text-decoration: none;">
+            🏠 Về trang chủ
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts chuẩn -->
+    <script src="/static/js/core/api.js?v={{ v }}"></script>
+    <script src="/static/js/core/auth.js?v={{ v }}"></script>
+    <script src="/static/js/components/audioPlayer.js?v={{ v }}"></script>
+    <script src="/static/js/services/syncService.js?v={{ v }}"></script>
+
+    <script>
+      let puzzleList = [];
+      let currentIndex = 0;
+      let placedTokens = []; // mảng các token đang đặt trên hàng: [{ id: 0, text: '你' }]
+      let bankTokens = [];   // mảng các token ở kho: [{ id: 0, text: '你', used: false }]
+
+      let totalMistakes = 0;
+      let currentSentenceMistakes = 0; // Đếm số lần sai riêng của câu hiện tại
+      let sentenceResults = [];        // Danh sách kết quả đồng bộ lên server: [{ sentence_id, is_correct }]
+      let currentScore = 0;
+      let isChecking = false;
+      let soundEnabled = true;
+
+      // Timer
+      let startTime = null;
+      let timerInterval = null;
+
+      function startTimer() {
+        startTime = Date.now();
+        timerInterval = setInterval(() => {
+          const elapsed = Math.floor((Date.now() - startTime) / 1000);
+          const mins = String(Math.floor(elapsed / 60)).padStart(2, "0");
+          const secs = String(elapsed % 60).padStart(2, "0");
+          document.getElementById("hudTimer").textContent = `${mins}:${secs}`;
+        }, 1000);
+      }
+
+      function stopTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+      }
+
+      // Tải danh sách câu từ API
+      async function loadPuzzles() {
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const sentenceSetId = urlParams.get("sentence_set_id");
+          const round = urlParams.get("round") || "1";
+          const cards = urlParams.get("cards") || "10";
+          const isPriority = urlParams.get("priority") === "true";
+
+          // Cập nhật link quay về trang cấu hình tương ứng
+          const backSetupUrl = sentenceSetId
+            ? `/pages/game-setup.html?sentence_set_id=${sentenceSetId}&game=sentence`
+            : `/pages/game-setup.html?mode=all&game=sentence`;
+          const exitBtn = document.getElementById("btnExitGame");
+          if (exitBtn) exitBtn.setAttribute("href", backSetupUrl);
+          const selectRoundBtn = document.getElementById("btnSelectOtherRound");
+          if (selectRoundBtn) selectRoundBtn.setAttribute("href", backSetupUrl);
+
+          let endpoint = `/api/v1/sentences?cards=${encodeURIComponent(cards)}`;
+          if (sentenceSetId) {
+            endpoint += `&set_id=${encodeURIComponent(sentenceSetId)}`;
+          }
+          if (isPriority) {
+            endpoint += `&priority=true`;
+            const badge = document.querySelector(".nav-logo span:last-child");
+            if (badge) badge.textContent = "Ghép câu · 🎯 Luyện tập";
+          } else {
+            endpoint += `&round=${encodeURIComponent(round)}`;
+            const badge = document.querySelector(".nav-logo span:last-child");
+            if (badge) badge.textContent = `Ghép câu · Màn ${round}`;
+          }
+
+          const res = await fetch(endpoint);
+          if (!res.ok) throw new Error("Không thể tải danh sách câu đố");
+          puzzleList = await res.json();
+          if (!puzzleList || puzzleList.length === 0) {
+            document.getElementById("promptVietnamese").textContent = "Chưa có dữ liệu câu nào trong hệ thống!";
+            document.getElementById("answerPlaceholder").innerHTML = "<span>Vui lòng vào trang Quản trị thêm câu ghép.</span>";
+            return;
+          }
+          currentIndex = 0;
+          totalMistakes = 0;
+          currentScore = 0;
+          startTimer();
+          renderCurrentPuzzle();
+        } catch (e) {
+          document.getElementById("promptVietnamese").textContent = "Lỗi nạp dữ liệu. Vui lòng thử lại sau.";
+        }
+      }
+
+      function renderCurrentPuzzle() {
+        if (currentIndex >= puzzleList.length) {
+          finishGame();
+          return;
+        }
+
+        const current = puzzleList[currentIndex];
+        isChecking = false;
+        currentSentenceMistakes = 0;
+
+        // Cập nhật HUD
+        document.getElementById("hudProgress").textContent = `${currentIndex + 1} / ${puzzleList.length}`;
+        document.getElementById("hudMistakes").textContent = totalMistakes;
+        document.getElementById("hudScore").textContent = currentScore;
+
+        // Prompt
+        document.getElementById("promptVietnamese").textContent = current.vietnamese;
+        const pinyinEl = document.getElementById("promptPinyin");
+        pinyinEl.textContent = "";
+        pinyinEl.classList.remove("show-pinyin");
+
+        // Khởi tạo tokens
+        placedTokens = [];
+        bankTokens = (current.shuffled_tokens || []).map((t, idx) => ({
+          bankId: idx,
+          text: t,
+          used: false,
+        }));
+
+        renderAnswerArea();
+        renderWordBank();
+      }
+
+      function renderAnswerArea() {
+        const placeholder = document.getElementById("answerPlaceholder");
+        const placedContainer = document.getElementById("placedWordsContainer");
+        const answerArea = document.getElementById("answerContainer");
+
+        answerArea.className = "answer-container";
+
+        if (placedTokens.length === 0) {
+          placeholder.style.display = "flex";
+          placedContainer.style.display = "none";
+          placedContainer.innerHTML = "";
+          return;
+        }
+
+        placeholder.style.display = "none";
+        placedContainer.style.display = "flex";
+        placedContainer.innerHTML = "";
+
+        placedTokens.forEach((item, slotIndex) => {
+          const tile = document.createElement("div");
+          tile.className = "word-tile placed-word-tile";
+          tile.textContent = item.text;
+          tile.title = "Nhấp để gỡ bỏ";
+          tile.addEventListener("click", () => {
+            if (isChecking) return;
+            removePlacedToken(slotIndex);
+          });
+          placedContainer.appendChild(tile);
+        });
+      }
+
+      function renderWordBank() {
+        const bankContainer = document.getElementById("wordBankTiles");
+        bankContainer.innerHTML = "";
+
+        bankTokens.forEach((item) => {
+          const tile = document.createElement("div");
+          tile.className = `word-tile bank-word-tile ${item.used ? 'hidden-in-bank' : ''}`;
+          tile.textContent = item.text;
+
+          tile.addEventListener("click", () => {
+            if (isChecking || item.used) return;
+            placeToken(item);
+          });
+
+          bankContainer.appendChild(tile);
+        });
+      }
+
+      // Đặt từ lên hàng trên
+      function placeToken(bankItem) {
+        bankItem.used = true;
+        placedTokens.push(bankItem);
+
+        renderAnswerArea();
+        renderWordBank();
+
+        // Kiểm tra xem đã đặt hết tất cả các từ chưa
+        const current = puzzleList[currentIndex];
+        if (placedTokens.length === (current.shuffled_tokens || []).length) {
+          checkSentenceAnswer();
+        }
+      }
+
+      // Gỡ từ ở hàng trên trả về kho
+      function removePlacedToken(slotIndex) {
+        const removed = placedTokens.splice(slotIndex, 1)[0];
+        if (removed) {
+          removed.used = false;
+        }
+        renderAnswerArea();
+        renderWordBank();
+      }
+
+      // Xếp lại từ đầu câu này
+      document.getElementById("btnResetPuzzle").addEventListener("click", () => {
+        if (isChecking) return;
+        resetCurrentPuzzle();
+      });
+
+      function resetCurrentPuzzle() {
+        placedTokens = [];
+        bankTokens.forEach((b) => (b.used = false));
+        renderAnswerArea();
+        renderWordBank();
+      }
+
+      // Tự động kiểm tra câu trả lời
+      function checkSentenceAnswer() {
+        isChecking = true;
+        const current = puzzleList[currentIndex];
+        const answerArea = document.getElementById("answerContainer");
+
+        // Chuẩn hóa câu người chơi ghép (loại bỏ khoảng trắng)
+        const userSentence = placedTokens.map((t) => t.text.trim()).join("");
+        // Chuẩn hóa câu gốc
+        const targetSentence = (current.chinese || "").replace(/\s+/g, "");
+
+        if (userSentence === targetSentence) {
+          // === ĐÚNG ===
+          answerArea.classList.add("correct-highlight");
+          document.querySelectorAll(".placed-word-tile").forEach((t) => t.classList.add("correct"));
+
+          // Lưu kết quả của câu này vào mảng kết quả đồng bộ
+          sentenceResults.push({
+            sentence_id: current.id,
+            is_correct: (currentSentenceMistakes === 0),
+          });
+
+          // Điểm
+          currentScore += 100;
+          document.getElementById("hudScore").textContent = currentScore;
+
+          // Hiển thị Pinyin câu rõ ràng và nổi bật
+          const pinyinEl = document.getElementById("promptPinyin");
+          pinyinEl.textContent = current.pinyin || "";
+          pinyinEl.classList.add("show-pinyin");
+
+          // Đọc to phát âm chuẩn toàn bộ câu
+          if (soundEnabled) {
+            AudioPlayer.play(current.audio_url, current.chinese);
+          }
+
+          // Chờ phát âm và người chơi quan sát Pinyin đầy đủ (1.8s) rồi mới chuyển câu tiếp
+          setTimeout(() => {
+            currentIndex++;
+            renderCurrentPuzzle();
+          }, 1800);
+        } else {
+          // === SAI ===
+          // Mỗi lần ghép sai cộng dồn thành 1 lần sai (một bản ghi có thể sai nhiều lần cho tới khi ghép đúng)
+          totalMistakes++;
+          currentSentenceMistakes++;
+          document.getElementById("hudMistakes").textContent = totalMistakes;
+
+          answerArea.classList.add("wrong-shake");
+
+          // Rung lắc xong trả lại vị trí kho ban đầu sau 650ms để người chơi tiếp tục xếp lại
+          setTimeout(() => {
+            answerArea.classList.remove("wrong-shake");
+            resetCurrentPuzzle();
+            isChecking = false;
+          }, 650);
+        }
+      }
+
+      // Nghe âm thanh câu
+      document.getElementById("btnPlaySentenceAudio").addEventListener("click", () => {
+        const current = puzzleList[currentIndex];
+        if (current) {
+          AudioPlayer.play(current.audio_url, current.chinese);
+          const pinyinEl = document.getElementById("promptPinyin");
+          if (!pinyinEl.textContent && current.pinyin) {
+            pinyinEl.textContent = current.pinyin;
+            pinyinEl.classList.add("show-pinyin");
+          }
+        }
+      });
+
+      // Bật/tắt âm thanh
+      const soundBtn = document.getElementById("soundToggleBtn");
+      soundBtn.addEventListener("click", () => {
+        soundEnabled = !soundEnabled;
+        soundBtn.textContent = soundEnabled ? "🔊" : "🔇";
+      });
+
+      // Hoàn thành trò chơi
+      async function finishGame() {
+        stopTimer();
+        const total = puzzleList.length;
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const mins = String(Math.floor(elapsed / 60)).padStart(2, "0");
+        const secs = String(elapsed % 60).padStart(2, "0");
+
+        document.getElementById("statCompleted").textContent = `${total} câu`;
+        document.getElementById("statMistakes").textContent = totalMistakes;
+        document.getElementById("statTime").textContent = `${mins}:${secs}`;
+
+        const accuracy = Math.max(0, Math.round(((total) / (total + totalMistakes)) * 100));
+        document.getElementById("statAccuracy").textContent = `${accuracy}%`;
+
+        document.getElementById("gameOverModal").classList.add("active");
+
+        // Đồng bộ tổng hợp kết quả lên server
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const setId = urlParams.get("sentence_set_id");
+          if (window.SyncService && sentenceResults.length > 0) {
+            await SyncService.syncSentenceResults(sentenceResults, setId);
+          }
+        } catch (err) {
+          console.warn("[Sentence] Sync error:", err);
+        }
+      }
+
+      document.getElementById("btnPlayAgain").addEventListener("click", () => {
+        document.getElementById("gameOverModal").classList.remove("active");
+        sentenceResults = [];
+        totalMistakes = 0;
+        currentScore = 0;
+        loadPuzzles();
+      });
+
+      // Khởi chạy
+      loadPuzzles();
+    </script>
+  </body>
+</html>

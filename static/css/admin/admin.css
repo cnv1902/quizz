@@ -1,0 +1,812 @@
+/* ============================================================
+   HanziQuizz — Admin Portal Stylesheet
+   Tuân thủ nghiêm ngặt theo .agents/design-rules.md
+   Phong cách: Giấy & Mực Á Đông hiện đại (Đỏ son + Giấy ấm)
+   ============================================================ */
+
+/* === Admin Layout === */
+.admin-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+}
+
+.admin-header {
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--s-5);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: var(--shadow-1);
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  text-decoration: none;
+}
+
+.admin-brand img {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+}
+
+.admin-brand-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.badge-admin {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid rgba(200, 56, 45, 0.25);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: var(--r-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.admin-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 6px 14px;
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  border-radius: var(--r-sm);
+  transition: all 150ms cubic-bezier(.2, .7, .2, 1);
+}
+
+.admin-nav-link:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.admin-nav-link.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
+.admin-user-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+/* === Main Container === */
+.admin-container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--s-6) var(--s-5);
+  flex: 1;
+}
+
+/* === Page Header === */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-bottom: var(--s-5);
+  flex-wrap: wrap;
+}
+
+.page-title-group h1 {
+  font-size: var(--fs-h1);
+  font-weight: 700;
+  margin-bottom: var(--s-1);
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.page-title-group p {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+/* === Stats Cards Grid === */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--s-4);
+  margin-bottom: var(--s-5);
+}
+
+.admin-stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--s-4);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 110px;
+  transition: transform 150ms cubic-bezier(.2, .7, .2, 1),
+              box-shadow 150ms cubic-bezier(.2, .7, .2, 1),
+              border-color 150ms cubic-bezier(.2, .7, .2, 1);
+}
+
+.admin-stat-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-2);
+}
+
+.admin-stat-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+  margin-bottom: var(--s-1);
+}
+
+.admin-stat-value {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-stat-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.admin-stat-label {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.admin-stat-action {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: var(--s-2);
+}
+
+.stat-detail-link {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 150ms cubic-bezier(.2, .7, .2, 1);
+}
+
+.stat-detail-link:hover {
+  color: var(--accent);
+}
+
+
+/* === Filter & Search Toolbar === */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
+  flex-wrap: wrap;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  max-width: 360px;
+  min-width: 220px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 8px 12px 8px 36px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 150ms cubic-bezier(.2, .7, .2, 1),
+              box-shadow 150ms cubic-bezier(.2, .7, .2, 1);
+}
+
+.search-box input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.search-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.filter-select {
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 150ms cubic-bezier(.2, .7, .2, 1);
+}
+
+.filter-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* === Bulk Action Bar & Checkboxes === */
+.row-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
+  border-radius: var(--r-sm);
+  vertical-align: middle;
+}
+
+.bulk-action-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 4px 10px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(200, 56, 45, 0.25);
+  border-radius: var(--r-sm);
+  animation: fadeInRow 150ms cubic-bezier(.2, .7, .2, 1);
+}
+
+.data-table tr.row-selected {
+  background: var(--accent-soft) !important;
+}
+
+/* === Data Table === */
+.table-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-1);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.data-table th {
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 12px var(--s-4);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 12px var(--s-4);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  vertical-align: middle;
+}
+
+.data-table tbody tr {
+  transition: background-color 150ms cubic-bezier(.2, .7, .2, 1);
+}
+
+.data-table tbody tr:hover {
+  background: var(--surface-2);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Chinese Hanzi cell styling (§3.1 Typography chuẩn mực) */
+.cell-hanzi {
+  font-family: var(--font-han);
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.cell-pinyin {
+  font-family: var(--font-pinyin);
+  font-size: 0.92rem;
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.cell-viet {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* Status Badges tuân thủ Palette (§2) */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--r-sm);
+}
+
+.status-active {
+  background: var(--success-soft);
+  color: var(--success);
+  border: 1px solid rgba(47, 125, 79, 0.25);
+}
+
+.status-inactive,
+.status-locked {
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 1px solid var(--border-strong);
+}
+
+.status-role-admin {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid rgba(200, 56, 45, 0.25);
+}
+
+.status-role-user {
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+
+/* Table action buttons */
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  justify-content: flex-end;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 150ms cubic-bezier(.2, .7, .2, 1);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.btn-icon:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.btn-icon-danger:hover {
+  color: var(--danger);
+  border-color: rgba(200, 56, 45, 0.4);
+  background: var(--danger-soft);
+}
+
+/* === Inline Add Row & Bulk Add Styles === */
+.inline-add-row {
+  background: var(--accent-soft) !important;
+  border-bottom: 2px solid var(--accent) !important;
+  animation: fadeInRow 150ms cubic-bezier(.2, .7, .2, 1);
+}
+
+@keyframes fadeInRow {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.inline-cell-input {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 150ms cubic-bezier(.2, .7, .2, 1),
+              box-shadow 150ms cubic-bezier(.2, .7, .2, 1);
+}
+
+.inline-cell-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.inline-cell-input.hanzi {
+  font-family: var(--font-han);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.inline-cell-input.pinyin {
+  font-family: var(--font-pinyin);
+  color: var(--text-2);
+}
+
+.inline-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  justify-content: flex-end;
+}
+
+/* === Bulk Add Component === */
+.bulk-textarea {
+  width: 100%;
+  min-height: 180px;
+  max-height: 320px;
+  padding: var(--s-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 150ms cubic-bezier(.2, .7, .2, 1),
+              box-shadow 150ms cubic-bezier(.2, .7, .2, 1);
+}
+
+.bulk-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.bulk-preview-box {
+  margin-top: var(--s-3);
+  padding: var(--s-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+}
+
+.bulk-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--s-2);
+}
+
+.bulk-preview-table th,
+.bulk-preview-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  font-size: var(--fs-xs);
+}
+
+.bulk-preview-table th {
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+/* === Modal Dialogs (Thư thái, Mực phai tao nhã) === */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 26, 23, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms cubic-bezier(.2, .7, .2, 1);
+  padding: var(--s-4);
+}
+
+.modal-overlay.open,
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--s-5);
+  width: 100%;
+  max-width: 540px;
+  box-shadow: var(--shadow-2);
+  transform: translateY(12px);
+  transition: transform 150ms cubic-bezier(.2, .7, .2, 1);
+  position: relative;
+}
+
+.modal-overlay.open .modal-card,
+.modal-overlay.active .modal-card {
+  transform: translateY(0);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s-4);
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+  border-radius: var(--r-sm);
+  transition: color 150ms cubic-bezier(.2, .7, .2, 1);
+}
+
+.modal-close:hover {
+  color: var(--text);
+}
+
+.modal-body {
+  margin-bottom: var(--s-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+
+/* Form Groups in Modal */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.form-control {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 150ms cubic-bezier(.2, .7, .2, 1),
+              box-shadow 150ms cubic-bezier(.2, .7, .2, 1);
+}
+
+.form-control:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Excel Drag & Drop Box */
+.dropzone {
+  border: 2px dashed var(--border-strong);
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+  padding: var(--s-5) var(--s-4);
+  text-align: center;
+  cursor: pointer;
+  transition: all 150ms cubic-bezier(.2, .7, .2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.dropzone:hover,
+.dropzone.dragover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.dropzone-icon {
+  font-size: 2.4rem;
+  margin-bottom: var(--s-1);
+}
+
+.dropzone-title {
+  font-weight: 600;
+  color: var(--text);
+  font-size: var(--fs-sm);
+}
+
+.dropzone-desc {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+
+.dropzone-file-info {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 6px 12px;
+  font-size: var(--fs-sm);
+  color: var(--success);
+  font-weight: 500;
+  margin-top: var(--s-2);
+}
+
+/* Flashcard Preview Modal (§5.3 Thẻ 3 khoang cân đối) */
+.preview-card-wrap {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 340px;
+  height: 220px;
+  margin: 0 auto var(--s-4);
+  cursor: pointer;
+}
+
+.preview-card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 400ms cubic-bezier(.2, .7, .2, 1);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-2);
+}
+
+.preview-card-wrap.flipped .preview-card-inner {
+  transform: rotateY(180deg);
+}
+
+.preview-card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-4);
+  text-align: center;
+}
+
+.preview-card-back {
+  transform: rotateY(180deg);
+  background: var(--surface-2);
+}
+
+.preview-hanzi {
+  font-family: var(--font-han);
+  font-size: 3rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--s-1);
+}
+
+.preview-pinyin {
+  font-family: var(--font-pinyin);
+  font-size: 1.15rem;
+  color: var(--text-2);
+}
+
+.preview-viet {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Empty State */
+.empty-table {
+  text-align: center;
+  padding: var(--s-7) var(--s-4);
+  color: var(--text-2);
+}
+
+.empty-icon {
+  font-size: 2.4rem;
+  margin-bottom: var(--s-2);
+  display: block;
+}

@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ghép Đôi Pikachu — HanziQuizz</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/img/HanziQuizz-Favicon.png"
+    />
+    <link rel="stylesheet" href="/static/css/game/theme.css?v={{ v }}" />
+    <link rel="stylesheet" href="/static/css/game/flashcard.css?v={{ v }}" />
+    <link rel="stylesheet" href="/static/css/game/pikachu.css?v={{ v }}" />
+  </head>
+  <body class="pikachu-layout">
+    <!-- Confetti Canvas (Fixed Overlay, không chiếm diện tích layout) -->
+    <canvas
+      id="confettiCanvas"
+      style="
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 9999;
+        display: none;
+      "
+    ></canvas>
+
+    <!-- Top Bar HUD -->
+    <header class="pikachu-top-bar">
+      <a href="#" id="btnExitGame" class="game-back-btn"> ← Thoát </a>
+
+      <div class="pikachu-hud-center">
+        <div class="hud-pill">
+          <span>Còn:</span>
+          <span id="pairsLeft" style="color: var(--accent)">0</span> cặp
+        </div>
+        <div class="hud-pill hud-timer">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span id="timerDisplay">00:00</span>
+        </div>
+        <div class="hud-pill hud-combo" id="comboWrap" style="display: none">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          Combo <span id="comboMultiplier">x1</span>
+        </div>
+      </div>
+
+      <div
+        style="font-size: var(--fs-xs); color: var(--text-2); font-weight: 600"
+        id="roundIndicator"
+      >
+        Màn 1 / 1
+      </div>
+    </header>
+
+    <!-- Main Board Stage -->
+    <main class="pikachu-stage">
+      <div style="text-align: center; margin-bottom: var(--s-5)">
+        <h2
+          style="
+            font-size: var(--fs-h2);
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: var(--s-1);
+          "
+          id="quizName"
+        >
+          Ghép Đôi Chữ Hán &amp; Nghĩa
+        </h2>
+        <p style="color: var(--text-2); font-size: var(--fs-sm)">
+          Chọn 1 ô Chữ Hán và 1 ô Nghĩa tương ứng để nối cặp biến mất
+        </p>
+      </div>
+
+      <!-- Tiles Grid -->
+      <div class="tiles-grid" id="tilesGrid">
+        <!-- Injected by JS -->
+      </div>
+    </main>
+
+    <!-- Game Over Screen -->
+    <div class="game-over-overlay" id="gameOverModal">
+      <div class="game-over-card">
+        <div class="game-over-badge" id="overIcon" style="color: var(--accent)">
+          <svg
+            width="44"
+            height="44"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+            <path d="M4 22h16"></path>
+            <path
+              d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"
+            ></path>
+            <path
+              d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"
+            ></path>
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+          </svg>
+        </div>
+        <h2 class="game-over-title" id="overTitle">Chiến thắng màn chơi!</h2>
+        <p class="game-over-subtitle" id="overSubtitle">
+          Bạn đã ghép chính xác tất cả các cặp từ
+        </p>
+
+        <!-- Score Circle -->
+        <div class="score-circle-wrap">
+          <svg class="score-circle-svg" viewBox="0 0 140 140">
+            <circle class="score-circle-bg" cx="70" cy="70" r="58"></circle>
+            <circle
+              class="score-circle-bar"
+              id="scoreCircleBar"
+              cx="70"
+              cy="70"
+              r="58"
+              stroke-dasharray="364.4"
+              stroke-dashoffset="0"
+            ></circle>
+          </svg>
+          <div class="score-circle-text">
+            <div id="overTime">00:00</div>
+            <div class="score-circle-sub">Thời gian</div>
+          </div>
+        </div>
+
+        <!-- Breakdown Stats -->
+        <div class="game-over-stats-grid">
+          <div class="over-stat-box">
+            <div
+              class="over-stat-val"
+              style="color: var(--accent)"
+              id="overStatPairs"
+            >
+              0
+            </div>
+            <div class="over-stat-lbl">Số cặp ghép</div>
+          </div>
+          <div class="over-stat-box">
+            <div
+              class="over-stat-val"
+              style="color: var(--warning)"
+              id="overStatMaxCombo"
+            >
+              x0
+            </div>
+            <div class="over-stat-lbl">Combo cao nhất</div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="game-over-actions">
+          <button
+            class="btn btn-primary btn-lg"
+            id="btnNextRound"
+            style="display: none"
+          >
+            Màn tiếp theo →
+          </button>
+          <button class="btn btn-secondary" id="btnReplayRound">
+            Chơi lại màn này
+          </button>
+          <a href="/" class="btn btn-secondary"> Về trang chủ </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/core/api.js?v={{ v }}"></script>
+    <script src="/static/js/core/auth.js?v={{ v }}"></script>
+    <script src="/static/js/components/toast.js?v={{ v }}"></script>
+    <script src="/static/js/components/audioPlayer.js?v={{ v }}"></script>
+    <script src="/static/js/api/quizApi.js?v={{ v }}"></script>
+    <script src="/static/js/services/syncService.js?v={{ v }}"></script>
+    <script>
+      (function () {
+        const isAuth = Auth.isLoggedIn();
+
+        const params = new URLSearchParams(window.location.search);
+        const quizId = params.get("quiz_id");
+        const mode = params.get("mode");
+        const rawCards = params.get("cards");
+        const isAllCards = (rawCards === "all");
+        const cardsPerRound = isAllCards ? "all" : (parseInt(rawCards) || 10);
+        const isPriority = params.get("priority") === "true";
+        const currentRound = parseInt(params.get("round")) || 1;
+
+        document.getElementById("btnExitGame").href = quizId
+          ? `/pages/game-setup.html?quiz_id=${quizId}`
+          : `/pages/game-setup.html?mode=all`;
+
+        // State
+        let allCards = [];
+        let roundCards = [];
+        let totalRounds = 1;
+        let tiles = []; // array of tile objects
+        let firstSelected = null;
+        let isBusy = false;
+        let pairsRemaining = 0;
+        let combo = 0;
+        let maxCombo = 0;
+        let secondsElapsed = 0;
+        let timerInterval = null;
+        const roundResults = [];
+
+        // TTS / Audio
+        function speakText(hanzi, audioUrl) {
+          AudioPlayer.play(audioUrl, hanzi, { rate: 0.9 });
+        }
+
+        // Timer
+        function startTimer() {
+          clearInterval(timerInterval);
+          secondsElapsed = 0;
+          timerInterval = setInterval(() => {
+            secondsElapsed++;
+            const m = String(Math.floor(secondsElapsed / 60)).padStart(2, "0");
+            const s = String(secondsElapsed % 60).padStart(2, "0");
+            document.getElementById("timerDisplay").textContent = `${m}:${s}`;
+          }, 1000);
+        }
+
+        function stopTimer() {
+          clearInterval(timerInterval);
+        }
+
+        // Load Game
+        async function initGame() {
+          try {
+            if (mode === "all") {
+              document.getElementById("quizName").textContent =
+                "Ghép Đôi — Tất cả thẻ";
+              allCards = await CardApi.getAll();
+            } else {
+              const quizInfo = await QuizApi.getById(quizId);
+              document.getElementById("quizName").textContent = quizInfo.title;
+              if (isPriority) {
+                if (Auth.isLoggedIn()) {
+                  try {
+                    allCards = await QuizApi.getCardsPriority(quizId);
+                  } catch {
+                    allCards = await QuizApi.getCards(quizId);
+                  }
+                } else {
+                  allCards = await QuizApi.getCards(quizId);
+                  allCards.sort(() => 0.5 - Math.random());
+                }
+              } else {
+                allCards = await QuizApi.getCards(quizId);
+              }
+            }
+
+            if (!allCards || allCards.length === 0) {
+              Toast.show("Không có thẻ nào trong bộ này!", "error");
+              setTimeout(() => (window.location.href = "/"), 1500);
+              return;
+            }
+
+            // Slice round cards
+            if (isAllCards) {
+              totalRounds = 1;
+              roundCards = [...allCards];
+            } else {
+              const K = parseInt(cardsPerRound, 10) || 10;
+              totalRounds = Math.ceil(allCards.length / K) || 1;
+              if (isPriority) {
+                roundCards = allCards.slice(0, K);
+              } else {
+                const startIdx = (currentRound - 1) * K;
+                roundCards = allCards.slice(startIdx, startIdx + K);
+
+                // Màn cuối cùng: nếu thiếu thẻ thì random lấy thêm thẻ từ các màn trước để đủ K thẻ
+                if (roundCards.length > 0 && roundCards.length < K && allCards.length > roundCards.length) {
+                  const currentSet = new Set(roundCards.map((c) => c.id));
+                  const pool = allCards.filter((c) => !currentSet.has(c.id));
+                  const shuffled = [...pool].sort(() => 0.5 - Math.random());
+                  roundCards = roundCards.concat(shuffled.slice(0, K - roundCards.length));
+                }
+              }
+            }
+
+            if (!roundCards.length) {
+              window.location.href =
+                window.location.pathname +
+                `?quiz_id=${quizId || ""}&cards=${cardsPerRound}&priority=${isPriority}&round=1`;
+              return;
+            }
+
+            document.getElementById("roundIndicator").textContent = isPriority
+              ? "🎯 Luyện tập"
+              : isAllCards
+                ? "Màn 1 / 1 (Tất cả)"
+                : `Màn ${currentRound} / ${totalRounds}`;
+            setupTiles();
+            startTimer();
+          } catch (err) {
+            Toast.show(err.message || "Lỗi khi tải dữ liệu", "error");
+          }
+        }
+
+        // Prepare & Shuffle Tiles
+        function setupTiles() {
+          tiles = [];
+          pairsRemaining = roundCards.length;
+          document.getElementById("pairsLeft").textContent = pairsRemaining;
+
+          roundCards.forEach((c, idx) => {
+            const meaningText = c.vietnamese || c.meaning || "";
+            // Tile 1: Hanzi
+            tiles.push({
+              uid: `h_${c.id}_${idx}`,
+              cardId: c.id,
+              type: "hanzi",
+              hanzi: c.hanzi,
+              pinyin: c.pinyin,
+              vietnamese: meaningText,
+              audio_url: c.audio_url || null,
+            });
+            // Tile 2: Meaning (Vietnamese + Pinyin)
+            tiles.push({
+              uid: `v_${c.id}_${idx}`,
+              cardId: c.id,
+              type: "viet",
+              hanzi: c.hanzi,
+              pinyin: c.pinyin,
+              vietnamese: meaningText,
+              audio_url: c.audio_url || null,
+            });
+          });
+
+          // Shuffle
+          tiles.sort(() => Math.random() - 0.5);
+
+          renderTiles();
+        }
+
+        function renderTiles() {
+          const grid = document.getElementById("tilesGrid");
+          grid.innerHTML = tiles
+            .map((t) => {
+              if (t.type === "hanzi") {
+                return `
+              <div class="match-tile" id="tile-${t.uid}" data-uid="${t.uid}">
+                <span class="tile-badge badge-hanzi">汉字</span>
+                <div class="tile-hanzi-text">${escapeHtml(t.hanzi)}</div>
+              </div>
+            `;
+              } else {
+                return `
+              <div class="match-tile" id="tile-${t.uid}" data-uid="${t.uid}">
+                <span class="tile-badge badge-viet">Nghĩa</span>
+                <div class="tile-viet-text">${escapeHtml(t.vietnamese)}</div>
+                <div class="tile-pinyin-text">${escapeHtml(t.pinyin)}</div>
+              </div>
+            `;
+              }
+            })
+            .join("");
+
+          // Attach clicks
+          grid.querySelectorAll(".match-tile").forEach((el) => {
+            el.addEventListener("click", () => handleTileClick(el.dataset.uid));
+          });
+        }
+
+        // Handle Tile Click
+        function handleTileClick(uid) {
+          if (isBusy) return;
+          const clickedTile = tiles.find((t) => t.uid === uid);
+          if (!clickedTile) return;
+
+          const el = document.getElementById(`tile-${uid}`);
+          if (
+            !el ||
+            el.classList.contains("is-matched") ||
+            el.classList.contains("is-hidden")
+          )
+            return;
+
+          // Bỏ chọn nếu nhấp lại chính nó
+          if (firstSelected && firstSelected.uid === uid) {
+            el.classList.remove("is-selected");
+            firstSelected = null;
+            return;
+          }
+
+          if (!firstSelected) {
+            // Chọn thẻ thứ nhất
+            firstSelected = clickedTile;
+            el.classList.add("is-selected");
+          } else {
+            // Chọn thẻ thứ hai
+            el.classList.add("is-selected");
+            isBusy = true;
+
+            const firstEl = document.getElementById(
+              `tile-${firstSelected.uid}`,
+            );
+
+            if (firstSelected.cardId === clickedTile.cardId) {
+              // MATCH!
+              combo++;
+              if (combo > maxCombo) maxCombo = combo;
+              showComboFloating(el, combo);
+
+              // TTS pronounce
+              speakText(clickedTile.hanzi, clickedTile.audio_url);
+
+              // Record result
+              roundResults.push({
+                card_id: clickedTile.cardId,
+                is_correct: true,
+              });
+
+              firstEl.classList.remove("is-selected");
+              el.classList.remove("is-selected");
+              firstEl.classList.add("is-matched");
+              el.classList.add("is-matched");
+
+              setTimeout(() => {
+                firstEl.classList.add("is-hidden");
+                el.classList.add("is-hidden");
+                firstSelected = null;
+                isBusy = false;
+
+                pairsRemaining--;
+                document.getElementById("pairsLeft").textContent =
+                  pairsRemaining;
+                if (pairsRemaining <= 0) {
+                  finishGame();
+                }
+              }, 450);
+            } else {
+              // MISMATCH!
+              combo = 0;
+              updateComboHUD();
+
+              roundResults.push({
+                card_id: clickedTile.cardId,
+                is_correct: false,
+              });
+
+              firstEl.classList.add("is-wrong");
+              el.classList.add("is-wrong");
+
+              setTimeout(() => {
+                firstEl.classList.remove("is-selected", "is-wrong");
+                el.classList.remove("is-selected", "is-wrong");
+                firstSelected = null;
+                isBusy = false;
+              }, 550);
+            }
+          }
+        }
+
+        function showComboFloating(targetEl, comboCount) {
+          updateComboHUD();
+          if (comboCount < 2) return;
+
+          const rect = targetEl.getBoundingClientRect();
+          const floater = document.createElement("div");
+          floater.className = "combo-floater";
+          floater.textContent = `Combo x${comboCount}!`;
+          floater.style.left = `${rect.left + rect.width / 2}px`;
+          floater.style.top = `${rect.top}px`;
+          document.body.appendChild(floater);
+
+          setTimeout(() => floater.remove(), 1000);
+        }
+
+        function updateComboHUD() {
+          const wrap = document.getElementById("comboWrap");
+          if (combo > 1) {
+            wrap.style.display = "inline-flex";
+            document.getElementById("comboMultiplier").textContent =
+              `x${combo}`;
+          } else {
+            wrap.style.display = "none";
+          }
+        }
+
+        // Finish Game
+        async function finishGame() {
+          stopTimer();
+          const m = String(Math.floor(secondsElapsed / 60)).padStart(2, "0");
+          const s = String(secondsElapsed % 60).padStart(2, "0");
+          const timeFormatted = `${m}:${s}`;
+
+          document.getElementById("overTime").textContent = timeFormatted;
+          document.getElementById("overStatPairs").textContent =
+            roundCards.length;
+          document.getElementById("overStatMaxCombo").textContent =
+            `x${maxCombo || 1}`;
+
+          startConfetti();
+          document.getElementById("gameOverModal").classList.add("show");
+
+          // Next round
+          const btnNext = document.getElementById("btnNextRound");
+          if (currentRound < totalRounds && !isPriority) {
+            btnNext.style.display = "block";
+            btnNext.onclick = () => {
+              window.location.href =
+                window.location.pathname +
+                `?` +
+                (quizId ? `quiz_id=${quizId}&` : "mode=all&") +
+                `cards=${cardsPerRound}&priority=${isPriority}&round=${currentRound + 1}`;
+            };
+          } else {
+            btnNext.style.display = "none";
+          }
+
+          document.getElementById("btnReplayRound").onclick = () =>
+            window.location.reload();
+
+          // Background Sync
+          try {
+            await SyncService.syncResults(
+              roundResults,
+              "pikachu",
+              quizId ? parseInt(quizId) : null,
+            );
+          } catch (err) {
+            console.error("[Pikachu] Sync error:", err);
+          }
+        }
+
+        // Confetti
+        function startConfetti() {
+          const canvas = document.getElementById("confettiCanvas");
+          canvas.style.display = "block";
+          const ctx = canvas.getContext("2d");
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+
+          const pieces = [];
+          const colors = [
+            "#6366f1",
+            "#06b6d4",
+            "#10b981",
+            "#f59e0b",
+            "#ec4899",
+            "#fde68a",
+          ];
+          for (let i = 0; i < 140; i++) {
+            pieces.push({
+              x: Math.random() * canvas.width,
+              y: Math.random() * canvas.height - canvas.height,
+              size: Math.random() * 8 + 4,
+              color: colors[Math.floor(Math.random() * colors.length)],
+              speedY: Math.random() * 3 + 2,
+              speedX: Math.random() * 2 - 1,
+              rotation: Math.random() * 360,
+              rotSpeed: Math.random() * 4 - 2,
+            });
+          }
+
+          let elapsed = 0;
+          function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            pieces.forEach((p) => {
+              p.y += p.speedY;
+              p.x += p.speedX;
+              p.rotation += p.rotSpeed;
+              ctx.save();
+              ctx.translate(p.x, p.y);
+              ctx.rotate((p.rotation * Math.PI) / 180);
+              ctx.fillStyle = p.color;
+              ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+              ctx.restore();
+            });
+            elapsed++;
+            if (elapsed < 240) requestAnimationFrame(animate);
+            else ctx.clearRect(0, 0, canvas.width, canvas.height);
+          }
+          animate();
+        }
+
+        function escapeHtml(str) {
+          if (!str) return "";
+          return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+
+        initGame();
+      })();
+    </script>
+  </body>
+</html>

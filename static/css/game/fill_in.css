@@ -1,0 +1,431 @@
+/* ============================================================
+   HanziQuizz — Fill-In Game Stylesheet
+   Tuân thủ nghiêm ngặt theo .agents/design-rules.md (§5.8)
+   ============================================================ */
+
+.fi-layout {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  user-select: none;
+  overflow-x: hidden;
+}
+
+/* === Game Top Bar (§5.1) === */
+.game-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 0 var(--s-5);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.game-nav .nav-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  text-decoration: none;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.game-nav .nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.btn-icon {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 150ms cubic-bezier(.2,.7,.2,1),
+              color 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.btn-icon:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.btn-text {
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  min-height: 36px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 150ms cubic-bezier(.2,.7,.2,1),
+              color 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.btn-text:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+/* === Main Container === */
+.fi-container {
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--s-5) var(--s-4);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* === HUD (§5.5 & §5.8) === */
+.hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--s-3) var(--s-4);
+  margin-bottom: var(--s-5);
+}
+
+.hud-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.hud-label {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.hud-value {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-value.timer {
+  color: var(--text);
+}
+
+.hud-value.combo {
+  color: var(--warning);
+}
+
+.hud-value.score {
+  color: var(--accent);
+}
+
+/* === Prompt Card (§5.8) === */
+.fi-prompt-card {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  padding: var(--s-6) var(--s-4);
+  text-align: center;
+  margin-bottom: var(--s-5);
+  position: relative;
+  box-shadow: var(--shadow-1);
+}
+
+.fi-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: var(--s-3);
+}
+
+.fi-meaning {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+  margin-bottom: var(--s-2);
+}
+
+.fi-pinyin-hint {
+  font-family: var(--font-pinyin);
+  font-size: 1.1rem;
+  color: var(--text-2);
+  letter-spacing: 0.02em;
+}
+
+/* === Word Selection Tiles (Game Điền Từ Mới) === */
+.fi-words-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--s-5) var(--s-4);
+  margin-bottom: var(--s-5);
+  text-align: center;
+}
+
+.words-title {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+  margin-bottom: var(--s-4);
+}
+
+.word-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-3);
+}
+
+.word-tile-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  font-family: var(--font-han);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text);
+  padding: 10px 18px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 150ms cubic-bezier(.2,.7,.2,1),
+              border-color 150ms cubic-bezier(.2,.7,.2,1),
+              color 150ms cubic-bezier(.2,.7,.2,1),
+              transform 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.word-tile-btn:hover:not(.solved) {
+  background: var(--surface);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.word-tile-btn.correct {
+  background: var(--success-soft) !important;
+  border-color: var(--success) !important;
+  color: var(--success) !important;
+  transform: scale(1.05);
+}
+
+.word-tile-btn.wrong {
+  background: var(--danger-soft) !important;
+  border-color: var(--danger) !important;
+  color: var(--danger) !important;
+  animation: tileShake 350ms cubic-bezier(.2,.7,.2,1);
+}
+
+.word-tile-btn.highlight-correct {
+  border-color: var(--success) !important;
+  color: var(--success) !important;
+  box-shadow: 0 0 0 2px var(--success);
+}
+
+.word-tile-btn.solved {
+  opacity: 0.28;
+  pointer-events: none;
+  background: var(--surface-2);
+  border-color: var(--border);
+  transform: none;
+}
+
+@keyframes tileShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+/* === Feedback Alert === */
+.fi-feedback {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--s-3) var(--s-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  opacity: 0;
+  transition: opacity 150ms cubic-bezier(.2,.7,.2,1);
+  pointer-events: none;
+}
+
+.fi-feedback.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fi-feedback.correct-feedback {
+  border-color: var(--success);
+  background: var(--success-soft);
+}
+
+.fi-feedback.wrong-feedback {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+#feedbackText {
+  color: var(--text);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+
+/* ============================================================
+   Game Over Modal (§5.6)
+   ============================================================ */
+.game-over-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 26, 23, 0.65);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--s-4);
+  backdrop-filter: blur(2px);
+}
+
+.game-over-modal.show {
+  display: flex;
+}
+
+.game-over-content {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  padding: var(--s-6);
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-2);
+}
+
+.trophy-icon {
+  font-size: 2.2rem;
+  margin-bottom: var(--s-2);
+  line-height: 1;
+  color: var(--accent);
+}
+
+.game-over-title {
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--s-1);
+}
+
+.game-over-subtitle {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  margin-bottom: var(--s-5);
+}
+
+.game-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s-3);
+  margin-bottom: var(--s-6);
+}
+
+.stat-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--s-3);
+  text-align: center;
+}
+
+.stat-num {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text);
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-lbl {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+.game-over-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.btn-action {
+  width: 100%;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms cubic-bezier(.2,.7,.2,1),
+              border-color 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.btn-replay {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+}
+
+.btn-replay:hover {
+  background: var(--accent-hover);
+}
+
+.btn-home {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-home:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}

@@ -1,0 +1,552 @@
+/* ============================================================
+   HanziQuizz — Flashcard Game Stylesheet
+   Tuân thủ nghiêm ngặt theo .agents/design-rules.md (§5.4)
+   ============================================================ */
+
+.game-layout {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  user-select: none;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* === Game Top Bar (§5.1) === */
+.game-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 0 var(--s-5);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.game-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  min-height: 36px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  transition: background-color 150ms cubic-bezier(.2,.7,.2,1),
+              color 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.game-back-btn:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.game-title-center {
+  text-align: center;
+}
+
+.game-quiz-name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+}
+
+.game-round-badge {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  padding: 2px var(--s-2);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+
+.game-stats-counters {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.counter-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  padding: 4px var(--s-3);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+}
+
+.counter-correct {
+  background: var(--success-soft);
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.counter-wrong {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* === Progress Bar Mảnh (§5.4) === */
+.game-progress-wrap {
+  width: 100%;
+  max-width: 520px;
+  margin: var(--s-4) auto 0;
+  padding: 0 var(--s-4);
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  margin-bottom: var(--s-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* === Game Arena / Flashcard Stage (§5.4) === */
+.game-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-5) var(--s-4);
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* 3D Flip Card Container */
+.flashcard-3d-wrap {
+  perspective: 1200px;
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 4 / 3;
+  min-height: 320px;
+  cursor: pointer;
+  position: relative;
+  margin-bottom: var(--s-5);
+}
+
+@media (max-width: 640px) {
+  .flashcard-3d-wrap {
+    aspect-ratio: 3 / 4;
+    min-height: 340px;
+  }
+}
+
+.flashcard-3d-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 300ms cubic-bezier(.2,.7,.2,1);
+  border-radius: var(--r-lg);
+}
+
+.flashcard-3d-wrap.is-flipped .flashcard-3d-inner {
+  transform: rotateY(180deg);
+}
+
+/* Card Faces */
+.flashcard-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--s-5) var(--s-5);
+  text-align: center;
+  box-sizing: border-box;
+  transition: border-color 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.flashcard-face:hover {
+  border-color: var(--text-2);
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+}
+
+/* 3 Equal Compartments on both sides (§ Layout đối xứng tuyệt đối) */
+.card-face-top {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.card-face-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: var(--s-2) 0;
+}
+
+.card-face-bottom {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Prompt Labels */
+.card-prompt-label {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+/* Center Hero Text - Cùng vị trí chính giữa & kích thước lớn đối xứng giữa Mặt trước & Mặt sau */
+.card-hero-text,
+.hanzi-main {
+  font-family: var(--font-han);
+  font-size: clamp(3rem, 9.5vw, 5rem);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  text-align: center;
+  word-break: break-word;
+}
+
+.card-hero-text.viet-hero-text,
+.viet-main {
+  font-family: var(--font-ui);
+  font-size: clamp(1.85rem, 6vw, 3.2rem);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+  max-width: 440px;
+  text-align: center;
+}
+
+.card-hero-text.pinyin-hero-text {
+  font-family: var(--font-pinyin);
+  font-size: clamp(2.5rem, 8vw, 4.2rem);
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+/* Back Top Meta Bar */
+.back-meta-bar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: var(--r-sm);
+}
+
+.back-pinyin-pill,
+.back-pinyin-main {
+  font-family: var(--font-pinyin);
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--text-2);
+  letter-spacing: 0.02em;
+}
+
+.btn-audio-speak {
+  background: transparent;
+  border: none;
+  color: var(--text-2);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.btn-audio-speak:hover {
+  color: var(--accent);
+}
+
+.flip-prompt {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  font-weight: 500;
+}
+
+/* Controls / Bottom Rating Buttons (§5.4) */
+.game-controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-3);
+  width: 100%;
+  max-width: 520px;
+}
+
+@media (max-width: 480px) {
+  .game-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btn-game-action {
+  min-height: 48px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--s-2) var(--s-3);
+  transition: background-color 150ms cubic-bezier(.2,.7,.2,1),
+              border-color 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.action-sub {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--text-3);
+}
+
+.btn-action-wrong {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+}
+
+.btn-action-wrong:hover {
+  background: var(--surface-2);
+  border-color: var(--text-2);
+}
+
+.btn-action-flip {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.btn-action-flip:hover {
+  background: var(--border);
+}
+
+.btn-action-correct {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--on-accent);
+}
+
+.btn-action-correct:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn-action-correct .action-sub {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Keyboard hint (§5.4) */
+.keyboard-legend {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  text-align: center;
+  margin-top: var(--s-4);
+  display: flex;
+  justify-content: center;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+}
+
+.key-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.key-cap {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--text-2);
+  box-shadow: 0 1px 0 var(--border-strong);
+}
+
+/* === Game Over Modal Hoàn Chỉnh (§5.6) === */
+.game-over-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 26, 23, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--s-4);
+}
+
+.game-over-overlay.show {
+  display: flex;
+}
+
+.game-over-card {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  padding: var(--s-6);
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-2);
+}
+
+.game-over-badge {
+  font-size: 2.5rem;
+  margin-bottom: var(--s-2);
+  line-height: 1;
+}
+
+.game-over-title {
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.game-over-subtitle {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  margin-bottom: var(--s-5);
+}
+
+/* Score SVG Circle */
+.score-circle-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto var(--s-5);
+}
+
+.score-circle-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.score-circle-bg {
+  fill: none;
+  stroke: var(--surface-2);
+  stroke-width: 8;
+}
+
+.score-circle-bar {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 800ms cubic-bezier(.2,.7,.2,1);
+}
+
+.score-circle-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#overPercentage, #overTime {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.score-circle-sub {
+  font-size: 0.68rem;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Breakdown Stats */
+.game-over-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s-3);
+  margin-bottom: var(--s-5);
+}
+
+.over-stat-box {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--s-3);
+  text-align: center;
+}
+
+.over-stat-val {
+  font-size: 1.35rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.over-stat-lbl {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+/* Actions */
+.game-over-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.game-over-actions .btn {
+  width: 100%;
+  justify-content: center;
+}

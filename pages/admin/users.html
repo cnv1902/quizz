@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý Người Dùng — HanziQuizz Admin</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/img/HanziQuizz-Favicon.png"
+    />
+    <link rel="stylesheet" href="/static/css/game/theme.css?v={{ v }}" />
+    <link rel="stylesheet" href="/static/css/admin/admin.css?v={{ v }}" />
+  </head>
+  <body class="admin-layout">
+    <!-- Header -->
+    <header class="admin-header">
+      <a href="/pages/admin/quizzes.html" class="admin-brand">
+        <img
+          src="/static/img/HanziQuizz-Favicon.png"
+          alt="HanziQuizz Logo"
+          style="height: 32px; width: auto; object-fit: contain"
+        />
+        <span class="admin-brand-title">HanziQuizz</span>
+        <span class="badge-admin">Admin</span>
+      </a>
+
+      <nav class="admin-nav">
+        <a href="/pages/admin/quizzes.html" class="admin-nav-link">Bộ Quizz</a>
+        <a href="/pages/admin/measure-words.html" class="admin-nav-link"
+          >Lượng từ</a
+        >
+        <a href="/pages/admin/grammar.html" class="admin-nav-link"
+          >Ngữ pháp</a
+        >
+        <a href="/pages/admin/sentences.html" class="admin-nav-link">Bộ câu</a>
+        <a href="/pages/admin/users.html" class="admin-nav-link active"
+          >Người dùng</a
+        >
+        <a href="/" class="admin-nav-link" title="Quay lại giao diện người chơi"
+          >Về trang chủ</a
+        >
+      </nav>
+
+      <div class="admin-user-menu">
+        <span id="adminUserName">Admin</span>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn">
+          Đăng xuất
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-container">
+      <div class="page-header">
+        <div class="page-title-group">
+          <h1>Quản lý Tài Khoản & Người Dùng</h1>
+          <p>
+            Xem danh sách thành viên, cấu hình quyền quản trị viên và trạng thái
+            kích hoạt tài khoản
+          </p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="admin-stat-card">
+          <div class="admin-stat-top">
+            <div class="admin-stat-value" id="statTotalUsers">0</div>
+            <div class="admin-stat-icon">👥</div>
+          </div>
+          <div class="admin-stat-label">Tổng số thành viên</div>
+          <div class="admin-stat-action">
+            <span class="stat-detail-link" data-filter-role="all" data-filter-status="all">Xem chi tiết</span>
+          </div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-top">
+            <div class="admin-stat-value" id="statAdminUsers">0</div>
+            <div class="admin-stat-icon">🛡️</div>
+          </div>
+          <div class="admin-stat-label">Quản trị viên (Admin)</div>
+          <div class="admin-stat-action">
+            <span class="stat-detail-link" data-filter-role="admin" data-filter-status="all">Xem chi tiết</span>
+          </div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-top">
+            <div class="admin-stat-value" id="statActiveUsers">0</div>
+            <div class="admin-stat-icon">🟢</div>
+          </div>
+          <div class="admin-stat-label">Đang hoạt động</div>
+          <div class="admin-stat-action">
+            <span class="stat-detail-link" data-filter-role="all" data-filter-status="active">Xem chi tiết</span>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Tìm theo username, họ tên hoặc email..."
+          />
+        </div>
+        <div class="filter-group">
+          <select class="filter-select" id="filterRole">
+            <option value="all">Tất cả vai trò</option>
+            <option value="admin">Quản trị viên (Admin)</option>
+            <option value="user">Người dùng (Member)</option>
+          </select>
+          <select class="filter-select" id="filterStatus">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="active">Đang hoạt động</option>
+            <option value="locked">Đã bị khóa</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 60px">ID</th>
+              <th>Tài khoản & Họ tên</th>
+              <th>Email</th>
+              <th style="width: 130px; text-align: center">Vai trò</th>
+              <th style="width: 140px; text-align: center">Trạng thái</th>
+              <th style="width: 120px; text-align: center">Thẻ / Màn</th>
+              <th style="width: 140px">Ngày tham gia</th>
+              <th style="width: 160px; text-align: right">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr>
+              <td colspan="8" class="empty-table">
+                <span class="empty-icon">⏳</span>
+                <div>Đang tải danh sách người dùng...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- Modal Xác nhận Thao tác User -->
+    <div class="modal-overlay" id="userActionModal">
+      <div class="modal-card" style="max-width: 440px">
+        <div class="modal-header">
+          <h3 class="modal-title" id="userActionTitle">Xác nhận</h3>
+          <button class="modal-close" data-close="userActionModal">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <p
+            id="userActionPrompt"
+            style="
+              color: var(--text-2);
+              font-size: var(--fs-sm);
+              line-height: 1.5;
+            "
+          >
+            Bạn có chắc chắn muốn thực hiện thao tác này?
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-close="userActionModal"
+          >
+            Hủy
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="btnConfirmUserAction"
+          >
+            Xác nhận
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/core/api.js?v={{ v }}"></script>
+    <script src="/static/js/core/auth.js?v={{ v }}"></script>
+    <script src="/static/js/components/toast.js?v={{ v }}"></script>
+    <script src="/static/js/api/quizApi.js?v={{ v }}"></script>
+    <script>
+      (function () {
+        // 1. Guard check Admin
+        if (!Auth.requireAdmin()) return;
+
+        const currentUser = Auth.getUser();
+        document.getElementById("adminUserName").textContent =
+          currentUser?.full_name || currentUser?.username || "Admin";
+
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+          Auth.clearSession();
+          window.location.href = "/pages/login.html";
+        });
+
+        // 2. State
+        let allUsers = [];
+        let pendingAction = null; // { type: 'role'|'status'|'delete', userId: number, payload: any }
+
+        // 3. Modal Helpers
+        function openModal(id) {
+          document.getElementById(id).classList.add("open");
+        }
+        function closeModal(id) {
+          document.getElementById(id).classList.remove("open");
+        }
+        document.querySelectorAll("[data-close]").forEach((btn) => {
+          btn.addEventListener("click", () =>
+            closeModal(btn.getAttribute("data-close")),
+          );
+        });
+
+        // 4. Load Users
+        async function loadUsers() {
+          try {
+            const list = await UserApi.adminGetAll();
+            allUsers = list || [];
+            renderUsers();
+            updateStats();
+          } catch (err) {
+            Toast.show(
+              err.message || "Lỗi khi tải danh sách người dùng",
+              "error",
+            );
+            document.getElementById("usersTableBody").innerHTML = `
+            <tr>
+              <td colspan="8" class="empty-table">
+                <span class="empty-icon">⚠️</span>
+                <div>Lỗi: ${escapeHtml(err.message)}</div>
+              </td>
+            </tr>
+          `;
+          }
+        }
+
+        function updateStats() {
+          document.getElementById("statTotalUsers").textContent =
+            allUsers.length;
+          document.getElementById("statAdminUsers").textContent =
+            allUsers.filter((u) => u.is_admin).length;
+          document.getElementById("statActiveUsers").textContent =
+            allUsers.filter((u) => u.is_active).length;
+        }
+
+        function renderUsers() {
+          const tbody = document.getElementById("usersTableBody");
+          const q = document
+            .getElementById("searchInput")
+            .value.trim()
+            .toLowerCase();
+          const roleFilter = document.getElementById("filterRole").value;
+          const statusFilter = document.getElementById("filterStatus").value;
+
+          const filtered = allUsers.filter((u) => {
+            const matchQ =
+              (u.username || "").toLowerCase().includes(q) ||
+              (u.full_name || "").toLowerCase().includes(q) ||
+              (u.email || "").toLowerCase().includes(q);
+            const matchRole =
+              roleFilter === "all"
+                ? true
+                : roleFilter === "admin"
+                  ? u.is_admin
+                  : !u.is_admin;
+            const matchStatus =
+              statusFilter === "all"
+                ? true
+                : statusFilter === "active"
+                  ? u.is_active
+                  : !u.is_active;
+            return matchQ && matchRole && matchStatus;
+          });
+
+          if (!filtered.length) {
+            tbody.innerHTML = `
+            <tr>
+              <td colspan="8" class="empty-table">
+                <span class="empty-icon">👥</span>
+                <div>Không tìm thấy người dùng nào phù hợp</div>
+              </td>
+            </tr>
+          `;
+            return;
+          }
+
+          tbody.innerHTML = filtered
+            .map((u) => {
+              const isSelf = u.id === currentUser?.id;
+              const createdDate = u.created_at
+                ? new Date(u.created_at).toLocaleDateString("vi-VN")
+                : "—";
+              return `
+            <tr>
+              <td style="color:var(--text-3);font-weight:600">#${u.id}</td>
+              <td>
+                <div style="font-weight:600;color:var(--text)">
+                  ${escapeHtml(u.username)}
+                  ${isSelf ? '<span style="font-size:0.75rem;color:var(--accent);margin-left:4px">(Bạn)</span>' : ""}
+                </div>
+                <div style="color:var(--text-2);font-size:0.84rem">${escapeHtml(u.full_name || "—")}</div>
+              </td>
+              <td>
+                <span style="color:var(--text-2)">${escapeHtml(u.email)}</span>
+                ${u.google_id ? '<span style="font-size:0.72rem;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border-strong);padding:1px 6px;border-radius:var(--r-sm);margin-left:4px">Google</span>' : ""}
+              </td>
+              <td style="text-align:center">
+                <span class="status-pill ${u.is_admin ? "status-role-admin" : "status-role-user"}">
+                  ${u.is_admin ? "🛡️ Admin" : "👤 User"}
+                </span>
+              </td>
+              <td style="text-align:center">
+                <span class="status-pill ${u.is_active ? "status-active" : "status-inactive"}">
+                  ${u.is_active ? "● Hoạt động" : "🔒 Đã khóa"}
+                </span>
+              </td>
+              <td style="text-align:center;color:var(--accent);font-weight:600">
+                ${u.cards_per_round || 10}
+              </td>
+              <td style="color:var(--text-2);font-size:0.84rem">${createdDate}</td>
+              <td>
+                <div class="table-actions">
+                  ${
+                    !isSelf
+                      ? `
+                    <button class="btn-icon" title="${u.is_admin ? "Hạ quyền về User thường" : "Nâng quyền thành Admin"}" onclick="toggleAdminRole(${u.id}, ${!u.is_admin}, '${escapeAttr(u.username)}')">
+                       ${u.is_admin ? "⬇️" : "⬆️"}
+                    </button>
+                    <button class="btn-icon" title="${u.is_active ? "Khóa tài khoản" : "Mở khóa tài khoản"}" onclick="toggleUserStatus(${u.id}, ${!u.is_active}, '${escapeAttr(u.username)}')">
+                      ${u.is_active ? "🔒" : "🔓"}
+                    </button>
+                    <button class="btn-icon btn-icon-danger" title="Xóa tài khoản" onclick="confirmDeleteUser(${u.id}, '${escapeAttr(u.username)}')">
+                      🗑️
+                    </button>
+                  `
+                      : '<span style="color:var(--text-3);font-size:0.8rem;font-style:italic">Tài khoản này</span>'
+                  }
+                </div>
+              </td>
+            </tr>
+          `;
+            })
+            .join("");
+        }
+
+        // 5. Actions Handlers
+        window.toggleAdminRole = function (userId, newIsAdmin, username) {
+          pendingAction = {
+            type: "role",
+            userId,
+            payload: { is_admin: newIsAdmin },
+            msg: newIsAdmin
+              ? `Nâng tài khoản "${username}" lên quyền Quản trị viên (Admin)?`
+              : `Hạ quyền tài khoản "${username}" về Người dùng thường?`,
+          };
+          showActionModal(
+            "Thay đổi quyền tài khoản",
+            pendingAction.msg,
+            "btn-primary",
+          );
+        };
+
+        window.toggleUserStatus = function (userId, newIsActive, username) {
+          pendingAction = {
+            type: "status",
+            userId,
+            payload: { is_active: newIsActive },
+            msg: newIsActive
+              ? `Mở khóa cho tài khoản "${username}"?`
+              : `Khóa tài khoản "${username}"? Người dùng này sẽ không thể đăng nhập!`,
+          };
+          showActionModal(
+            newIsActive ? "Mở khóa tài khoản" : "Khóa tài khoản",
+            pendingAction.msg,
+            newIsActive ? "btn-primary" : "btn-danger",
+          );
+        };
+
+        window.confirmDeleteUser = function (userId, username) {
+          pendingAction = {
+            type: "delete",
+            userId,
+            msg: `Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản "${username}" không? Toàn bộ dữ liệu kết quả học tập của tài khoản này sẽ bị xóa.`,
+          };
+          showActionModal(
+            "Xác nhận xóa tài khoản",
+            pendingAction.msg,
+            "btn-danger",
+          );
+        };
+
+        function showActionModal(title, message, btnClass) {
+          document.getElementById("userActionTitle").textContent = title;
+          document.getElementById("userActionPrompt").textContent = message;
+          const confirmBtn = document.getElementById("btnConfirmUserAction");
+          confirmBtn.className = `btn ${btnClass}`;
+          openModal("userActionModal");
+        }
+
+        document
+          .getElementById("btnConfirmUserAction")
+          .addEventListener("click", async () => {
+            if (!pendingAction) return;
+            const btn = document.getElementById("btnConfirmUserAction");
+            btn.disabled = true;
+
+            try {
+              if (pendingAction.type === "delete") {
+                await UserApi.adminDelete(pendingAction.userId);
+                Toast.show("Đã xóa tài khoản thành công", "success");
+              } else {
+                await UserApi.adminUpdate(
+                  pendingAction.userId,
+                  pendingAction.payload,
+                );
+                Toast.show("Đã cập nhật tài khoản thành công", "success");
+              }
+              closeModal("userActionModal");
+              loadUsers();
+            } catch (err) {
+              Toast.show(err.message || "Lỗi khi thực hiện thao tác", "error");
+            } finally {
+              btn.disabled = false;
+              pendingAction = null;
+            }
+          });
+
+        // 6. Search & Filters & Metric Detail Click
+        document
+          .getElementById("searchInput")
+          .addEventListener("input", renderUsers);
+        document
+          .getElementById("filterRole")
+          .addEventListener("change", renderUsers);
+        document
+          .getElementById("filterStatus")
+          .addEventListener("change", renderUsers);
+
+        document.querySelectorAll(".stat-detail-link").forEach((link) => {
+          link.addEventListener("click", () => {
+            const role = link.getAttribute("data-filter-role");
+            const statusVal = link.getAttribute("data-filter-status");
+            if (role) document.getElementById("filterRole").value = role;
+            if (statusVal) document.getElementById("filterStatus").value = statusVal;
+            renderUsers();
+            document.getElementById("usersTableBody").scrollIntoView({ behavior: "smooth", block: "start" });
+          });
+        });
+
+
+        // Utils
+        function escapeHtml(str) {
+          if (!str) return "";
+          return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+        function escapeAttr(str) {
+          if (!str) return "";
+          return String(str).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+        }
+
+        // Init
+        loadUsers();
+      })();
+    </script>
+  </body>
+</html>

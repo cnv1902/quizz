@@ -1,0 +1,231 @@
+"""
+voice_service.py — Dịch vụ tạo giọng đọc tiếng Trung Phổ thông chuẩn (普通话)
+Sử dụng edge-tts với giọng Neural rõ ràng, tự nhiên, hỗ trợ sinh file MP3 tĩnh và chạy nền (BackgroundTasks).
+"""
+
+import os
+import hashlib
+import asyncio
+from typing import Optional, List
+from app.database import SessionLocal
+
+# Cấu hình giọng đọc mặc định
+DEFAULT_VOICE = "zh-CN-XiaoxiaoNeural"  # Giọng phổ thông Bắc Kinh chuẩn, trong trẻo, tự nhiên
+DEFAULT_RATE = "-8%"                    # Tốc độ đọc chậm hơn 8% để nghe rõ thanh điệu HSK
+
+# Thư mục gốc lưu trữ âm thanh
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+VOICE_DIR = os.path.join(STATIC_DIR, "voice")
+
+
+def get_voice_hash(text: str, voice: str = DEFAULT_VOICE, rate: str = DEFAULT_RATE) -> str:
+    """Tạo mã băm MD5 duy nhất dựa trên nội dung chữ, tên voice và tốc độ đọc."""
+    normalized = f"{text.strip()}_{voice.strip()}_{rate.strip()}"
+    return hashlib.md5(normalized.encode("utf-8")).hexdigest()
+
+
+async def generate_voice_file(
+    text: str,
+    category: str = "cards",
+    voice: str = DEFAULT_VOICE,
+    rate: str = DEFAULT_RATE,
+) -> Optional[str]:
+    """
+    Sinh file MP3 phát âm tiếng Trung và lưu vào thư mục static/voice/{category}/.
+    Nếu file đã tồn tại trên đĩa thì trả về URL ngay mà không cần gọi lại TTS (Deduplication).
+    Trả về đường dẫn tĩnh công khai: /static/voice/{category}/{hash}.mp3
+    """
+    clean_text = (text or "").strip()
+    if not clean_text:
+        return None
+
+    # Đảm bảo thư mục lưu trữ tồn tại
+    target_dir = os.path.join(VOICE_DIR, category)
+    os.makedirs(target_dir, exist_ok=True)
+
+    file_hash = get_voice_hash(clean_text, voice, rate)
+    filename = f"{file_hash}.mp3"
+    file_path = os.path.join(target_dir, filename)
+    relative_url = f"/static/voice/{category}/{filename}"
+
+    # Nếu file đã tồn tại và kích thước > 0 thì trả về URL ngay
+    if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+        return relative_url
+
+    try:
+        import edge_tts
+        communicate = edge_tts.Communicate(clean_text, voice=voice, rate=rate)
+        await communicate.save(file_path)
+        return relative_url
+    except Exception as e:
+        print(f"[VoiceService] Loi sinh audio cho '{clean_text}': {e}")
+        return None
+
+
+def generate_voice_file_sync(
+    text: str,
+    category: str = "cards",
+    voice: str = DEFAULT_VOICE,
+    rate: str = DEFAULT_RATE,
+) -> Optional[str]:
+    """Hàm đồng bộ chạy coroutine generate_voice_file."""
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # Nếu đang trong event loop của FastAPI
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(
+                    asyncio.run,
+                    generate_voice_file(text, category, voice, rate),
+                )
+                return future.result()
+        else:
+            return loop.run_until_complete(
+                generate_voice_file(text, category, voice, rate)
+            )
+    except Exception:
+        return asyncio.run(generate_voice_file(text, category, voice, rate))
+
+
+# === Background Tasks Workers ===
+
+def background_generate_voices_for_cards(card_ids: List[int]):
+    """Background task: Quét danh sách cards theo ID và sinh file voice MP3."""
+    if not card_ids:
+        return
+
+    from app.models.card import Card
+    db = SessionLocal()
+    try:
+        cards = db.query(Card).filter(Card.id.in_(card_ids)).all()
+        for card in cards:
+            if not card.audio_url or not os.path.exists(os.path.join(BASE_DIR, card.audio_url.lstrip("/\\"))):
+                url = generate_voice_file_sync(card.hanzi, category="cards")
+                if url:
+                    card.audio_url = url
+        db.commit()
+    except Exception as e:
+        print(f"[VoiceService] Loi background cards: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
+def background_generate_voices_for_measure_words(mw_ids: List[int]):
+    """Background task: Quét danh sách lượng từ và sinh file voice MP3."""
+    if not mw_ids:
+        return
+
+    from app.models.measure_word import MeasureWord
+    db = SessionLocal()
+    try:
+        items = db.query(MeasureWord).filter(MeasureWord.id.in_(mw_ids)).all()
+        for item in items:
+            if not item.audio_url or not os.path.exists(os.path.join(BASE_DIR, item.audio_url.lstrip("/\\"))):
+                url = generate_voice_file_sync(item.hanzi, category="measure_words")
+                if url:
+                    item.audio_url = url
+        db.commit()
+    except Exception as e:
+        print(f"[VoiceService] Loi background measure_words: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
+def background_generate_voices_for_grammar(grammar_ids: List[int]):
+    """Background task: Quét danh sách điểm ngữ pháp và sinh file voice MP3."""
+    if not grammar_ids:
+        return
+
+    from app.models.grammar_point import GrammarPoint
+    db = SessionLocal()
+    try:
+        items = db.query(GrammarPoint).filter(GrammarPoint.id.in_(grammar_ids)).all()
+        for item in items:
+            if not item.audio_url or not os.path.exists(os.path.join(BASE_DIR, item.audio_url.lstrip("/\\"))):
+                url = generate_voice_file_sync(item.hanzi, category="grammar")
+                if url:
+                    item.audio_url = url
+        db.commit()
+    except Exception as e:
+        print(f"[VoiceService] Loi background grammar: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
+def background_generate_voices_for_sentences(sentence_ids: List[int]):
+    """Background task: Quét danh sách câu và sinh file voice MP3 phát âm toàn câu."""
+    if not sentence_ids:
+        return
+
+    from app.models.sentence import Sentence
+    db = SessionLocal()
+    try:
+        items = db.query(Sentence).filter(Sentence.id.in_(sentence_ids)).all()
+        for item in items:
+            if not item.audio_url or not os.path.exists(os.path.join(BASE_DIR, item.audio_url.lstrip("/\\"))):
+                url = generate_voice_file_sync(item.chinese, category="sentences")
+                if url:
+                    item.audio_url = url
+        db.commit()
+    except Exception as e:
+        print(f"[VoiceService] Loi background sentences: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
+def sync_all_missing_voices():
+    """Hàm quét toàn bộ database và tự động sinh voice cho các mục chưa có audio_url."""
+    from app.models.card import Card
+    from app.models.measure_word import MeasureWord
+    from app.models.grammar_point import GrammarPoint
+    from app.models.sentence import Sentence
+
+    db = SessionLocal()
+    counts = {"cards": 0, "measure_words": 0, "grammar": 0, "sentences": 0}
+    try:
+        # 1. Cards
+        cards = db.query(Card).filter((Card.audio_url == None) | (Card.audio_url == "")).all()
+        for c in cards:
+            url = generate_voice_file_sync(c.hanzi, category="cards")
+            if url:
+                c.audio_url = url
+                counts["cards"] += 1
+
+        # 2. Measure words
+        mws = db.query(MeasureWord).filter((MeasureWord.audio_url == None) | (MeasureWord.audio_url == "")).all()
+        for m in mws:
+            url = generate_voice_file_sync(m.hanzi, category="measure_words")
+            if url:
+                m.audio_url = url
+                counts["measure_words"] += 1
+
+        # 3. Grammar
+        gps = db.query(GrammarPoint).filter((GrammarPoint.audio_url == None) | (GrammarPoint.audio_url == "")).all()
+        for g in gps:
+            url = generate_voice_file_sync(g.hanzi, category="grammar")
+            if url:
+                g.audio_url = url
+                counts["grammar"] += 1
+
+        # 4. Sentences
+        sentences = db.query(Sentence).filter((Sentence.audio_url == None) | (Sentence.audio_url == "")).all()
+        for s in sentences:
+            url = generate_voice_file_sync(s.chinese, category="sentences")
+            if url:
+                s.audio_url = url
+                counts["sentences"] += 1
+
+        db.commit()
+        return counts
+    except Exception as e:
+        db.rollback()
+        print(f"[VoiceService] Loi sync_all_missing_voices: {e}")
+        return counts
+    finally:
+        db.close()

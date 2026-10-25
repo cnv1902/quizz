@@ -1,0 +1,1395 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý Thẻ Từ Vựng — HanziQuizz Admin</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/img/HanziQuizz-Favicon.png"
+    />
+    <link rel="stylesheet" href="/static/css/game/theme.css?v={{ v }}" />
+    <link rel="stylesheet" href="/static/css/admin/admin.css?v={{ v }}" />
+  </head>
+  <body class="admin-layout">
+    <!-- Header -->
+    <header class="admin-header">
+      <a href="/pages/admin/quizzes.html" class="admin-brand">
+        <img
+          src="/static/img/HanziQuizz-Favicon.png"
+          alt="HanziQuizz Logo"
+          style="height: 32px; width: auto; object-fit: contain"
+        />
+        <span class="admin-brand-title">HanziQuizz</span>
+        <span class="badge-admin">Admin</span>
+      </a>
+
+      <nav class="admin-nav">
+        <a href="/pages/admin/quizzes.html" class="admin-nav-link active"
+          >Bộ Quizz</a
+        >
+        <a href="/pages/admin/measure-words.html" class="admin-nav-link"
+          >Lượng từ</a
+        >
+        <a href="/pages/admin/grammar.html" class="admin-nav-link"
+          >Ngữ pháp</a
+        >
+        <a href="/pages/admin/sentences.html" class="admin-nav-link">Bộ câu</a>
+        <a href="/pages/admin/users.html" class="admin-nav-link">Người dùng</a>
+        <a href="/" class="admin-nav-link" title="Quay lại giao diện người chơi"
+          >Về trang chủ</a
+        >
+      </nav>
+
+      <div class="admin-user-menu">
+        <span id="adminUserName">Admin</span>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn">
+          Đăng xuất
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-container">
+      <!-- Breadcrumb & Back -->
+      <div style="margin-bottom: var(--s-3)">
+        <a
+          href="/pages/admin/quizzes.html"
+          style="
+            color: var(--text-2);
+            text-decoration: none;
+            font-size: var(--fs-sm);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+          "
+        >
+          ← Quay lại danh sách Quizz
+        </a>
+      </div>
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-title-group">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin-bottom: 4px;
+            "
+          >
+            <h1 id="quizTitle">Đang tải tên Quizz...</h1>
+            <span class="badge-admin" id="quizStatusBadge">Active</span>
+          </div>
+          <p id="quizDesc" style="color: var(--text-2)">
+            Đang tải mô tả bài học...
+          </p>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="btn btn-primary" id="btnInlineAddCard">
+            ＋ Thêm thẻ
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnOpenBulkAdd">
+            📋 Nhập hàng loạt
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnOpenImport">
+            📥 Import Excel
+          </button>
+          <a href="#" id="btnPlayGame" class="btn btn-secondary">
+            🎮 Thử chơi Quizz này
+          </a>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Tìm theo Chữ Hán, Pinyin hoặc Tiếng Việt..."
+          />
+        </div>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: var(--s-3);
+            flex-wrap: wrap;
+          "
+        >
+          <!-- Bulk Action Bar -->
+          <div id="bulkActionBar" class="bulk-action-bar" style="display: none">
+            <span
+              style="
+                font-size: var(--fs-xs);
+                color: var(--text);
+                font-weight: 600;
+              "
+            >
+              Đã chọn:
+              <strong id="selectedCountDisplay" style="color: var(--accent)"
+                >0</strong
+              >
+              thẻ
+            </span>
+            <button
+              type="button"
+              class="btn btn-danger btn-sm"
+              id="btnBulkDeleteOpen"
+              style="padding: 3px 8px; font-size: var(--fs-xs)"
+            >
+              🗑️ Xóa đã chọn
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              id="btnDeselectAll"
+              style="padding: 3px 8px; font-size: var(--fs-xs)"
+            >
+              Bỏ chọn
+            </button>
+          </div>
+
+          <div style="color: var(--text-2); font-size: var(--fs-sm)">
+            Tổng số:
+            <strong id="cardsCountDisplay" style="color: var(--accent)"
+              >0</strong
+            >
+            thẻ
+          </div>
+        </div>
+      </div>
+
+      <!-- Cards Data Table -->
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 44px; text-align: center">
+                <input
+                  type="checkbox"
+                  id="selectAllCheckbox"
+                  class="row-checkbox"
+                  title="Chọn tất cả thẻ đang hiển thị"
+                />
+              </th>
+              <th style="width: 50px">STT</th>
+              <th style="width: 220px">Chữ Hán (汉字)</th>
+              <th style="width: 200px">Pinyin (拼音)</th>
+              <th>Tiếng Việt (Nghĩa)</th>
+              <th style="width: 140px; text-align: right">Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="cardsTableBody">
+            <tr>
+              <td colspan="6" class="empty-table">
+                <span class="empty-icon">⏳</span>
+                <div>Đang tải danh sách thẻ...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- Modal Chỉnh Sửa Thẻ -->
+    <div class="modal-overlay" id="editCardModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">Chỉnh sửa Thẻ Từ Vựng</h3>
+          <button class="modal-close" data-close="editCardModal">
+            &times;
+          </button>
+        </div>
+        <form id="editCardForm">
+          <div class="modal-body">
+            <input type="hidden" id="editCardId" />
+            <div class="form-group">
+              <label class="form-label"
+                >Chữ Hán (汉字)
+                <span style="color: var(--danger)">*</span></label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="editCardHanzi"
+                required
+                style="font-family: var(--font-han); font-size: 1.3rem"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label"
+                >Pinyin (Phiên âm có thanh điệu)
+                <span style="color: var(--danger)">*</span></label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="editCardPinyin"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label"
+                >Tiếng Việt (Nghĩa từ vựng)
+                <span style="color: var(--danger)">*</span></label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="editCardViet"
+                required
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-close="editCardModal"
+            >
+              Hủy
+            </button>
+            <button type="submit" class="btn btn-primary" id="btnSaveCard">
+              Lưu thay đổi
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Preview Flashcard 3D -->
+    <div class="modal-overlay" id="previewModal">
+      <div class="modal-card" style="text-align: center; max-width: 420px">
+        <div class="modal-header">
+          <h3 class="modal-title">Xem trước Flashcard 3D</h3>
+          <button class="modal-close" data-close="previewModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p
+            style="
+              color: var(--text-2);
+              font-size: var(--fs-xs);
+              margin-bottom: var(--s-3);
+            "
+          >
+            Nhấp chuột vào thẻ bên dưới để lật mặt trước / mặt sau:
+          </p>
+          <div class="preview-card-wrap" id="previewCardWrap">
+            <div class="preview-card-inner">
+              <div class="preview-card-face">
+                <div class="preview-hanzi" id="prevHanzi">字</div>
+                <div class="preview-pinyin" id="prevPinyin">zì</div>
+              </div>
+              <div class="preview-card-face preview-card-back">
+                <div
+                  style="
+                    font-size: var(--fs-xs);
+                    color: var(--text-2);
+                    margin-bottom: var(--s-2);
+                    font-weight: 600;
+                    letter-spacing: 0.05em;
+                  "
+                >
+                  NGHĨA TIẾNG VIỆT
+                </div>
+                <div class="preview-viet" id="prevViet">Chữ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="justify-content: center">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-close="previewModal"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Xóa Thẻ -->
+    <div class="modal-overlay" id="deleteCardModal">
+      <div class="modal-card" style="max-width: 420px">
+        <div class="modal-header">
+          <h3 class="modal-title" style="color: var(--danger)">
+            Xác nhận xóa thẻ
+          </h3>
+          <button class="modal-close" data-close="deleteCardModal">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <p
+            style="
+              color: var(--text-2);
+              font-size: var(--fs-sm);
+              line-height: 1.5;
+            "
+          >
+            Bạn có chắc chắn muốn xóa thẻ từ
+            <strong id="deleteCardInfo" style="color: var(--text)"></strong>
+            không?
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-close="deleteCardModal"
+          >
+            Hủy
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger"
+            id="btnConfirmDeleteCard"
+          >
+            Xóa thẻ
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Import Excel -->
+    <div class="modal-overlay" id="importModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">Import Thẻ từ Excel vào Quizz này</h3>
+          <button class="modal-close" data-close="importModal">&times;</button>
+        </div>
+        <form id="importForm">
+          <div class="modal-body">
+            <div
+              style="
+                background: var(--surface-2);
+                border-left: 3px solid var(--accent);
+                padding: 10px 14px;
+                border-radius: var(--r-sm);
+                font-size: var(--fs-xs);
+                color: var(--text-2);
+                line-height: 1.5;
+              "
+            >
+              <strong>Yêu cầu định dạng file Excel (.xlsx):</strong><br />
+              • Cột A: Tiếng Việt (Nghĩa)<br />
+              • Cột B: Pinyin (Phiên âm có dấu thanh)<br />
+              • Cột C: Chữ Hán (Giản thể / Phồn thể)<br />
+              • Dòng đầu tiên (header) sẽ tự động được bỏ qua.
+            </div>
+
+            <div class="dropzone" id="excelDropzone">
+              <div class="dropzone-icon">📊</div>
+              <div class="dropzone-title">Kéo & thả file Excel vào đây</div>
+              <div class="dropzone-desc">
+                hoặc nhấp chuột để chọn file (.xlsx, .xls)
+              </div>
+              <input
+                type="file"
+                id="excelFileInput"
+                accept=".xlsx, .xls"
+                style="display: none"
+              />
+              <div class="dropzone-file-info" id="selectedFileInfo"></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-close="importModal"
+            >
+              Đóng
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              id="btnSubmitImport"
+              disabled
+            >
+              Bắt đầu Import
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Nhập Hàng Loạt Thẻ -->
+    <div class="modal-overlay" id="bulkAddModal">
+      <div class="modal-card" style="max-width: 680px">
+        <div class="modal-header">
+          <h3 class="modal-title">📋 Nhập Thẻ Hàng Loạt vào Quizz</h3>
+          <button class="modal-close" data-close="bulkAddModal">&times;</button>
+        </div>
+        <form id="bulkAddForm">
+          <div class="modal-body">
+            <div
+              style="
+                background: var(--surface-2);
+                border-left: 3px solid var(--accent);
+                padding: 10px 14px;
+                border-radius: var(--r-sm);
+                font-size: var(--fs-xs);
+                color: var(--text-2);
+                line-height: 1.5;
+                margin-bottom: var(--s-3);
+              "
+            >
+              <strong>Hướng dẫn định dạng:</strong><br />
+              • Mỗi hàng tương ứng 1 thẻ từ vựng.<br />
+              • Định dạng chuẩn: <code>Chữ Hán,Pinyin,Tiếng Việt</code> (hoặc
+              cách nhau bằng dấu Tab / dấu gạch đứng <code>|</code>).<br />
+              • Ví dụ: <code>你好,Nǐ hǎo,Xin chào</code>
+            </div>
+
+            <div class="form-group">
+              <label
+                class="form-label"
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <span>Nhập danh sách thẻ (mỗi dòng 1 thẻ):</span>
+                <span
+                  id="bulkCountBadge"
+                  style="
+                    font-size: var(--fs-xs);
+                    font-weight: 600;
+                    color: var(--accent);
+                  "
+                >
+                  0 thẻ hợp lệ
+                </span>
+              </label>
+              <textarea
+                id="bulkCardsInput"
+                class="bulk-textarea"
+                rows="8"
+                placeholder="你好,Nǐ hǎo,Xin chào&#10;谢谢,Xièxie,Cảm ơn&#10;再见,Zàijiàn,Tạm biệt"
+              ></textarea>
+            </div>
+
+            <!-- Preview Box -->
+            <div
+              class="bulk-preview-box"
+              id="bulkPreviewBox"
+              style="display: none"
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  font-weight: 600;
+                  color: var(--text);
+                  margin-bottom: 6px;
+                "
+              >
+                <span>Xem trước kết quả nhận diện (tối đa 5 thẻ đầu):</span>
+                <span
+                  id="bulkParseStatus"
+                  style="font-size: var(--fs-xs); color: var(--success)"
+                ></span>
+              </div>
+              <table class="bulk-preview-table">
+                <thead>
+                  <tr>
+                    <th style="width: 32%">Chữ Hán (汉字)</th>
+                    <th style="width: 33%">Pinyin (拼音)</th>
+                    <th style="width: 35%">Tiếng Việt (Nghĩa)</th>
+                  </tr>
+                </thead>
+                <tbody id="bulkPreviewBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-close="bulkAddModal"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              id="btnSubmitBulkAdd"
+              disabled
+            >
+              Lưu vào Quizz
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Xác nhận Xóa Hàng Loạt -->
+    <div class="modal-overlay" id="bulkDeleteModal">
+      <div class="modal-card" style="max-width: 460px">
+        <div class="modal-header">
+          <h3 class="modal-title" style="color: var(--danger)">
+            Xác nhận xóa hàng loạt
+          </h3>
+          <button class="modal-close" data-close="bulkDeleteModal">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <p
+            style="
+              color: var(--text-2);
+              font-size: var(--fs-sm);
+              line-height: 1.5;
+            "
+          >
+            Bạn có chắc chắn muốn xóa vĩnh viễn
+            <strong id="bulkDeleteCountDisplay" style="color: var(--accent)"
+              >0</strong
+            >
+            thẻ đã chọn khỏi bộ Quizz này không?
+          </p>
+          <div
+            id="bulkDeleteSampleList"
+            style="
+              margin-top: var(--s-2);
+              padding: var(--s-2) var(--s-3);
+              background: var(--surface-2);
+              border: 1px solid var(--border);
+              border-radius: var(--r-sm);
+              font-size: var(--fs-xs);
+              color: var(--text-2);
+              max-height: 140px;
+              overflow-y: auto;
+              line-height: 1.6;
+            "
+          ></div>
+          <p
+            style="
+              color: var(--danger);
+              font-size: var(--fs-xs);
+              margin-top: var(--s-2);
+            "
+          >
+            ⚠️ Thao tác này không thể hoàn tác sau khi thực hiện!
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-close="bulkDeleteModal"
+          >
+            Hủy
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger"
+            id="btnConfirmBulkDelete"
+          >
+            Xóa vĩnh viễn
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/core/api.js?v={{ v }}"></script>
+    <script src="/static/js/core/auth.js?v={{ v }}"></script>
+    <script src="/static/js/components/toast.js?v={{ v }}"></script>
+    <script src="/static/js/components/audioPlayer.js?v={{ v }}"></script>
+    <script src="/static/js/api/quizApi.js?v={{ v }}"></script>
+    <script>
+      (function () {
+        // 1. Guard check Admin
+        if (!Auth.requireAdmin()) return;
+
+        const user = Auth.getUser();
+        document.getElementById("adminUserName").textContent =
+          user?.full_name || user?.username || "Admin";
+
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+          Auth.clearSession();
+          window.location.href = "/pages/login.html";
+        });
+
+        // 2. Parse quiz_id
+        const params = new URLSearchParams(window.location.search);
+        const quizId = params.get("quiz_id");
+        if (!quizId) {
+          Toast.show("Không tìm thấy mã quizz!", "error");
+          setTimeout(
+            () => (window.location.href = "/pages/admin/quizzes.html"),
+            1500,
+          );
+          return;
+        }
+
+        document.getElementById("btnPlayGame").href =
+          `/pages/game-setup.html?quiz_id=${quizId}`;
+
+        // 3. State
+        let quizData = null;
+        let allCards = [];
+        let selectedCardIds = new Set();
+        let currentDeleteCardId = null;
+        let selectedFile = null;
+
+        // 4. Modals Helpers
+        function openModal(id) {
+          document.getElementById(id).classList.add("open");
+        }
+        function closeModal(id) {
+          document.getElementById(id).classList.remove("open");
+        }
+        document.querySelectorAll("[data-close]").forEach((btn) => {
+          btn.addEventListener("click", () =>
+            closeModal(btn.getAttribute("data-close")),
+          );
+        });
+
+        // Helper lấy danh sách thẻ đã lọc theo search query
+        function getFilteredCards() {
+          const q = (document.getElementById("searchInput")?.value || "")
+            .trim()
+            .toLowerCase();
+          return allCards.filter((card) => {
+            return (
+              (card.hanzi || "").toLowerCase().includes(q) ||
+              (card.pinyin || "").toLowerCase().includes(q) ||
+              (card.vietnamese || "").toLowerCase().includes(q)
+            );
+          });
+        }
+
+        // Cập nhật giao diện thanh chọn và checkbox header
+        function updateSelectionUI() {
+          const count = selectedCardIds.size;
+          const bar = document.getElementById("bulkActionBar");
+          const countDisplay = document.getElementById("selectedCountDisplay");
+          const selectAllCb = document.getElementById("selectAllCheckbox");
+
+          if (countDisplay) countDisplay.textContent = count;
+          if (bar) {
+            bar.style.display = count > 0 ? "inline-flex" : "none";
+          }
+
+          const filtered = getFilteredCards();
+          if (!selectAllCb) return;
+
+          if (
+            filtered.length > 0 &&
+            filtered.every((c) => selectedCardIds.has(c.id))
+          ) {
+            selectAllCb.checked = true;
+            selectAllCb.indeterminate = false;
+          } else if (filtered.some((c) => selectedCardIds.has(c.id))) {
+            selectAllCb.checked = false;
+            selectAllCb.indeterminate = true;
+          } else {
+            selectAllCb.checked = false;
+            selectAllCb.indeterminate = false;
+          }
+        }
+
+        // 5. Load Quiz Info & Cards
+        async function loadQuizAndCards() {
+          try {
+            // Lấy chi tiết quiz
+            quizData = await QuizApi.getById(quizId);
+            document.getElementById("quizTitle").textContent = quizData.title;
+            document.getElementById("quizDesc").textContent =
+              quizData.description || "Chưa có mô tả cho quizz này.";
+            const badge = document.getElementById("quizStatusBadge");
+            badge.textContent = quizData.is_active ? "Đang mở" : "Tạm dừng";
+            badge.className = `status-pill ${quizData.is_active ? "status-active" : "status-inactive"}`;
+
+            // Lấy danh sách thẻ
+            const cards = await QuizApi.getCards(quizId);
+            allCards = cards || [];
+            selectedCardIds.clear();
+            renderCards();
+          } catch (err) {
+            Toast.show(err.message || "Lỗi khi tải dữ liệu quizz", "error");
+            document.getElementById("cardsTableBody").innerHTML = `
+            <tr>
+              <td colspan="6" class="empty-table">
+                <span class="empty-icon">⚠️</span>
+                <div>Lỗi: ${escapeHtml(err.message)}</div>
+              </td>
+            </tr>
+          `;
+          }
+        }
+
+        function renderCards() {
+          const tbody = document.getElementById("cardsTableBody");
+          const filtered = getFilteredCards();
+          const q = (
+            document.getElementById("searchInput")?.value || ""
+          ).trim();
+
+          document.getElementById("cardsCountDisplay").textContent =
+            allCards.length;
+
+          if (!filtered.length) {
+            tbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="empty-table">
+                <span class="empty-icon">📇</span>
+                <div>${q ? "Không tìm thấy thẻ nào khớp từ khóa" : "Chưa có thẻ nào trong bộ quizz này. Hãy thêm mới hoặc import từ Excel!"}</div>
+              </td>
+            </tr>
+          `;
+            updateSelectionUI();
+            return;
+          }
+
+          tbody.innerHTML = filtered
+            .map(
+              (c, idx) => `
+          <tr class="${selectedCardIds.has(c.id) ? "row-selected" : ""}">
+            <td style="text-align:center">
+              <input
+                type="checkbox"
+                class="row-checkbox card-select-cb"
+                data-id="${c.id}"
+                ${selectedCardIds.has(c.id) ? "checked" : ""}
+              />
+            </td>
+            <td style="color:var(--text-3);font-weight:600">${idx + 1}</td>
+            <td class="cell-hanzi">
+              <div style="display:inline-flex;align-items:center;gap:8px">
+                <span>${escapeHtml(c.hanzi)}</span>
+                <button type="button" class="btn-icon" style="padding:2px 4px;font-size:0.9rem" title="Phát âm tiếng Trung chuẩn" onclick="event.stopPropagation(); AudioPlayer.play('${escapeHtml(c.audio_url || '')}', '${escapeHtml(c.hanzi)}', { btnElement: this })">
+                  🔊
+                </button>
+              </div>
+            </td>
+            <td class="cell-pinyin">${escapeHtml(c.pinyin)}</td>
+            <td class="cell-viet">${escapeHtml(c.vietnamese)}</td>
+            <td>
+              <div class="table-actions">
+                <button class="btn-icon" title="Xem trước Flashcard" onclick="openPreviewModal(${c.id})">
+                  👁️
+                </button>
+                <button class="btn-icon" title="Chỉnh sửa thẻ" onclick="openEditCardModal(${c.id})">
+                  ✏️
+                </button>
+                <button class="btn-icon btn-icon-danger" title="Xóa thẻ" onclick="openDeleteCardModal(${c.id})">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `,
+            )
+            .join("");
+
+          updateSelectionUI();
+        }
+
+        // Event delegation khi check từng thẻ
+        document
+          .getElementById("cardsTableBody")
+          .addEventListener("change", (e) => {
+            if (e.target.classList.contains("card-select-cb")) {
+              const cardId = parseInt(e.target.dataset.id);
+              if (e.target.checked) {
+                selectedCardIds.add(cardId);
+              } else {
+                selectedCardIds.delete(cardId);
+              }
+              const tr = e.target.closest("tr");
+              if (tr) {
+                tr.classList.toggle("row-selected", e.target.checked);
+              }
+              updateSelectionUI();
+            }
+          });
+
+        // Checkbox Chọn tất cả
+        document
+          .getElementById("selectAllCheckbox")
+          .addEventListener("change", (e) => {
+            const checked = e.target.checked;
+            const filtered = getFilteredCards();
+            filtered.forEach((c) => {
+              if (checked) {
+                selectedCardIds.add(c.id);
+              } else {
+                selectedCardIds.delete(c.id);
+              }
+            });
+            renderCards();
+          });
+
+        // Bỏ chọn tất cả
+        document
+          .getElementById("btnDeselectAll")
+          .addEventListener("click", () => {
+            selectedCardIds.clear();
+            renderCards();
+          });
+
+        // Mở Modal Xóa Hàng Loạt
+        document
+          .getElementById("btnBulkDeleteOpen")
+          .addEventListener("click", () => {
+            if (selectedCardIds.size === 0) return;
+            const selectedCards = allCards.filter((c) =>
+              selectedCardIds.has(c.id),
+            );
+
+            document.getElementById("bulkDeleteCountDisplay").textContent =
+              selectedCards.length;
+
+            const sampleList = document.getElementById("bulkDeleteSampleList");
+            const previewItems = selectedCards.slice(0, 8);
+            const remaining = selectedCards.length - previewItems.length;
+
+            sampleList.innerHTML =
+              previewItems
+                .map(
+                  (c) =>
+                    `<div>• <strong style="font-family:var(--font-han);font-size:1.05rem">${escapeHtml(c.hanzi)}</strong> (${escapeHtml(c.pinyin)}) — ${escapeHtml(c.vietnamese)}</div>`,
+                )
+                .join("") +
+              (remaining > 0
+                ? `<div style="font-style:italic;color:var(--text-3);margin-top:4px">... và ${remaining} thẻ khác</div>`
+                : "");
+
+            openModal("bulkDeleteModal");
+          });
+
+        // Xác nhận xóa hàng loạt
+        document
+          .getElementById("btnConfirmBulkDelete")
+          .addEventListener("click", async () => {
+            if (selectedCardIds.size === 0) return;
+            const btn = document.getElementById("btnConfirmBulkDelete");
+            btn.disabled = true;
+            btn.textContent = "Đang xóa...";
+
+            try {
+              const idsToDelete = Array.from(selectedCardIds);
+              await CardApi.adminBulkDelete(idsToDelete);
+
+              allCards = allCards.filter((c) => !selectedCardIds.has(c.id));
+              selectedCardIds.clear();
+              renderCards();
+              closeModal("bulkDeleteModal");
+              Toast.show(
+                `Đã xóa thành công ${idsToDelete.length} thẻ!`,
+                "success",
+              );
+            } catch (err) {
+              Toast.show(err.message || "Lỗi khi xóa hàng loạt thẻ", "error");
+            } finally {
+              btn.disabled = false;
+              btn.textContent = "Xóa vĩnh viễn";
+            }
+          });
+
+        // 6. Inline Add Card (Hàng đầu tiên trong bảng)
+        document
+          .getElementById("btnInlineAddCard")
+          .addEventListener("click", () => {
+            insertInlineAddRow();
+          });
+
+        function insertInlineAddRow() {
+          const tbody = document.getElementById("cardsTableBody");
+          const existingRow = document.getElementById("inlineAddRow");
+          if (existingRow) {
+            document.getElementById("inlineAddHanzi")?.focus();
+            return;
+          }
+
+          // Xóa empty row nếu đang hiển thị
+          const emptyCell = tbody.querySelector(".empty-table");
+          if (emptyCell) {
+            tbody.innerHTML = "";
+          }
+
+          const tr = document.createElement("tr");
+          tr.id = "inlineAddRow";
+          tr.className = "inline-add-row";
+          tr.innerHTML = `
+            <td style="text-align:center;color:var(--text-3)">—</td>
+            <td style="color:var(--accent);font-weight:bold;text-align:center;">★</td>
+            <td>
+              <input
+                type="text"
+                id="inlineAddHanzi"
+                class="inline-cell-input hanzi"
+                placeholder="Chữ Hán (vd: 你好)"
+                autocomplete="off"
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                id="inlineAddPinyin"
+                class="inline-cell-input pinyin"
+                placeholder="Pinyin (vd: nǐ hǎo)"
+                autocomplete="off"
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                id="inlineAddViet"
+                class="inline-cell-input"
+                placeholder="Tiếng Việt (vd: Xin chào)"
+                autocomplete="off"
+              />
+            </td>
+            <td>
+              <div class="inline-actions">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  id="btnSaveInlineCard"
+                  title="Lưu thẻ (Enter)"
+                >
+                  ✓  Lưu
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  id="btnCancelInlineCard"
+                  title="Hủy (Esc)"
+                >
+                  ✕
+                </button>
+              </div>
+            </td>
+          `;
+
+          tbody.insertBefore(tr, tbody.firstChild);
+
+          const hanziInput = document.getElementById("inlineAddHanzi");
+          const pinyinInput = document.getElementById("inlineAddPinyin");
+          const vietInput = document.getElementById("inlineAddViet");
+          const saveBtn = document.getElementById("btnSaveInlineCard");
+          const cancelBtn = document.getElementById("btnCancelInlineCard");
+
+          hanziInput.focus();
+
+          const handleKeyDown = (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              saveInlineCard();
+            } else if (e.key === "Escape") {
+              e.preventDefault();
+              cancelInlineRow();
+            }
+          };
+
+          [hanziInput, pinyinInput, vietInput].forEach((inp) => {
+            inp.addEventListener("keydown", handleKeyDown);
+          });
+
+          saveBtn.addEventListener("click", saveInlineCard);
+          cancelBtn.addEventListener("click", cancelInlineRow);
+        }
+
+        async function saveInlineCard() {
+          const hanziInput = document.getElementById("inlineAddHanzi");
+          const pinyinInput = document.getElementById("inlineAddPinyin");
+          const vietInput = document.getElementById("inlineAddViet");
+          const saveBtn = document.getElementById("btnSaveInlineCard");
+
+          if (!hanziInput || !pinyinInput || !vietInput) return;
+
+          const hanzi = hanziInput.value.trim();
+          const pinyin = pinyinInput.value.trim();
+          const vietnamese = vietInput.value.trim();
+
+          if (!hanzi) {
+            Toast.show("Vui lòng nhập Chữ Hán", "error");
+            hanziInput.focus();
+            return;
+          }
+          if (!pinyin) {
+            Toast.show("Vui lòng nhập Pinyin", "error");
+            pinyinInput.focus();
+            return;
+          }
+          if (!vietnamese) {
+            Toast.show("Vui lòng nhập Nghĩa Tiếng Việt", "error");
+            vietInput.focus();
+            return;
+          }
+
+          saveBtn.disabled = true;
+          saveBtn.textContent = "...";
+
+          try {
+            const newCard = await CardApi.adminCreate({
+              quiz_id: parseInt(quizId),
+              hanzi,
+              pinyin,
+              vietnamese,
+              order_index: allCards.length + 1,
+            });
+
+            // Thêm thẻ vào allCards (đưa lên đầu danh sách hiển thị)
+            allCards.unshift(newCard);
+            renderCards();
+            Toast.show(`Đã thêm thẻ "${hanzi}" thành công!`, "success");
+          } catch (err) {
+            Toast.show(err.message || "Lỗi khi thêm thẻ", "error");
+            saveBtn.disabled = false;
+            saveBtn.textContent = "✓  Lưu";
+          }
+        }
+
+        function cancelInlineRow() {
+          const row = document.getElementById("inlineAddRow");
+          if (row) row.remove();
+          if (allCards.length === 0) {
+            renderCards();
+          }
+        }
+
+        // 7. Bulk Add Cards Modal
+        const btnOpenBulkAdd = document.getElementById("btnOpenBulkAdd");
+        const bulkCardsInput = document.getElementById("bulkCardsInput");
+        const bulkCountBadge = document.getElementById("bulkCountBadge");
+        const bulkPreviewBox = document.getElementById("bulkPreviewBox");
+        const bulkPreviewBody = document.getElementById("bulkPreviewBody");
+        const bulkParseStatus = document.getElementById("bulkParseStatus");
+        const btnSubmitBulkAdd = document.getElementById("btnSubmitBulkAdd");
+        const bulkAddForm = document.getElementById("bulkAddForm");
+
+        let parsedBulkCards = [];
+
+        btnOpenBulkAdd.addEventListener("click", () => {
+          parsedBulkCards = [];
+          bulkCardsInput.value = "";
+          updateBulkPreview();
+          openModal("bulkAddModal");
+          setTimeout(() => bulkCardsInput.focus(), 150);
+        });
+
+        bulkCardsInput.addEventListener("input", () => {
+          updateBulkPreview();
+        });
+
+        function parseBulkLine(line) {
+          const trimmed = line.trim();
+          if (!trimmed) return null;
+
+          // Hỗ trợ phân cách bằng dấu phẩy, tab hoặc gạch đứng
+          let parts = [];
+          if (trimmed.includes(",")) {
+            parts = trimmed.split(",");
+          } else if (trimmed.includes("\t")) {
+            parts = trimmed.split("\t");
+          } else if (trimmed.includes("|")) {
+            parts = trimmed.split("|");
+          } else {
+            return null;
+          }
+
+          parts = parts.map((p) => p.trim()).filter((p) => p.length > 0);
+          if (parts.length < 3) return null;
+
+          // Kiểm tra xem cột nào là Chữ Hán (có ký tự Unicode Hán tự \u4e00-\u9fff)
+          const hanziRegex = /[\u4e00-\u9fff]/;
+
+          let hanzi = "";
+          let pinyin = "";
+          let vietnamese = "";
+
+          // Mặc định người dùng yêu cầu: 你好,Nǐ hǎo,Xin chào (Chữ Hán, Pinyin, Tiếng Việt)
+          if (hanziRegex.test(parts[0])) {
+            hanzi = parts[0];
+            pinyin = parts[1];
+            vietnamese = parts.slice(2).join(", ");
+          } else if (hanziRegex.test(parts[2])) {
+            // Trường hợp nhập ngược: Tiếng Việt, Pinyin, Chữ Hán
+            vietnamese = parts[0];
+            pinyin = parts[1];
+            hanzi = parts[2];
+          } else {
+            // Mặc định lấy theo thứ tự: Chữ Hán, Pinyin, Tiếng Việt
+            hanzi = parts[0];
+            pinyin = parts[1];
+            vietnamese = parts.slice(2).join(", ");
+          }
+
+          return { hanzi, pinyin, vietnamese };
+        }
+
+        function updateBulkPreview() {
+          const text = bulkCardsInput.value;
+          const lines = text.split("\n");
+          parsedBulkCards = [];
+          let invalidCount = 0;
+
+          lines.forEach((line) => {
+            if (!line.trim()) return;
+            const parsed = parseBulkLine(line);
+            if (parsed) {
+              parsedBulkCards.push(parsed);
+            } else {
+              invalidCount++;
+            }
+          });
+
+          const totalValid = parsedBulkCards.length;
+          bulkCountBadge.textContent = `${totalValid} thẻ hợp lệ${invalidCount > 0 ? ` (${invalidCount} dòng không hợp lệ)` : ""}`;
+
+          if (totalValid > 0) {
+            btnSubmitBulkAdd.disabled = false;
+            btnSubmitBulkAdd.textContent = `Lưu ${totalValid} thẻ vào Quizz`;
+            bulkPreviewBox.style.display = "block";
+            bulkParseStatus.textContent = `Hợp lệ: ${totalValid} / ${totalValid + invalidCount}`;
+
+            // Render 5 preview rows
+            const previewItems = parsedBulkCards.slice(0, 5);
+            bulkPreviewBody.innerHTML = previewItems
+              .map(
+                (c) => `
+                <tr>
+                  <td class="cell-hanzi" style="font-size:1.1rem">${escapeHtml(c.hanzi)}</td>
+                  <td class="cell-pinyin" style="font-size:0.88rem">${escapeHtml(c.pinyin)}</td>
+                  <td class="cell-viet" style="font-size:0.88rem">${escapeHtml(c.vietnamese)}</td>
+                </tr>
+              `,
+              )
+              .join("");
+          } else {
+            btnSubmitBulkAdd.disabled = true;
+            btnSubmitBulkAdd.textContent = "Lưu vào Quizz";
+            bulkPreviewBox.style.display = "none";
+            bulkPreviewBody.innerHTML = "";
+          }
+        }
+
+        bulkAddForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          if (!parsedBulkCards.length) {
+            Toast.show("Vui lòng nhập ít nhất 1 thẻ hợp lệ", "error");
+            return;
+          }
+
+          btnSubmitBulkAdd.disabled = true;
+          btnSubmitBulkAdd.textContent = "Đang lưu...";
+
+          try {
+            const createdCards = await CardApi.adminBulkCreate(
+              parseInt(quizId),
+              parsedBulkCards,
+            );
+
+            // Thêm các thẻ mới vào danh sách
+            allCards.push(...createdCards);
+            renderCards();
+            closeModal("bulkAddModal");
+            Toast.show(
+              `Đã thêm thành công ${createdCards.length} thẻ vào Quizz!`,
+              "success",
+            );
+            bulkCardsInput.value = "";
+          } catch (err) {
+            Toast.show(err.message || "Lỗi khi nhập hàng loạt thẻ", "error");
+          } finally {
+            btnSubmitBulkAdd.disabled = false;
+            btnSubmitBulkAdd.textContent = "Lưu vào Quizz";
+          }
+        });
+
+        // 7. Edit Card Modal
+        window.openEditCardModal = function (cardId) {
+          const c = allCards.find((item) => item.id === cardId);
+          if (!c) return;
+          document.getElementById("editCardId").value = c.id;
+          document.getElementById("editCardHanzi").value = c.hanzi;
+          document.getElementById("editCardPinyin").value = c.pinyin;
+          document.getElementById("editCardViet").value = c.vietnamese;
+          openModal("editCardModal");
+        };
+
+        document
+          .getElementById("editCardForm")
+          .addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const cardId = document.getElementById("editCardId").value;
+            const hanzi = document.getElementById("editCardHanzi").value.trim();
+            const pinyin = document
+              .getElementById("editCardPinyin")
+              .value.trim();
+            const vietnamese = document
+              .getElementById("editCardViet")
+              .value.trim();
+
+            const btn = document.getElementById("btnSaveCard");
+            btn.disabled = true;
+
+            try {
+              const updated = await CardApi.adminUpdate(cardId, {
+                hanzi,
+                pinyin,
+                vietnamese,
+              });
+              const idx = allCards.findIndex((item) => item.id == cardId);
+              if (idx !== -1) allCards[idx] = updated;
+              renderCards();
+              Toast.show("Đã cập nhật thẻ thành công", "success");
+              closeModal("editCardModal");
+            } catch (err) {
+              Toast.show(err.message || "Lỗi khi cập nhật thẻ", "error");
+            } finally {
+              btn.disabled = false;
+            }
+          });
+
+        // 8. Delete Card Modal
+        window.openDeleteCardModal = function (cardId) {
+          const c = allCards.find((item) => item.id === cardId);
+          if (!c) return;
+          currentDeleteCardId = cardId;
+          document.getElementById("deleteCardInfo").textContent =
+            `"${c.hanzi}" (${c.vietnamese})`;
+          openModal("deleteCardModal");
+        };
+
+        document
+          .getElementById("btnConfirmDeleteCard")
+          .addEventListener("click", async () => {
+            if (!currentDeleteCardId) return;
+            const btn = document.getElementById("btnConfirmDeleteCard");
+            btn.disabled = true;
+            try {
+              await CardApi.adminDelete(currentDeleteCardId);
+              allCards = allCards.filter((c) => c.id != currentDeleteCardId);
+              renderCards();
+              Toast.show("Đã xóa thẻ", "success");
+              closeModal("deleteCardModal");
+            } catch (err) {
+              Toast.show(err.message || "Lỗi khi xóa thẻ", "error");
+            } finally {
+              btn.disabled = false;
+            }
+          });
+
+        // 9. Preview Flashcard Modal
+        const previewCardWrap = document.getElementById("previewCardWrap");
+        window.openPreviewModal = function (cardId) {
+          const c = allCards.find((item) => item.id === cardId);
+          if (!c) return;
+          document.getElementById("prevHanzi").textContent = c.hanzi;
+          document.getElementById("prevPinyin").textContent = c.pinyin;
+          document.getElementById("prevViet").textContent = c.vietnamese;
+          previewCardWrap.classList.remove("flipped");
+          openModal("previewModal");
+        };
+        previewCardWrap.addEventListener("click", () => {
+          previewCardWrap.classList.toggle("flipped");
+        });
+
+        // 10. Import Excel Modal
+        const dropzone = document.getElementById("excelDropzone");
+        const fileInput = document.getElementById("excelFileInput");
+        const fileInfo = document.getElementById("selectedFileInfo");
+        const btnSubmitImport = document.getElementById("btnSubmitImport");
+
+        document
+          .getElementById("btnOpenImport")
+          .addEventListener("click", () => {
+            selectedFile = null;
+            fileInput.value = "";
+            fileInfo.style.display = "none";
+            btnSubmitImport.disabled = true;
+            openModal("importModal");
+          });
+
+        dropzone.addEventListener("click", () => fileInput.click());
+        dropzone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dropzone.classList.add("dragover");
+        });
+        dropzone.addEventListener("dragleave", () =>
+          dropzone.classList.remove("dragover"),
+        );
+        dropzone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dropzone.classList.remove("dragover");
+          if (e.dataTransfer.files.length)
+            handleFileSelect(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener("change", (e) => {
+          if (e.target.files.length) handleFileSelect(e.target.files[0]);
+        });
+
+        function handleFileSelect(file) {
+          if (!file.name.match(/\.(xlsx|xls)$/i)) {
+            Toast.show("Vui lòng chọn file .xlsx hoặc .xls", "error");
+            return;
+          }
+          selectedFile = file;
+          fileInfo.textContent = `📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+          fileInfo.style.display = "block";
+          btnSubmitImport.disabled = false;
+        }
+
+        document
+          .getElementById("importForm")
+          .addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!selectedFile) return;
+
+            const formData = new FormData();
+            formData.append("file", selectedFile);
+
+            btnSubmitImport.disabled = true;
+            btnSubmitImport.textContent = "Đang import...";
+
+            try {
+              const res = await QuizApi.adminImportExcel(quizId, formData);
+              Toast.show(res.message || "Import thành công!", "success");
+              closeModal("importModal");
+              loadQuizAndCards();
+            } catch (err) {
+              Toast.show(err.message || "Lỗi khi import file Excel", "error");
+            } finally {
+              btnSubmitImport.disabled = false;
+              btnSubmitImport.textContent = "Bắt đầu Import";
+            }
+          });
+
+        // 11. Search
+        document
+          .getElementById("searchInput")
+          .addEventListener("input", renderCards);
+
+        // Utils
+        function escapeHtml(str) {
+          if (!str) return "";
+          return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+
+        // Init
+        loadQuizAndCards();
+      })();
+    </script>
+  </body>
+</html>

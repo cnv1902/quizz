@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý Câu trong Bộ — HanziQuizz Admin</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/img/HanziQuizz-Favicon.png"
+    />
+    <link rel="stylesheet" href="/static/css/game/theme.css?v={{ v }}" />
+    <link rel="stylesheet" href="/static/css/admin/admin.css?v={{ v }}" />
+    <style>
+      .hanzi-sentence {
+        font-family: var(--font-han, "Noto Serif SC", serif);
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--text);
+        letter-spacing: 0.02em;
+      }
+      .btn-audio-sm {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        padding: 2px 6px;
+        color: var(--text-2);
+        transition: color var(--t-fast), transform var(--t-fast);
+        vertical-align: middle;
+      }
+      .btn-audio-sm:hover {
+        color: var(--accent);
+        transform: scale(1.15);
+      }
+      .inline-add-row {
+        background: var(--surface-2);
+        border-bottom: 2px solid var(--accent);
+      }
+      .inline-add-input {
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-sm);
+        padding: 6px 10px;
+        color: var(--text);
+        font-size: var(--fs-sm);
+        outline: none;
+      }
+      .inline-add-input:focus {
+        border-color: var(--accent);
+      }
+      .bulk-action-bar {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        background: var(--surface-2);
+        padding: 6px 14px;
+        border-radius: var(--r-sm);
+        border: 1px solid var(--accent);
+      }
+    </style>
+  </head>
+  <body class="admin-layout">
+    <!-- Header -->
+    <header class="admin-header">
+      <a href="/pages/admin/quizzes.html" class="admin-brand">
+        <img
+          src="/static/img/HanziQuizz-Favicon.png"
+          alt="HanziQuizz Logo"
+          style="height: 32px; width: auto; object-fit: contain"
+        />
+        <span class="admin-brand-title">HanziQuizz</span>
+        <span class="badge-admin">Admin</span>
+      </a>
+
+      <nav class="admin-nav">
+        <a href="/pages/admin/quizzes.html" class="admin-nav-link">Bộ Quizz</a>
+        <a href="/pages/admin/measure-words.html" class="admin-nav-link">Lượng từ</a>
+        <a href="/pages/admin/grammar.html" class="admin-nav-link">Ngữ pháp</a>
+        <a href="/pages/admin/sentences.html" class="admin-nav-link active">Bộ câu</a>
+        <a href="/pages/admin/users.html" class="admin-nav-link">Người dùng</a>
+        <a href="/" class="admin-nav-link" title="Quay lại giao diện người chơi">Về trang chủ</a>
+      </nav>
+
+      <div class="admin-user-menu">
+        <span id="adminUserName">Admin</span>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn">Đăng xuất</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-container">
+      <!-- Back Link -->
+      <div style="margin-bottom: var(--s-3)">
+        <a
+          href="/pages/admin/sentences.html"
+          style="
+            color: var(--text-2);
+            text-decoration: none;
+            font-size: var(--fs-sm);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+          "
+        >
+          ← Quay lại danh sách Bộ câu
+        </a>
+      </div>
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-title-group">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+            <h1 id="setTitleDisplay">Đang tải tên Bộ câu...</h1>
+            <span class="badge-admin" id="setStatusBadge">Active</span>
+          </div>
+          <p id="setDescDisplay" style="color: var(--text-2)">
+            Đang tải mô tả bài học...
+          </p>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="btn btn-primary" id="btnToggleInlineAdd">
+            ＋ Thêm câu
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnOpenBulkAdd">
+            📋 Nhập hàng loạt
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnOpenImport">
+            📥 Import Excel
+          </button>
+          <a href="#" id="btnPlayGame" class="btn btn-secondary" target="_blank" title="Chơi thử bộ câu này">
+            🎮 Luyện tập ↗
+          </a>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Tìm kiếm câu trong bộ..."
+          />
+        </div>
+        <div style="display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap;">
+          <!-- Bulk Action Bar -->
+          <div id="bulkActionBar" class="bulk-action-bar" style="display: none">
+            <span style="font-size: var(--fs-xs); color: var(--text); font-weight: 600;">
+              Đã chọn: <strong id="selectedCountDisplay" style="color: var(--accent)">0</strong> câu
+            </span>
+            <button
+              type="button"
+              class="btn btn-danger btn-sm"
+              id="btnBulkDeleteOpen"
+              style="padding: 3px 8px; font-size: var(--fs-xs)"
+            >
+              🗑️ Xóa đã chọn
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              id="btnDeselectAll"
+              style="padding: 3px 8px; font-size: var(--fs-xs)"
+            >
+              Bỏ chọn
+            </button>
+          </div>
+
+          <div style="color: var(--text-2); font-size: var(--fs-sm)">
+            Tổng số: <strong id="itemsCountDisplay" style="color: var(--accent)">0</strong> câu
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Table -->
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 44px; text-align: center">
+                <input
+                  type="checkbox"
+                  id="selectAllCheckbox"
+                  class="row-checkbox"
+                  title="Chọn tất cả câu hiển thị"
+                />
+              </th>
+              <th style="width: 60px; text-align: center">STT</th>
+              <th style="width: 320px">Câu tiếng Trung (Chữ Hán)</th>
+              <th style="width: 220px">Pinyin (Phiên âm)</th>
+              <th>Tiếng Việt (Nghĩa)</th>
+              <th style="width: 120px; text-align: right">Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Inline Add Row -->
+            <tr id="inlineAddRow" class="inline-add-row" style="display: none;">
+              <td style="text-align: center; color: var(--accent); font-weight: bold;">＋</td>
+              <td style="color: var(--text-2); font-size: var(--fs-xs); text-align: center;">Mới</td>
+              <td>
+                <input type="text" id="inlineChinese" class="inline-add-input" placeholder="Ví dụ: 你在哪？" style="font-family: var(--font-han); font-weight: bold; font-size: 1.15rem;" />
+              </td>
+              <td>
+                <input type="text" id="inlinePinyin" class="inline-add-input" placeholder="Tự sinh nếu để trống (nǐ zài nǎ)" style="color: var(--accent-light); font-size: var(--fs-sm);" />
+              </td>
+              <td>
+                <input type="text" id="inlineViet" class="inline-add-input" placeholder="Ví dụ: Bạn đang ở đâu?" />
+              </td>
+              <td style="text-align: right; white-space: nowrap;">
+                <button type="button" class="btn btn-primary btn-sm" id="btnSaveInline">Lưu</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btnCancelInline">Hủy</button>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="6" class="empty-table">
+                <span class="empty-icon">⏳</span>
+                <div>Đang tải danh sách câu...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- Modal Chỉnh Sửa Câu -->
+    <div class="modal-overlay" id="editModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">Chỉnh sửa Câu Ghép</h3>
+          <button class="modal-close" data-close="editModal">&times;</button>
+        </div>
+        <form id="editForm">
+          <div class="modal-body">
+            <input type="hidden" id="editId" />
+            <div class="form-group">
+              <label class="form-label">Câu tiếng Trung (Chữ Hán) <span style="color: var(--danger)">*</span></label>
+              <input
+                type="text"
+                class="form-control"
+                id="editChinese"
+                required
+                style="font-family: var(--font-han); font-size: 1.25rem; font-weight: bold;"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pinyin (Phiên âm)</label>
+              <input
+                type="text"
+                class="form-control"
+                id="editPinyin"
+                placeholder="Để trống nếu muốn hệ thống tự tạo lại"
+                style="color: var(--accent-light);"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Dịch nghĩa tiếng Việt <span style="color: var(--danger)">*</span></label>
+              <input
+                type="text"
+                class="form-control"
+                id="editViet"
+                required
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-close="editModal">Hủy</button>
+            <button type="submit" class="btn btn-primary" id="btnSaveEdit">Lưu thay đổi</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Xóa 1 Câu -->
+    <div class="modal-overlay" id="deleteModal">
+      <div class="modal-card" style="max-width: 420px">
+        <div class="modal-header">
+          <h3 class="modal-title" style="color: var(--danger)">Xác nhận xóa câu</h3>
+          <button class="modal-close" data-close="deleteModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="color: var(--text-2); font-size: var(--fs-sm); line-height: 1.5;">
+            Bạn có chắc chắn muốn xóa câu <strong id="deleteInfo" style="color: var(--text)"></strong> khỏi bộ này không?
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="deleteModal">Hủy</button>
+          <button type="button" class="btn btn-danger" id="btnConfirmDelete">Xóa</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Xóa Hàng Loạt -->
+    <div class="modal-overlay" id="bulkDeleteModal">
+      <div class="modal-card" style="max-width: 440px">
+        <div class="modal-header">
+          <h3 class="modal-title" style="color: var(--danger)">Xác nhận xóa hàng loạt</h3>
+          <button class="modal-close" data-close="bulkDeleteModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="color: var(--text-2); font-size: var(--fs-sm); line-height: 1.5;">
+            Bạn đang chuẩn bị xóa vĩnh viễn <strong id="bulkDeleteCount" style="color: var(--danger)">0</strong> câu đã chọn. Hành động này không thể hoàn tác!
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="bulkDeleteModal">Hủy</button>
+          <button type="button" class="btn btn-danger" id="btnConfirmBulkDelete">Đồng ý xóa</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Nhập Hàng Loạt -->
+    <div class="modal-overlay" id="bulkAddModal">
+      <div class="modal-card" style="max-width: 680px">
+        <div class="modal-header">
+          <h3 class="modal-title">📋 Nhập Câu Ghép Hàng Loạt</h3>
+          <button class="modal-close" data-close="bulkAddModal">&times;</button>
+        </div>
+        <form id="bulkAddForm">
+          <div class="modal-body">
+            <div style="background: var(--surface-2); border-left: 3px solid var(--accent); padding: 10px 14px; border-radius: var(--r-sm); font-size: var(--fs-xs); color: var(--text-2); line-height: 1.5; margin-bottom: var(--s-3);">
+              <strong>Hướng dẫn định dạng nhập liệu vào bộ này:</strong><br />
+              • Mỗi dòng một câu, cách nhau bằng dấu gạch đứng <code>|</code>, dấu phẩy <code>,</code> hoặc phím <code>Tab</code>.<br />
+              • Định dạng 3 cột chuẩn: <code>Tiếng Trung | Pinyin | Tiếng Việt</code> (hoặc 2 cột: <code>Tiếng Trung | Tiếng Việt</code> để hệ thống tự sinh Pinyin).<br />
+              • Tự động bóc tách từ ghép và tạo giọng đọc phát âm chuẩn MP3.
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="display: flex; justify-content: space-between;">
+                <span>Dán danh sách vào đây:</span>
+                <span id="bulkLineCount" style="color: var(--text-2); font-size: var(--fs-xs);">0 dòng</span>
+              </label>
+              <textarea
+                class="form-control"
+                id="bulkAddTextarea"
+                rows="10"
+                placeholder="Ví dụ 3 cột:&#10;你在哪？ | nǐ zài nǎ | Bạn đang ở đâu?&#10;今天天气很好。 | jīntiān tiānqì hěn hǎo | Hôm nay thời tiết rất đẹp.&#10;&#10;Hoặc 2 cột:&#10;我很喜欢学汉语。 | Tôi rất thích học tiếng Trung."
+                style="font-family: monospace; font-size: var(--fs-xs); line-height: 1.5; resize: vertical;"
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-close="bulkAddModal">Hủy</button>
+            <button type="submit" class="btn btn-primary" id="btnSubmitBulkAdd">Thêm vào bộ câu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Import Excel vào Bộ -->
+    <div class="modal-overlay" id="importModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">📥 Import File Excel vào Bộ Câu</h3>
+          <button class="modal-close" data-close="importModal">&times;</button>
+        </div>
+        <form id="importForm">
+          <div class="modal-body">
+            <div style="background: var(--surface-2); border-left: 3px solid var(--accent); padding: 10px 14px; border-radius: var(--r-sm); font-size: var(--fs-xs); color: var(--text-2); line-height: 1.5; margin-bottom: var(--s-3);">
+              <strong>Cấu trúc file Excel:</strong><br />
+              • <strong>Chuẩn 3 cột:</strong> Cột A: Tiếng Trung | Cột B: Pinyin | Cột C: Tiếng Việt<br />
+              • <strong>Hoặc 2 cột:</strong> Cột A: Tiếng Trung | Cột B: Tiếng Việt (hệ thống tự sinh Pinyin)<br />
+              <em>* Tự động nhận diện thông minh, bóc tách khối từ và tạo file phát âm MP3 chuẩn.</em>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Chọn file Excel (.xlsx, .xls) hoặc CSV (.csv)</label>
+              <div id="dropZone" style="border: 2px dashed var(--border); border-radius: var(--r-md); padding: var(--s-6) var(--s-4); text-align: center; cursor: pointer;">
+                <div style="font-size: 2rem; margin-bottom: var(--s-2)">📄</div>
+                <div style="font-weight: 600; margin-bottom: var(--s-1)">
+                  Kéo thả file vào đây hoặc <span style="color: var(--accent)">chọn từ máy tính</span>
+                </div>
+                <div style="font-size: var(--fs-xs); color: var(--text-2)">
+                  Hỗ trợ định dạng .xlsx, .xls, .csv (tối đa 5MB)
+                </div>
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none" />
+              </div>
+              <div id="fileSelectedInfo" style="display: none; margin-top: var(--s-2); font-size: var(--fs-xs); color: var(--accent); font-weight: 600;"></div>
+            </div>
+
+            <div style="text-align: right">
+              <a href="/api/v1/sentences/template" style="font-size: var(--fs-xs); color: var(--accent); text-decoration: none" download>
+                📥 Tải file Excel mẫu 3 cột chuẩn (.xlsx)
+              </a>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-close="importModal">Hủy</button>
+            <button type="submit" class="btn btn-primary" id="btnSubmitImport">Bắt đầu Import</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts chuẩn -->
+    <script src="/static/js/core/api.js?v={{ v }}"></script>
+    <script src="/static/js/core/auth.js?v={{ v }}"></script>
+    <script src="/static/js/api/quizApi.js?v={{ v }}"></script>
+    <script src="/static/js/components/toast.js?v={{ v }}"></script>
+    <script src="/static/js/components/audioPlayer.js?v={{ v }}"></script>
+    <script>
+      (function () {
+        if (!Auth.requireAdmin()) return;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentSetId = parseInt(urlParams.get("id"));
+
+        if (!currentSetId) {
+          Toast.show("Không xác định được ID bộ câu!", "danger");
+          setTimeout(() => {
+            window.location.href = "/pages/admin/sentences.html";
+          }, 1500);
+          return;
+        }
+
+        let currentSet = null;
+        let allItems = [];
+        let filteredItems = [];
+        let selectedIds = new Set();
+        let deleteTargetId = null;
+
+        const user = Auth.getUser();
+        if (user) {
+          document.getElementById("adminUserName").textContent = user.full_name || user.username || "Admin";
+        }
+
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+          Auth.clearSession();
+          window.location.href = "/pages/login.html";
+        });
+
+        function openModal(id) {
+          document.getElementById(id).classList.add("active");
+        }
+
+        function closeModal(id) {
+          document.getElementById(id).classList.remove("active");
+        }
+
+        document.querySelectorAll("[data-close]").forEach((btn) => {
+          btn.addEventListener("click", () => closeModal(btn.getAttribute("data-close")));
+        });
+
+        // 1. Tải chi tiết bộ câu
+        async function loadSetDetail() {
+          try {
+            currentSet = await SentenceSetApi.getById(currentSetId);
+            document.getElementById("setTitleDisplay").textContent = currentSet.title;
+            document.getElementById("setDescDisplay").textContent = currentSet.description || "Chưa có mô tả.";
+            
+            const badge = document.getElementById("setStatusBadge");
+            badge.textContent = currentSet.is_active ? "Active" : "Inactive";
+            badge.className = `badge-admin ${currentSet.is_active ? '' : 'badge-inactive'}`;
+
+            document.getElementById("btnPlayGame").setAttribute(
+              "href",
+              `/pages/games/sentence.html?sentence_set_id=${currentSetId}&priority=true`
+            );
+          } catch (e) {
+            Toast.show("Lỗi tải thông tin bộ câu: " + e.message, "danger");
+          }
+        }
+
+        // 2. Tải danh sách các câu trong bộ
+        async function loadSentences() {
+          try {
+            const res = await Api.get(`/sentences/all?set_id=${currentSetId}`);
+            allItems = Array.isArray(res) ? res : (res.data || []);
+            filterAndRender();
+          } catch (e) {
+            Toast.show(e.message || "Lỗi tải danh sách câu", "danger");
+            document.getElementById("tableBody").innerHTML = `
+              <tr>
+                <td colspan="6" class="empty-table">
+                  <span class="empty-icon">❌</span>
+                  <div>Lỗi tải dữ liệu. Vui lòng thử lại sau.</div>
+                </td>
+              </tr>
+            `;
+          }
+        }
+
+        function filterAndRender() {
+          const query = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+          if (!query) {
+            filteredItems = [...allItems];
+          } else {
+            filteredItems = allItems.filter((item) => {
+              return (
+                (item.chinese || "").toLowerCase().includes(query) ||
+                (item.pinyin || "").toLowerCase().includes(query) ||
+                (item.vietnamese || "").toLowerCase().includes(query)
+              );
+            });
+          }
+          renderTable();
+        }
+
+        function renderTable() {
+          const tbody = document.getElementById("tableBody");
+          document.getElementById("itemsCountDisplay").textContent = allItems.length;
+
+          const inlineRow = document.getElementById("inlineAddRow");
+
+          if (filteredItems.length === 0) {
+            tbody.innerHTML = "";
+            if (inlineRow) tbody.appendChild(inlineRow);
+            const emptyRow = document.createElement("tr");
+            emptyRow.innerHTML = `
+              <td colspan="6" class="empty-table">
+                <span class="empty-icon">📭</span>
+                <div>Chưa có câu nào trong bộ này hoặc không khớp với tìm kiếm.</div>
+              </td>
+            `;
+            tbody.appendChild(emptyRow);
+            updateBulkActionBar();
+            return;
+          }
+
+          const rowsHtml = filteredItems
+            .map((item, idx) => {
+              const isChecked = selectedIds.has(item.id);
+              const audioBtn = `
+                <button
+                  type="button"
+                  class="btn-audio-sm"
+                  data-audio="${item.audio_url || ''}"
+                  data-text="${encodeURIComponent(item.chinese || '')}"
+                  title="Nghe phát âm chuẩn"
+                >
+                  🔊
+                </button>
+              `;
+
+              return `
+                <tr class="${isChecked ? 'row-selected' : ''}">
+                  <td style="text-align: center">
+                    <input
+                      type="checkbox"
+                      class="row-checkbox item-checkbox"
+                      data-id="${item.id}"
+                      ${isChecked ? 'checked' : ''}
+                    />
+                  </td>
+                  <td style="text-align: center; color: var(--text-2); font-size: var(--fs-xs)">${idx + 1}</td>
+                  <td>
+                    <span class="hanzi-sentence">${item.chinese || ''}</span>
+                    ${audioBtn}
+                  </td>
+                  <td style="font-size: var(--fs-sm); color: var(--accent-light); font-weight: 500">${item.pinyin || '<span style="color: var(--text-3)">—</span>'}</td>
+                  <td style="font-size: var(--fs-sm); font-weight: 500">${item.vietnamese || ''}</td>
+                  <td style="text-align: right; white-space: nowrap">
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm btn-edit"
+                      data-id="${item.id}"
+                      style="padding: 3px 6px; font-size: var(--fs-xs)"
+                    >
+                      ✏️ Sửa
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm btn-delete"
+                      data-id="${item.id}"
+                      data-chinese="${encodeURIComponent(item.chinese)}"
+                      style="padding: 3px 6px; font-size: var(--fs-xs); color: var(--danger)"
+                    >
+                      🗑️ Xóa
+                    </button>
+                  </td>
+                </tr>
+              `;
+            })
+            .join("");
+
+          tbody.innerHTML = "";
+          if (inlineRow) tbody.appendChild(inlineRow);
+          tbody.insertAdjacentHTML("beforeend", rowsHtml);
+
+          // Audio
+          tbody.querySelectorAll(".btn-audio-sm").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const url = btn.getAttribute("data-audio");
+              const text = decodeURIComponent(btn.getAttribute("data-text") || "");
+              AudioPlayer.play(url, text, { btnElement: btn });
+            });
+          });
+
+          // Checkboxes
+          tbody.querySelectorAll(".item-checkbox").forEach((cb) => {
+            cb.addEventListener("change", (e) => {
+              const id = parseInt(e.target.getAttribute("data-id"));
+              if (e.target.checked) {
+                selectedIds.add(id);
+              } else {
+                selectedIds.delete(id);
+              }
+              updateBulkActionBar();
+              e.target.closest("tr").classList.toggle("row-selected", e.target.checked);
+            });
+          });
+
+          // Sửa câu
+          tbody.querySelectorAll(".btn-edit").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const id = parseInt(btn.getAttribute("data-id"));
+              const item = allItems.find((x) => x.id === id);
+              if (!item) return;
+              document.getElementById("editId").value = item.id;
+              document.getElementById("editChinese").value = item.chinese || "";
+              document.getElementById("editPinyin").value = item.pinyin || "";
+              document.getElementById("editViet").value = item.vietnamese || "";
+              openModal("editModal");
+            });
+          });
+
+          // Xóa câu
+          tbody.querySelectorAll(".btn-delete").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              deleteTargetId = parseInt(btn.getAttribute("data-id"));
+              const chinese = decodeURIComponent(btn.getAttribute("data-chinese") || "");
+              document.getElementById("deleteInfo").textContent = `"${chinese}"`;
+              openModal("deleteModal");
+            });
+          });
+
+          updateBulkActionBar();
+        }
+
+        function updateBulkActionBar() {
+          const bar = document.getElementById("bulkActionBar");
+          const countSpan = document.getElementById("selectedCountDisplay");
+          const selectAllCb = document.getElementById("selectAllCheckbox");
+
+          const count = selectedIds.size;
+          countSpan.textContent = count;
+          if (count > 0) {
+            bar.style.display = "flex";
+          } else {
+            bar.style.display = "none";
+          }
+
+          if (filteredItems.length > 0 && selectedIds.size === filteredItems.length) {
+            selectAllCb.checked = true;
+            selectAllCb.indeterminate = false;
+          } else if (selectedIds.size > 0) {
+            selectAllCb.checked = false;
+            selectAllCb.indeterminate = true;
+          } else {
+            selectAllCb.checked = false;
+            selectAllCb.indeterminate = false;
+          }
+        }
+
+        // Chọn tất cả
+        document.getElementById("selectAllCheckbox").addEventListener("change", (e) => {
+          if (e.target.checked) {
+            filteredItems.forEach((item) => selectedIds.add(item.id));
+          } else {
+            selectedIds.clear();
+          }
+          renderTable();
+        });
+
+        document.getElementById("btnDeselectAll").addEventListener("click", () => {
+          selectedIds.clear();
+          renderTable();
+        });
+
+        // Tìm kiếm
+        document.getElementById("searchInput").addEventListener("input", filterAndRender);
+
+        // Inline Add
+        const inlineRow = document.getElementById("inlineAddRow");
+        document.getElementById("btnToggleInlineAdd").addEventListener("click", () => {
+          if (inlineRow.style.display === "none") {
+            inlineRow.style.display = "table-row";
+            document.getElementById("inlineChinese").focus();
+          } else {
+            inlineRow.style.display = "none";
+          }
+        });
+
+        document.getElementById("btnCancelInline").addEventListener("click", () => {
+          inlineRow.style.display = "none";
+          document.getElementById("inlineChinese").value = "";
+          document.getElementById("inlinePinyin").value = "";
+          document.getElementById("inlineViet").value = "";
+        });
+
+        document.getElementById("btnSaveInline").addEventListener("click", async () => {
+          const ch = document.getElementById("inlineChinese").value.trim();
+          const py = document.getElementById("inlinePinyin").value.trim();
+          const vi = document.getElementById("inlineViet").value.trim();
+
+          if (!ch) {
+            Toast.show("Vui lòng nhập câu tiếng Trung!", "danger");
+            document.getElementById("inlineChinese").focus();
+            return;
+          }
+          if (!vi) {
+            Toast.show("Vui lòng nhập dịch nghĩa tiếng Việt!", "danger");
+            document.getElementById("inlineViet").focus();
+            return;
+          }
+
+          try {
+            await Api.post("/sentences/admin", {
+              set_id: currentSetId,
+              chinese: ch,
+              pinyin: py || null,
+              vietnamese: vi,
+            });
+            Toast.show("Đã thêm câu vào bộ thành công!", "success");
+            document.getElementById("inlineChinese").value = "";
+            document.getElementById("inlinePinyin").value = "";
+            document.getElementById("inlineViet").value = "";
+            inlineRow.style.display = "none";
+            await loadSentences();
+          } catch (e) {
+            Toast.show(e.message || "Lỗi khi tạo câu", "danger");
+          }
+        });
+
+        // Lưu sửa câu
+        document.getElementById("editForm").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const id = document.getElementById("editId").value;
+          const ch = document.getElementById("editChinese").value.trim();
+          const py = document.getElementById("editPinyin").value.trim();
+          const vi = document.getElementById("editViet").value.trim();
+
+          try {
+            await Api.put(`/sentences/admin/${id}`, {
+              chinese: ch,
+              pinyin: py || null,
+              vietnamese: vi,
+            });
+            Toast.show("Đã cập nhật câu thành công!", "success");
+            closeModal("editModal");
+            await loadSentences();
+          } catch (err) {
+            Toast.show(err.message || "Lỗi cập nhật", "danger");
+          }
+        });
+
+        // Xóa 1 câu
+        document.getElementById("btnConfirmDelete").addEventListener("click", async () => {
+          if (!deleteTargetId) return;
+          try {
+            await Api.delete(`/sentences/admin/${deleteTargetId}`);
+            Toast.show("Đã xóa câu thành công!", "success");
+            selectedIds.delete(deleteTargetId);
+            deleteTargetId = null;
+            closeModal("deleteModal");
+            await loadSentences();
+          } catch (e) {
+            Toast.show(e.message || "Lỗi khi xóa", "danger");
+          }
+        });
+
+        // Xóa hàng loạt
+        document.getElementById("btnBulkDeleteOpen").addEventListener("click", () => {
+          if (selectedIds.size === 0) return;
+          document.getElementById("bulkDeleteCount").textContent = selectedIds.size;
+          openModal("bulkDeleteModal");
+        });
+
+        document.getElementById("btnConfirmBulkDelete").addEventListener("click", async () => {
+          if (selectedIds.size === 0) return;
+          try {
+            const data = await Api.post("/sentences/admin/bulk-delete", { ids: Array.from(selectedIds) });
+            Toast.show(`Đã xóa thành công ${data.deleted_count} câu!`, "success");
+            selectedIds.clear();
+            closeModal("bulkDeleteModal");
+            await loadSentences();
+          } catch (e) {
+            Toast.show(e.message || "Lỗi khi xóa hàng loạt", "danger");
+          }
+        });
+
+        // Nhập hàng loạt qua modal
+        document.getElementById("btnOpenBulkAdd").addEventListener("click", () => {
+          document.getElementById("bulkAddTextarea").value = "";
+          document.getElementById("bulkLineCount").textContent = "0 dòng";
+          openModal("bulkAddModal");
+        });
+
+        document.getElementById("bulkAddTextarea").addEventListener("input", (e) => {
+          const lines = e.target.value.split("\n").filter((l) => l.trim().length > 0);
+          document.getElementById("bulkLineCount").textContent = `${lines.length} dòng`;
+        });
+
+        document.getElementById("bulkAddForm").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const text = document.getElementById("bulkAddTextarea").value;
+          const lines = text.split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
+          if (lines.length === 0) {
+            Toast.show("Vui lòng nhập ít nhất 1 dòng!", "danger");
+            return;
+          }
+
+          const items = [];
+          for (const line of lines) {
+            let parts = [];
+            if (line.includes("|")) {
+              parts = line.split("|");
+            } else if (line.includes("\t")) {
+              parts = line.split("\t");
+            } else if (line.includes(",")) {
+              parts = line.split(",");
+            }
+
+            if (parts.length >= 3) {
+              const p0 = parts[0].trim();
+              const p1 = parts[1].trim();
+              const p2 = parts[2].trim();
+              if (p0 && p2) {
+                items.push({ set_id: currentSetId, chinese: p0, pinyin: p1, vietnamese: p2 });
+              }
+            } else if (parts.length === 2) {
+              const p0 = parts[0].trim();
+              const p1 = parts[1].trim();
+              const hasHanzi0 = /[\u4e00-\u9fff]/.test(p0);
+              const hasHanzi1 = /[\u4e00-\u9fff]/.test(p1);
+
+              let ch = p0, vi = p1;
+              if (hasHanzi1 && !hasHanzi0) {
+                ch = p1; vi = p0;
+              }
+              if (ch && vi) {
+                items.push({ set_id: currentSetId, chinese: ch, vietnamese: vi });
+              }
+            }
+          }
+
+          if (items.length === 0) {
+            Toast.show("Không tìm thấy dữ liệu hợp lệ (yêu cầu dạng Tiếng Trung | Pinyin | Tiếng Việt)", "danger");
+            return;
+          }
+
+          try {
+            await Api.post("/sentences/admin/bulk", { set_id: currentSetId, items });
+            Toast.show(`Đã thêm thành công ${items.length} câu vào bộ!`, "success");
+            closeModal("bulkAddModal");
+            await loadSentences();
+          } catch (err) {
+            Toast.show(err.message || "Lỗi khi thêm hàng loạt", "danger");
+          }
+        });
+
+        // Import Excel trực tiếp vào bộ
+        document.getElementById("btnOpenImport").addEventListener("click", () => {
+          document.getElementById("fileInput").value = "";
+          document.getElementById("fileSelectedInfo").style.display = "none";
+          openModal("importModal");
+        });
+
+        const dropZone = document.getElementById("dropZone");
+        const fileInput = document.getElementById("fileInput");
+        const fileInfo = document.getElementById("fileSelectedInfo");
+
+        dropZone.addEventListener("click", () => fileInput.click());
+
+        fileInput.addEventListener("change", () => {
+          const file = fileInput.files[0];
+          if (file) {
+            fileInfo.textContent = `Đã chọn: ${file.name} (${Math.round(file.size / 1024)} KB)`;
+            fileInfo.style.display = "block";
+          }
+        });
+
+        dropZone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dropZone.style.borderColor = "var(--accent)";
+        });
+
+        dropZone.addEventListener("dragleave", () => {
+          dropZone.style.borderColor = "var(--border)";
+        });
+
+        dropZone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dropZone.style.borderColor = "var(--border)";
+          if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            const file = fileInput.files[0];
+            fileInfo.textContent = `Đã chọn: ${file.name} (${Math.round(file.size / 1024)} KB)`;
+            fileInfo.style.display = "block";
+          }
+        });
+
+        document.getElementById("importForm").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const file = fileInput.files[0];
+          if (!file) {
+            Toast.show("Vui lòng chọn 1 file Excel hoặc CSV!", "danger");
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const btnSubmit = document.getElementById("btnSubmitImport");
+          btnSubmit.disabled = true;
+          btnSubmit.textContent = "Đang xử lý import...";
+
+          try {
+            const res = await SentenceSetApi.adminImportExcel(currentSetId, formData);
+            Toast.show(res.message || "Import thành công!", "success");
+            closeModal("importModal");
+            await loadSentences();
+          } catch (err) {
+            Toast.show(err.message || "Lỗi khi import file", "danger");
+          } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Bắt đầu Import";
+          }
+        });
+
+        loadSetDetail();
+        loadSentences();
+      })();
+    </script>
+  </body>
+</html>

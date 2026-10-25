@@ -1,0 +1,558 @@
+/* ============================================================
+   HanziQuizz — Design System & Tokens
+   Tuân thủ nghiêm ngặt theo .agents/design-rules.md
+   Phong cách: Giấy & Mực Á Đông hiện đại (Đỏ son + Giấy ấm)
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+SC:wght@500;600;700;900&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+
+:root {
+  /* === 2. Màu sắc (Light Mode: Giấy ấm & Đỏ son) === */
+  --bg:            #FAF8F4;   /* Giấy ấm */
+  --surface:       #FFFFFF;   /* Card, Panel */
+  --surface-2:     #F3F0EA;   /* Vùng phụ, input, hover nhẹ */
+  --border:        #E6E1D8;
+  --border-strong: #D3CCBF;
+
+  /* Chữ */
+  --text:          #1C1A17;   /* Không dùng #000 */
+  --text-2:        #5F5A52;   /* Mô tả, phụ */
+  --text-3:        #8F897E;   /* Placeholder, caption */
+
+  /* Màu nhấn duy nhất: Đỏ son (朱红) */
+  --accent:        #C8382D;
+  --accent-hover:  #AD2F25;
+  --accent-soft:   #FBEDEB;   /* Nền badge, vùng chọn */
+  --on-accent:     #FFFFFF;
+
+  /* Ngữ nghĩa: đúng / sai / cảnh báo */
+  --success:       #2F7D4F;
+  --success-soft:  #E8F3EC;
+  --danger:        #C8382D;
+  --danger-soft:   #FBEDEB;
+  --warning:       #B7791F;
+  --warning-soft:  #FBF3E1;
+
+  /* === 3. Typography === */
+  --font-ui:       "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-han:      "Noto Serif SC", "Songti SC", "SimSun", serif;
+  --font-han-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-pinyin:   "Be Vietnam Pro", sans-serif;
+  --font-mono:     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Thang cỡ chữ */
+  --fs-han-xl:     clamp(4rem, 14vw, 7rem);
+  --fs-han-lg:     2.5rem;
+  --fs-han-md:     1.5rem;
+  --fs-h1:         clamp(1.75rem, 4vw, 2.5rem);
+  --fs-h2:         1.375rem;
+  --fs-body:       1rem;
+  --fs-sm:         0.875rem;
+  --fs-xs:         0.75rem;
+
+  /* === 4. Không gian & Bo góc === */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+
+  /* Radius: chỉ 3 mức */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+
+  /* Shadow: rất nhẹ, chỉ 2 mức */
+  --shadow-1: 0 1px 2px rgba(28, 26, 23, 0.06);
+  --shadow-2: 0 4px 12px rgba(28, 26, 23, 0.08);
+
+  /* === Backward Compatibility Aliases === */
+  --bg-base:       var(--bg);
+  --bg-surface:    var(--surface);
+  --bg-card:       var(--surface);
+  --bg-card-hover: var(--surface-2);
+  --primary:       var(--accent);
+  --primary-light: var(--accent-hover);
+  --primary-dark:  var(--accent-hover);
+  --secondary:     var(--text-2);
+  --text-primary:  var(--text);
+  --text-secondary:var(--text-2);
+  --text-muted:    var(--text-3);
+  --text-hanzi:    var(--text);
+  --text-pinyin:   var(--text-2);
+  --text-viet:     var(--text);
+  --state-correct: var(--success);
+  --state-correct-bg: var(--success-soft);
+  --state-wrong:   var(--danger);
+  --state-wrong-bg:var(--danger-soft);
+  --state-pending: var(--warning);
+  --state-pending-bg: var(--warning-soft);
+  --border-active: var(--accent);
+  --shadow-sm:     var(--shadow-1);
+  --shadow-md:     var(--shadow-2);
+  --shadow-lg:     var(--shadow-2);
+  --shadow-glow:   0 0 0 3px var(--accent-soft);
+  --radius-sm:     var(--r-sm);
+  --radius-md:     var(--r-md);
+  --radius-lg:     var(--r-lg);
+  --radius-xl:     var(--r-lg);
+  --radius-full:   var(--r-sm);
+  --space-xs:      var(--s-1);
+  --space-sm:      var(--s-2);
+  --space-md:      var(--s-4);
+  --space-lg:      var(--s-5);
+  --space-xl:      var(--s-6);
+  --space-2xl:     var(--s-7);
+  --space-3xl:     var(--s-8);
+  --font-hanzi:    var(--font-han);
+}
+
+/* === Dark Mode (khi hệ điều hành bật hoặc class .dark-theme) === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:            #15130F;
+    --surface:       #1E1B16;
+    --surface-2:     #27231D;
+    --border:        #332F27;
+    --border-strong: #463F34;
+    --text:          #F2EEE6;
+    --text-2:        #B5AEA0;
+    --text-3:        #857E70;
+    --accent:        #E2554A;
+    --accent-hover:  #EC6D63;
+    --accent-soft:   #3A1F1C;
+    --on-accent:     #FFFFFF;
+    --success:       #5FB27F;
+    --success-soft:  #1B2C22;
+    --danger:        #E2554A;
+    --danger-soft:   #3A1F1C;
+    --warning:       #E0A94A;
+    --warning-soft:  #33290F;
+    --shadow-1:      0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-2:      0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+}
+
+body.dark-theme {
+  --bg:            #15130F;
+  --surface:       #1E1B16;
+  --surface-2:     #27231D;
+  --border:        #332F27;
+  --border-strong: #463F34;
+  --text:          #F2EEE6;
+  --text-2:        #B5AEA0;
+  --text-3:        #857E70;
+  --accent:        #E2554A;
+  --accent-hover:  #EC6D63;
+  --accent-soft:   #3A1F1C;
+  --on-accent:     #FFFFFF;
+  --success:       #5FB27F;
+  --success-soft:  #1B2C22;
+  --danger:        #E2554A;
+  --danger-soft:   #3A1F1C;
+  --warning:       #E0A94A;
+  --warning-soft:  #33290F;
+  --shadow-1:      0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2:      0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* === Reset & Base Styles === */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-ui);
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: var(--r-sm); }
+
+/* === Typography Hierarchy === */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+h1 { font-size: var(--fs-h1); }
+h2 { font-size: var(--fs-h2); }
+h3 { font-size: 1.15rem; }
+
+p {
+  color: var(--text-2);
+  line-height: 1.6;
+  max-width: 65ch;
+}
+
+.text-hanzi {
+  font-family: var(--font-han);
+  color: var(--text);
+}
+
+.text-pinyin {
+  font-family: var(--font-pinyin);
+  color: var(--text-2);
+  letter-spacing: 0.02em;
+}
+
+/* === Buttons (§5.7) === */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 44px;
+  padding: 0 var(--s-4);
+  border-radius: var(--r-sm);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 150ms cubic-bezier(.2,.7,.2,1),
+              border-color 150ms cubic-bezier(.2,.7,.2,1),
+              color 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.btn:disabled, .btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Primary Button (Duy nhất 1 nút chính trên màn hình) */
+.btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+/* Secondary Button */
+.btn-secondary {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.btn-secondary:hover {
+  background: var(--surface-2);
+  border-color: var(--text-2);
+}
+
+/* Ghost Button */
+.btn-ghost, .btn-text {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-2);
+}
+
+.btn-ghost:hover, .btn-text:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.btn-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: var(--danger);
+  color: var(--on-accent);
+}
+
+.btn-lg { min-height: 48px; padding: 0 var(--s-6); font-size: var(--fs-body); }
+.btn-sm { min-height: 36px; padding: 0 var(--s-3); font-size: var(--fs-xs); }
+.btn-icon { width: 44px; height: 44px; padding: 0; border-radius: var(--r-sm); }
+.btn-full { width: 100%; }
+
+/* === Cards (§4 & §5.3) === */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--s-5);
+  box-shadow: none;
+  transition: border-color 150ms cubic-bezier(.2,.7,.2,1),
+              transform 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.card-glass {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+/* === Inputs & Search (§5.8) === */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin-bottom: var(--s-4);
+}
+
+.form-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.form-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px var(--s-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  outline: none;
+  transition: border-color 150ms cubic-bezier(.2,.7,.2,1),
+              box-shadow 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.form-input::placeholder { color: var(--text-3); }
+
+.form-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.form-error {
+  font-size: var(--fs-xs);
+  color: var(--danger);
+  margin-top: var(--s-1);
+}
+
+/* === Navbar (§5.1) === */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  min-height: 56px;
+  max-height: 64px;
+  padding: 0 var(--s-5);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  text-decoration: none;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.navbar-brand img {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
+
+.navbar-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* === Badges === */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+
+.badge-primary, .badge-accent {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: transparent;
+}
+
+.badge-correct {
+  background: var(--success-soft);
+  color: var(--success);
+  border-color: transparent;
+}
+
+.badge-wrong {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: transparent;
+}
+
+/* === Progress Bar (Mảnh 4px) === */
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--surface-2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 250ms cubic-bezier(.2,.7,.2,1);
+}
+
+/* === Skeleton Loading (§5.9) === */
+.skeleton {
+  background: var(--surface-2);
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-sm);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  animation: skeletonShimmer 1.5s infinite;
+}
+
+@keyframes skeletonShimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* === Toasts === */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.toast {
+  padding: 12px 18px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  box-shadow: var(--shadow-2);
+  max-width: 360px;
+}
+
+.toast-success { border-left: 4px solid var(--success); }
+.toast-error   { border-left: 4px solid var(--danger); }
+.toast-info    { border-left: 4px solid var(--text-2); }
+
+/* === Confetti Canvas Overlay === */
+#confettiCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* === Modal (§5.6) === */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 26, 23, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--s-4);
+}
+
+.modal-content {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  padding: var(--s-6);
+  max-width: 520px;
+  width: 100%;
+  box-shadow: var(--shadow-2);
+}
+
+/* === Audio Playing Indicator === */
+.is-audio-playing svg,
+.is-audio-playing .icon-speaker {
+  animation: audioPulse 0.7s infinite alternate ease-in-out;
+  color: var(--accent, #b33939) !important;
+}
+
+@keyframes audioPulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.25); opacity: 1; }
+}
+
+/* === Accessibility: prefers-reduced-motion (§7) === */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

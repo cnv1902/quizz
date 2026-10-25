@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý Ngữ Pháp — HanziQuizz Admin</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/img/HanziQuizz-Favicon.png"
+    />
+    <link rel="stylesheet" href="/static/css/game/theme.css?v={{ v }}" />
+    <link rel="stylesheet" href="/static/css/admin/admin.css?v={{ v }}" />
+    <style>
+      .hanzi-text {
+        font-family: var(--font-han, "Noto Serif SC", serif);
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--accent);
+      }
+      .inline-add-row {
+        background: var(--surface-2);
+        border-bottom: 2px solid var(--border-strong);
+      }
+      .inline-add-row td {
+        padding: 8px 12px;
+      }
+      .inline-add-input {
+        width: 100%;
+        padding: 7px 10px;
+        border: 1px solid var(--border);
+        border-radius: var(--r-sm);
+        background: var(--surface);
+        color: var(--text);
+        font-size: var(--fs-sm);
+        box-sizing: border-box;
+      }
+      .inline-add-input:focus {
+        border-color: var(--accent);
+        outline: none;
+      }
+      .inline-textarea {
+        resize: vertical;
+        min-height: 40px;
+        font-family: inherit;
+        line-height: 1.4;
+      }
+      .btn-audio-sm {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-2);
+        padding: 2px 4px;
+        border-radius: 4px;
+        transition: color 120ms ease;
+      }
+      .btn-audio-sm:hover {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body class="admin-layout">
+    <!-- Header đồng nhất 100% các trang Admin -->
+    <header class="admin-header">
+      <a href="/pages/admin/quizzes.html" class="admin-brand">
+        <img
+          src="/static/img/HanziQuizz-Favicon.png"
+          alt="HanziQuizz Logo"
+          style="height: 32px; width: auto; object-fit: contain"
+        />
+        <span class="admin-brand-title">HanziQuizz</span>
+        <span class="badge-admin">Admin</span>
+      </a>
+
+      <nav class="admin-nav">
+        <a href="/pages/admin/quizzes.html" class="admin-nav-link">Bộ Quizz</a>
+        <a href="/pages/admin/measure-words.html" class="admin-nav-link">Lượng từ</a>
+        <a href="/pages/admin/grammar.html" class="admin-nav-link active">Ngữ pháp</a>
+        <a href="/pages/admin/sentences.html" class="admin-nav-link">Bộ câu</a>
+        <a href="/pages/admin/users.html" class="admin-nav-link">Người dùng</a>
+        <a href="/" class="admin-nav-link" title="Quay lại giao diện người chơi">Về trang chủ</a>
+      </nav>
+
+      <div class="admin-user-menu">
+        <span id="adminUserName">Admin</span>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn">Đăng xuất</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-container">
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-title-group">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+            <h1>Quản lý Điểm Ngữ Pháp</h1>
+            <span class="badge-admin">HSK 1 - 6</span>
+          </div>
+          <p style="color: var(--text-2)">
+            Quản lý cấu trúc câu, ngữ pháp, mẫu câu ví dụ và phiên âm pinyin cho học viên.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="btn btn-primary" id="btnToggleInlineAdd">
+            ＋ Thêm nhanh
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnOpenBulkAdd">
+            📋 Nhập hàng loạt
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnOpenImport">
+            📥 Import Excel
+          </button>
+          <a href="/api/v1/grammar/template" class="btn btn-secondary" title="Tải file Excel mẫu" download>
+            📄 Tải file mẫu
+          </a>
+          <a href="/pages/grammar.html" target="_blank" class="btn btn-secondary" title="Xem giao diện người học">
+            👁️ Xem trang học ↗
+          </a>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Tìm theo Chữ Hán, Pinyin hoặc Giải thích Công thức..."
+          />
+        </div>
+        <div style="display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap;">
+          <!-- Bulk Action Bar -->
+          <div id="bulkActionBar" class="bulk-action-bar" style="display: none">
+            <span style="font-size: var(--fs-xs); color: var(--text); font-weight: 600;">
+              Đã chọn: <strong id="selectedCountDisplay" style="color: var(--accent)">0</strong> mục
+            </span>
+            <button
+              type="button"
+              class="btn btn-danger btn-sm"
+              id="btnBulkDeleteOpen"
+              style="padding: 3px 8px; font-size: var(--fs-xs)"
+            >
+              🗑️ Xóa đã chọn
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              id="btnDeselectAll"
+              style="padding: 3px 8px; font-size: var(--fs-xs)"
+            >
+              Bỏ chọn
+            </button>
+          </div>
+
+          <div style="color: var(--text-2); font-size: var(--fs-sm)">
+            Tổng số: <strong id="itemsCountDisplay" style="color: var(--accent)">0</strong> điểm ngữ pháp
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Table -->
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 44px; text-align: center">
+                <input
+                  type="checkbox"
+                  id="selectAllCheckbox"
+                  class="row-checkbox"
+                  title="Chọn tất cả mục hiển thị"
+                />
+              </th>
+              <th style="width: 50px; text-align: center">STT</th>
+              <th style="width: 180px">Chữ Hán / Cấu trúc (汉字)</th>
+              <th style="width: 140px">Pinyin (拼音)</th>
+              <th>Giải thích Công thức (Ý nghĩa & Cấu trúc)</th>
+              <th style="width: 120px; text-align: right">Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Inline add row (Ẩn/Hiện bằng nút Thêm nhanh) -->
+            <tr id="inlineAddRow" class="inline-add-row" style="display: none;">
+              <td style="text-align: center; color: var(--accent); font-weight: bold;">＋</td>
+              <td style="color: var(--text-2); font-size: var(--fs-xs); text-align: center;">Mới</td>
+              <td>
+                <input type="text" id="inlineHanzi" class="inline-add-input" placeholder="Ví dụ: 怎么" style="font-family: var(--font-han); font-weight: bold;" />
+              </td>
+              <td>
+                <input type="text" id="inlinePinyin" class="inline-add-input" placeholder="Ví dụ: zěnme" />
+              </td>
+              <td>
+                <textarea id="inlineViet" class="inline-add-input inline-textarea" placeholder="Nhập giải thích công thức, cách dùng, ví dụ câu..."></textarea>
+              </td>
+              <td style="text-align: right; white-space: nowrap;">
+                <button type="button" class="btn btn-primary btn-sm" id="btnSaveInline">Lưu</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btnCancelInline">Hủy</button>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="6" class="empty-table">
+                <span class="empty-icon">⏳</span>
+                <div>Đang tải danh sách ngữ pháp...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- Modal Chỉnh Sửa -->
+    <div class="modal-overlay" id="editModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">Chỉnh sửa Điểm Ngữ Pháp</h3>
+          <button class="modal-close" data-close="editModal">&times;</button>
+        </div>
+        <form id="editForm">
+          <div class="modal-body">
+            <input type="hidden" id="editId" />
+            <div class="form-group">
+              <label class="form-label">Chữ Hán / Cấu trúc (汉字) <span style="color: var(--danger)">*</span></label>
+              <input
+                type="text"
+                class="form-control"
+                id="editHanzi"
+                required
+                style="font-family: var(--font-han); font-size: 1.3rem; font-weight: bold;"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pinyin (Phiên âm có thanh điệu) <span style="color: var(--danger)">*</span></label>
+              <input
+                type="text"
+                class="form-control"
+                id="editPinyin"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Giải thích Công thức <span style="color: var(--danger)">*</span></label>
+              <textarea
+                class="form-control"
+                id="editViet"
+                rows="5"
+                required
+                style="resize: vertical; line-height: 1.5;"
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-close="editModal">Hủy</button>
+            <button type="submit" class="btn btn-primary" id="btnSaveEdit">Lưu thay đổi</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Xóa Đơn Lẻ -->
+    <div class="modal-overlay" id="deleteModal">
+      <div class="modal-card" style="max-width: 420px">
+        <div class="modal-header">
+          <h3 class="modal-title" style="color: var(--danger)">Xác nhận xóa ngữ pháp</h3>
+          <button class="modal-close" data-close="deleteModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="color: var(--text-2); font-size: var(--fs-sm); line-height: 1.5;">
+            Bạn có chắc chắn muốn xóa điểm ngữ pháp <strong id="deleteInfo" style="color: var(--text)"></strong> không?
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="deleteModal">Hủy</button>
+          <button type="button" class="btn btn-danger" id="btnConfirmDelete">Xóa</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Xóa Hàng Loạt -->
+    <div class="modal-overlay" id="bulkDeleteModal">
+      <div class="modal-card" style="max-width: 440px">
+        <div class="modal-header">
+          <h3 class="modal-title" style="color: var(--danger)">Xác nhận xóa hàng loạt</h3>
+          <button class="modal-close" data-close="bulkDeleteModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="color: var(--text-2); font-size: var(--fs-sm); line-height: 1.5;">
+            Bạn đang chuẩn bị xóa vĩnh viễn <strong id="bulkDeleteCount" style="color: var(--danger)">0</strong> điểm ngữ pháp đã chọn. Hành động này không thể hoàn tác!
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="bulkDeleteModal">Hủy</button>
+          <button type="button" class="btn btn-danger" id="btnConfirmBulkDelete">Đồng ý xóa</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Nhập Hàng Loạt -->
+    <div class="modal-overlay" id="bulkAddModal">
+      <div class="modal-card" style="max-width: 680px">
+        <div class="modal-header">
+          <h3 class="modal-title">📋 Nhập Ngữ Pháp Hàng Loạt</h3>
+          <button class="modal-close" data-close="bulkAddModal">&times;</button>
+        </div>
+        <form id="bulkAddForm">
+          <div class="modal-body">
+            <div
+              style="
+                background: var(--surface-2);
+                border-left: 3px solid var(--accent);
+                padding: 10px 14px;
+                border-radius: var(--r-sm);
+                font-size: var(--fs-xs);
+                color: var(--text-2);
+                line-height: 1.5;
+                margin-bottom: var(--s-3);
+              "
+            >
+              <strong>Hướng dẫn định dạng:</strong><br />
+              • Mỗi dòng một điểm ngữ pháp, cách nhau bằng dấu gạch đứng <code>|</code>, dấu phẩy <code>,</code> hoặc phím <code>Tab</code>.<br />
+              • Định dạng chuẩn 3 cột: <code>Giải thích Công thức | Pinyin | Chữ Hán</code><br />
+              • Hỗ trợ đảo vị trí: <code>Chữ Hán | Pinyin | Giải thích Công thức</code>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="display: flex; justify-content: space-between;">
+                <span>Dán danh sách vào đây:</span>
+                <span id="bulkLineCount" style="color: var(--text-2); font-size: var(--fs-xs);">0 dòng</span>
+              </label>
+              <textarea
+                class="form-control"
+                id="bulkAddTextarea"
+                rows="10"
+                placeholder="Ví dụ:&#10;Dùng hỏi phương thức: Chủ ngữ + 怎么 + Động từ? | zěnme | 怎么&#10;Trợ từ kết cấu: Định ngữ + 的 + Danh từ | de | 的"
+                style="font-family: monospace; font-size: var(--fs-xs); line-height: 1.5; resize: vertical;"
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-close="bulkAddModal">Hủy</button>
+            <button type="submit" class="btn btn-primary" id="btnSubmitBulkAdd">Thêm vào hệ thống</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Import Excel -->
+    <div class="modal-overlay" id="importModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">📥 Import Ngữ Pháp từ File Excel (.xlsx / .csv)</h3>
+          <button class="modal-close" data-close="importModal">&times;</button>
+        </div>
+        <form id="importForm">
+          <div class="modal-body">
+            <div
+              style="
+                background: var(--surface-2);
+                border-left: 3px solid var(--accent);
+                padding: 10px 14px;
+                border-radius: var(--r-sm);
+                font-size: var(--fs-xs);
+                color: var(--text-2);
+                line-height: 1.5;
+                margin-bottom: var(--s-3);
+              "
+            >
+              <strong>Yêu cầu định dạng bảng Excel (3 cột):</strong><br />
+              • Cột A: <strong>Giải thích Công thức</strong> (Cấu trúc, ý nghĩa & ví dụ)<br />
+              • Cột B: <strong>Pinyin</strong> (Phiên âm)<br />
+              • Cột C: <strong>Chữ Hán</strong> (Mẫu câu/từ ngữ pháp)<br />
+              • Dòng tiêu đề đầu tiên sẽ tự động được bỏ qua.<br />
+              <div style="margin-top: 6px;">
+                <a href="/api/v1/grammar/template" style="color: var(--accent); font-weight: 600; text-decoration: underline;" download>
+                  Tải file Excel mẫu 3 cột chuẩn tại đây nếu chưa có
+                </a>
+              </div>
+            </div>
+
+            <div class="dropzone" id="excelDropzone">
+              <div class="dropzone-icon">📊</div>
+              <div class="dropzone-title">Kéo & thả file Excel/CSV vào đây</div>
+              <div class="dropzone-desc">hoặc nhấp chuột để chọn file</div>
+              <input
+                type="file"
+                id="excelFileInput"
+                accept=".xlsx, .xls, .csv"
+                style="display: none"
+              />
+              <div class="dropzone-file-info" id="selectedFileInfo"></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-close="importModal">Hủy</button>
+            <button type="submit" class="btn btn-primary" id="btnSubmitImport" disabled>Bắt đầu Import</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script src="/static/js/core/api.js?v={{ v }}"></script>
+    <script src="/static/js/core/auth.js?v={{ v }}"></script>
+    <script src="/static/js/components/toast.js?v={{ v }}"></script>
+    <script src="/static/js/components/audioPlayer.js?v={{ v }}"></script>
+    <script>
+      (function() {
+        if (!Auth.requireAdmin()) return;
+
+        let allItems = [];
+        let filteredItems = [];
+        let selectedIds = new Set();
+        let currentItemToDelete = null;
+
+        const tableBody = document.getElementById("tableBody");
+        const inlineAddRow = document.getElementById("inlineAddRow");
+        const searchInput = document.getElementById("searchInput");
+        const selectAllCheckbox = document.getElementById("selectAllCheckbox");
+        const bulkActionBar = document.getElementById("bulkActionBar");
+        const selectedCountDisplay = document.getElementById("selectedCountDisplay");
+        const itemsCountDisplay = document.getElementById("itemsCountDisplay");
+
+        function speak(text, audioUrl, btnElement) {
+          AudioPlayer.play(audioUrl, text, { btnElement: btnElement });
+        }
+
+        function escapeHtml(str) {
+          if (!str) return "";
+          return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+        }
+
+        const user = Auth.getUser();
+        if (user) {
+          document.getElementById("adminUserName").textContent = user.full_name || user.username || "Admin";
+        }
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+          Auth.clearSession();
+          window.location.href = "/pages/login.html";
+        });
+
+        async function loadItems() {
+          try {
+            const res = await Api.get("/grammar");
+            allItems = Array.isArray(res) ? res : (res.data || []);
+            applyFilter();
+          } catch (err) {
+            console.error(err);
+            Toast.show("Lỗi khi tải danh mục ngữ pháp!", "danger");
+          }
+        }
+
+        function applyFilter() {
+          const q = (searchInput.value || "").trim().toLowerCase();
+          if (!q) {
+            filteredItems = [...allItems];
+          } else {
+            filteredItems = allItems.filter(item => {
+              const h = (item.hanzi || "").toLowerCase();
+              const p = (item.pinyin || "").toLowerCase();
+              const v = (item.vietnamese || "").toLowerCase();
+              return h.includes(q) || p.includes(q) || v.includes(q);
+            });
+          }
+          renderTable();
+        }
+
+        function renderTable() {
+          itemsCountDisplay.textContent = filteredItems.length;
+
+          const rows = tableBody.querySelectorAll("tr:not(#inlineAddRow)");
+          rows.forEach(r => r.remove());
+
+          if (filteredItems.length === 0) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td colspan="6" class="empty-table">
+                <span class="empty-icon">📂</span>
+                <div>Chưa có điểm ngữ pháp nào. Hãy bấm "＋ Thêm nhanh", "📋 Nhập hàng loạt" hoặc "📥 Import Excel".</div>
+              </td>
+            `;
+            tableBody.appendChild(tr);
+            updateSelectionState();
+            return;
+          }
+
+          filteredItems.forEach((item, idx) => {
+            const isChecked = selectedIds.has(item.id);
+            const tr = document.createElement("tr");
+            tr.dataset.id = item.id;
+            tr.innerHTML = `
+              <td style="text-align: center">
+                <input type="checkbox" class="row-checkbox item-checkbox" data-id="${item.id}" ${isChecked ? "checked" : ""} />
+              </td>
+              <td style="color: var(--text-2); font-size: var(--fs-xs); text-align: center;">${idx + 1}</td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="hanzi-text">${escapeHtml(item.hanzi)}</span>
+                  <button type="button" class="btn-audio-sm" data-speak="${escapeHtml(item.hanzi)}" data-audio="${escapeHtml(item.audio_url || '')}" title="Phát âm tiếng Trung">
+                    🔊
+                  </button>
+                </div>
+              </td>
+              <td style="font-weight: 500;">${escapeHtml(item.pinyin || '')}</td>
+              <td style="line-height: 1.6; font-size: var(--fs-sm);">${escapeHtml(item.vietnamese || '')}</td>
+              <td style="text-align: right; white-space: nowrap;">
+                <button type="button" class="btn btn-ghost btn-sm btn-edit" data-id="${item.id}" title="Chỉnh sửa">
+                  ✏️
+                </button>
+                <button type="button" class="btn btn-ghost btn-sm btn-delete" data-id="${item.id}" title="Xóa" style="color: var(--danger);">
+                  🗑️
+                </button>
+              </td>
+            `;
+            tableBody.appendChild(tr);
+          });
+
+          bindTableEvents();
+          updateSelectionState();
+        }
+
+        function bindTableEvents() {
+          tableBody.querySelectorAll("[data-speak]").forEach(btn => {
+            btn.onclick = () => {
+              const text = btn.getAttribute("data-speak");
+              const audioUrl = btn.getAttribute("data-audio");
+              speak(text, audioUrl, btn);
+            };
+          });
+
+          tableBody.querySelectorAll(".item-checkbox").forEach(cb => {
+            cb.onchange = (e) => {
+              const id = parseInt(e.target.dataset.id, 10);
+              if (e.target.checked) {
+                selectedIds.add(id);
+              } else {
+                selectedIds.delete(id);
+              }
+              updateSelectionState();
+            };
+          });
+
+          tableBody.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.onclick = () => {
+              const id = parseInt(btn.dataset.id, 10);
+              const item = allItems.find(x => x.id === id);
+              if (item) openEditModal(item);
+            };
+          });
+
+          tableBody.querySelectorAll(".btn-delete").forEach(btn => {
+            btn.onclick = () => {
+              const id = parseInt(btn.dataset.id, 10);
+              const item = allItems.find(x => x.id === id);
+              if (item) openDeleteModal(item);
+            };
+          });
+        }
+
+        function updateSelectionState() {
+          const totalShown = filteredItems.length;
+          const shownSelected = filteredItems.filter(x => selectedIds.has(x.id)).length;
+
+          if (totalShown > 0 && shownSelected === totalShown) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+          } else if (shownSelected > 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+          } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+          }
+
+          if (selectedIds.size > 0) {
+            bulkActionBar.style.display = "flex";
+            selectedCountDisplay.textContent = selectedIds.size;
+          } else {
+            bulkActionBar.style.display = "none";
+          }
+        }
+
+        selectAllCheckbox.addEventListener("change", (e) => {
+          if (e.target.checked) {
+            filteredItems.forEach(x => selectedIds.add(x.id));
+          } else {
+            filteredItems.forEach(x => selectedIds.delete(x.id));
+          }
+          renderTable();
+        });
+
+        document.getElementById("btnDeselectAll")?.addEventListener("click", () => {
+          selectedIds.clear();
+          renderTable();
+        });
+
+        searchInput.addEventListener("input", applyFilter);
+
+        // Inline Add Toggle
+        const btnToggleInline = document.getElementById("btnToggleInlineAdd");
+        btnToggleInline.addEventListener("click", () => {
+          if (inlineAddRow.style.display === "none") {
+            inlineAddRow.style.display = "table-row";
+            document.getElementById("inlineHanzi").focus();
+            btnToggleInline.textContent = "✕ Đóng thêm nhanh";
+          } else {
+            inlineAddRow.style.display = "none";
+            btnToggleInline.textContent = "＋ Thêm nhanh";
+          }
+        });
+
+        document.getElementById("btnCancelInline").addEventListener("click", () => {
+          inlineAddRow.style.display = "none";
+          btnToggleInline.textContent = "＋ Thêm nhanh";
+        });
+
+        document.getElementById("btnSaveInline").addEventListener("click", async () => {
+          const hanzi = document.getElementById("inlineHanzi").value.trim();
+          const pinyin = document.getElementById("inlinePinyin").value.trim();
+          const viet = document.getElementById("inlineViet").value.trim();
+
+          if (!hanzi || !viet) {
+            Toast.show("Vui lòng nhập Chữ Hán / Cấu trúc và Giải thích Công thức!", "warning");
+            return;
+          }
+
+          try {
+            await Api.post("/grammar/admin", {
+              hanzi: hanzi,
+              pinyin: pinyin,
+              vietnamese: viet,
+              order_index: allItems.length + 1
+            });
+            Toast.show("Đã thêm điểm ngữ pháp mới!", "success");
+            document.getElementById("inlineHanzi").value = "";
+            document.getElementById("inlinePinyin").value = "";
+            document.getElementById("inlineViet").value = "";
+            document.getElementById("inlineHanzi").focus();
+            loadItems();
+          } catch (err) {
+            Toast.show("Không thể lưu ngữ pháp: " + (err.detail || err.message), "danger");
+          }
+        });
+
+        function openModal(id) {
+          const el = typeof id === "string" ? document.getElementById(id) : id;
+          if (!el) return;
+          el.classList.add("open");
+          el.classList.add("active");
+          document.body.style.overflow = "hidden";
+        }
+        function closeModal(id) {
+          const el = typeof id === "string" ? document.getElementById(id) : id;
+          if (!el) return;
+          el.classList.remove("open");
+          el.classList.remove("active");
+          document.body.style.overflow = "";
+        }
+        document.querySelectorAll("[data-close]").forEach(btn => {
+          btn.addEventListener("click", () => closeModal(btn.getAttribute("data-close")));
+        });
+        document.querySelectorAll(".modal-overlay").forEach(modal => {
+          modal.addEventListener("click", (e) => {
+            if (e.target === modal) closeModal(modal);
+          });
+        });
+
+        // Edit Modal
+        const editForm = document.getElementById("editForm");
+        function openEditModal(item) {
+          document.getElementById("editId").value = item.id;
+          document.getElementById("editHanzi").value = item.hanzi;
+          document.getElementById("editPinyin").value = item.pinyin || "";
+          document.getElementById("editViet").value = item.vietnamese;
+          openModal("editModal");
+        }
+
+        editForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const id = parseInt(document.getElementById("editId").value, 10);
+          const hanzi = document.getElementById("editHanzi").value.trim();
+          const pinyin = document.getElementById("editPinyin").value.trim();
+          const viet = document.getElementById("editViet").value.trim();
+
+          try {
+            await Api.put(`/grammar/admin/${id}`, {
+              hanzi: hanzi,
+              pinyin: pinyin,
+              vietnamese: viet
+            });
+            Toast.show("Đã cập nhật điểm ngữ pháp!", "success");
+            closeModal("editModal");
+            loadItems();
+          } catch (err) {
+            Toast.show("Lỗi cập nhật: " + (err.detail || err.message), "danger");
+          }
+        });
+
+        function openDeleteModal(item) {
+          currentItemToDelete = item;
+          document.getElementById("deleteInfo").textContent = `${item.hanzi} (${item.pinyin || ''})`;
+          openModal("deleteModal");
+        }
+
+        document.getElementById("btnConfirmDelete").addEventListener("click", async () => {
+          if (!currentItemToDelete) return;
+          try {
+            await Api.delete(`/grammar/admin/${currentItemToDelete.id}`);
+            Toast.show("Đã xóa điểm ngữ pháp!", "success");
+            selectedIds.delete(currentItemToDelete.id);
+            closeModal("deleteModal");
+            loadItems();
+          } catch (err) {
+            Toast.show("Lỗi khi xóa: " + (err.detail || err.message), "danger");
+          }
+        });
+
+        document.getElementById("btnBulkDeleteOpen").addEventListener("click", () => {
+          if (selectedIds.size === 0) return;
+          document.getElementById("bulkDeleteCount").textContent = selectedIds.size;
+          openModal("bulkDeleteModal");
+        });
+
+        document.getElementById("btnConfirmBulkDelete").addEventListener("click", async () => {
+          try {
+            await Api.post("/grammar/admin/bulk-delete", {
+              ids: Array.from(selectedIds)
+            });
+            Toast.show(`Đã xóa thành công ${selectedIds.size} điểm ngữ pháp!`, "success");
+            selectedIds.clear();
+            closeModal("bulkDeleteModal");
+            loadItems();
+          } catch (err) {
+            Toast.show("Lỗi khi xóa hàng loạt: " + (err.detail || err.message), "danger");
+          }
+        });
+
+        document.getElementById("btnOpenBulkAdd").addEventListener("click", () => {
+          document.getElementById("bulkAddTextarea").value = "";
+          document.getElementById("bulkLineCount").textContent = "0 dòng";
+          openModal("bulkAddModal");
+        });
+
+        const bulkTextarea = document.getElementById("bulkAddTextarea");
+        bulkTextarea.addEventListener("input", () => {
+          const lines = bulkTextarea.value.split("\n").filter(l => l.trim().length > 0);
+          document.getElementById("bulkLineCount").textContent = `${lines.length} dòng`;
+        });
+
+        document.getElementById("bulkAddForm").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const raw = bulkTextarea.value.trim();
+          if (!raw) {
+            Toast.show("Vui lòng nhập danh sách điểm ngữ pháp!", "warning");
+            return;
+          }
+
+          const lines = raw.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+          const items = [];
+
+          for (const line of lines) {
+            let parts = [];
+            if (line.includes("\t")) {
+              parts = line.split("\t");
+            } else if (line.includes("|")) {
+              parts = line.split("|");
+            } else {
+              parts = line.split(",");
+            }
+            parts = parts.map(p => p.trim());
+
+            if (parts.length >= 3) {
+              const isHanziFirst = /[\u4e00-\u9fa5]/.test(parts[0]);
+              let hanzi = "", pinyin = "", vietnamese = "";
+              if (isHanziFirst) {
+                hanzi = parts[0];
+                pinyin = parts[1];
+                vietnamese = parts.slice(2).join(", ");
+              } else {
+                vietnamese = parts[0];
+                pinyin = parts[1];
+                hanzi = parts[2];
+              }
+              if (hanzi && vietnamese) {
+                items.push({
+                  hanzi: hanzi,
+                  pinyin: pinyin,
+                  vietnamese: vietnamese,
+                  order_index: allItems.length + items.length + 1
+                });
+              }
+            } else if (parts.length === 2) {
+              if (parts[0] && parts[1]) {
+                items.push({
+                  hanzi: parts[0],
+                  pinyin: "",
+                  vietnamese: parts[1],
+                  order_index: allItems.length + items.length + 1
+                });
+              }
+            }
+          }
+
+          if (items.length === 0) {
+            Toast.show("Không phân tích được dòng nào hợp lệ!", "warning");
+            return;
+          }
+
+          try {
+            await Api.post("/grammar/admin/bulk", { items });
+            Toast.show(`Đã thêm thành công ${items.length} điểm ngữ pháp!`, "success");
+            closeModal("bulkAddModal");
+            loadItems();
+          } catch (err) {
+            Toast.show("Lỗi thêm hàng loạt: " + (err.detail || err.message), "danger");
+          }
+        });
+
+        const dropzone = document.getElementById("excelDropzone");
+        const fileInput = document.getElementById("excelFileInput");
+        const fileInfo = document.getElementById("selectedFileInfo");
+        const btnSubmitImport = document.getElementById("btnSubmitImport");
+        let selectedFile = null;
+
+        document.getElementById("btnOpenImport").addEventListener("click", () => {
+          selectedFile = null;
+          fileInput.value = "";
+          fileInfo.textContent = "";
+          btnSubmitImport.disabled = true;
+          openModal("importModal");
+        });
+
+        dropzone.addEventListener("click", () => fileInput.click());
+        dropzone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dropzone.classList.add("dragover");
+        });
+        dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+        dropzone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dropzone.classList.remove("dragover");
+          if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleFileSelect(e.dataTransfer.files[0]);
+          }
+        });
+
+        fileInput.addEventListener("change", (e) => {
+          if (e.target.files && e.target.files[0]) {
+            handleFileSelect(e.target.files[0]);
+          }
+        });
+
+        function handleFileSelect(file) {
+          selectedFile = file;
+          fileInfo.textContent = `📄 Đã chọn: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+          btnSubmitImport.disabled = false;
+        }
+
+        document.getElementById("importForm").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          if (!selectedFile) return;
+
+          btnSubmitImport.disabled = true;
+          btnSubmitImport.textContent = "Đang xử lý...";
+
+          try {
+            const formData = new FormData();
+            formData.append("file", selectedFile);
+
+            const data = await Api.postForm("/grammar/admin/import", formData);
+            Toast.show(`Đã import thành công ${data.count} điểm ngữ pháp!`, "success");
+            closeModal("importModal");
+            loadItems();
+          } catch (err) {
+            Toast.show("Lỗi import: " + (err.message || err.detail || "Không thể import file"), "danger");
+          } finally {
+            btnSubmitImport.disabled = false;
+            btnSubmitImport.textContent = "Bắt đầu Import";
+          }
+        });
+
+        loadItems();
+      })();
+    </script>
+  </body>
+</html>

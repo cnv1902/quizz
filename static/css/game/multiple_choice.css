@@ -1,0 +1,465 @@
+/* ============================================================
+   HanziQuizz — Multiple Choice Game Stylesheet
+   Tuân thủ nghiêm ngặt theo .agents/design-rules.md (§5.5)
+   ============================================================ */
+
+.mc-layout {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  user-select: none;
+  overflow-x: hidden;
+}
+
+/* === Game Top Bar (§5.1) === */
+.game-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 0 var(--s-5);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.game-nav .nav-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  text-decoration: none;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.game-nav .nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.btn-icon {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 150ms cubic-bezier(.2,.7,.2,1),
+              color 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.btn-icon:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.btn-text {
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  min-height: 36px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 150ms cubic-bezier(.2,.7,.2,1),
+              color 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.btn-text:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+/* === Main Container === */
+.mc-container {
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--s-5) var(--s-4);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* === Header & HUD (§5.5) === */
+.mc-hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--s-3) var(--s-4);
+  margin-bottom: var(--s-5);
+}
+
+.hud-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.hud-label {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.hud-value {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-value.timer {
+  color: var(--text);
+}
+
+.hud-value.combo {
+  color: var(--warning);
+}
+
+.hud-value.score {
+  color: var(--accent);
+}
+
+/* === Question Card (§5.5) === */
+.question-card {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  padding: var(--s-6) var(--s-4);
+  text-align: center;
+  margin-bottom: var(--s-5);
+  position: relative;
+  box-shadow: var(--shadow-1);
+}
+
+.question-prompt {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--s-3);
+}
+
+.question-hanzi {
+  font-family: var(--font-han);
+  font-size: var(--fs-han-lg);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+  margin-bottom: var(--s-3);
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.question-audio-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  border-radius: var(--r-sm);
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 150ms cubic-bezier(.2,.7,.2,1),
+              color 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.question-audio-btn:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+/* === Options Grid (§5.5: cao ≥ 52px, xếp 2×2 hoặc dọc) === */
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s-3);
+  margin-bottom: var(--s-5);
+}
+
+@media (max-width: 600px) {
+  .options-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.option-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  min-height: 54px;
+  padding: var(--s-3) var(--s-4);
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  cursor: pointer;
+  transition: background-color 150ms cubic-bezier(.2,.7,.2,1),
+              border-color 150ms cubic-bezier(.2,.7,.2,1),
+              transform 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.option-btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.option-key {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: var(--fs-xs);
+  flex-shrink: 0;
+}
+
+.option-content {
+  flex: 1;
+}
+
+.option-main {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.option-sub {
+  font-family: var(--font-pinyin);
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  margin-top: 1px;
+}
+
+/* Answer Status (§5.5: Đổi màu 150ms, không rung lắc mạnh) */
+.option-btn.correct {
+  background: var(--success-soft) !important;
+  border-color: var(--success) !important;
+}
+
+.option-btn.correct .option-key {
+  background: var(--success);
+  color: #fff;
+  border-color: var(--success);
+}
+
+.option-btn.wrong {
+  background: var(--danger-soft) !important;
+  border-color: var(--danger) !important;
+}
+
+.option-btn.wrong .option-key {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
+
+.option-btn:disabled {
+  cursor: default;
+}
+
+/* === Explanation Footer === */
+.answer-explanation {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--s-3) var(--s-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  opacity: 0;
+  transition: opacity 150ms cubic-bezier(.2,.7,.2,1);
+  pointer-events: none;
+}
+
+.answer-explanation.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.explanation-text {
+  font-size: var(--fs-sm);
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.btn-next-question {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  border-radius: var(--r-sm);
+  min-height: 40px;
+  padding: 0 var(--s-4);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  transition: background-color 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.btn-next-question:hover {
+  background: var(--accent-hover);
+}
+
+/* ============================================================
+   Game Over Modal (§5.6)
+   ============================================================ */
+.game-over-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 26, 23, 0.65);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--s-4);
+  backdrop-filter: blur(2px);
+}
+
+.game-over-modal.show {
+  display: flex;
+}
+
+.game-over-content {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  padding: var(--s-6);
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-2);
+}
+
+.trophy-icon {
+  font-size: 2.2rem;
+  margin-bottom: var(--s-2);
+  line-height: 1;
+  color: var(--accent);
+}
+
+.game-over-title {
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--s-1);
+}
+
+.game-over-subtitle {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  margin-bottom: var(--s-5);
+}
+
+.game-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s-3);
+  margin-bottom: var(--s-6);
+}
+
+.stat-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--s-3);
+  text-align: center;
+}
+
+.stat-num {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text);
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-lbl {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+.game-over-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.btn-action {
+  width: 100%;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms cubic-bezier(.2,.7,.2,1),
+              border-color 150ms cubic-bezier(.2,.7,.2,1);
+}
+
+.btn-replay {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+}
+
+.btn-replay:hover {
+  background: var(--accent-hover);
+}
+
+.btn-home {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-home:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}

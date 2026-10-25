@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cấu hình bài học — HanziQuizz</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/img/HanziQuizz-Favicon.png"
+    />
+    <link rel="stylesheet" href="/static/css/game/theme.css?v={{ v }}" />
+    <style>
+      .setup-page {
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .setup-content {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: var(--s-6) var(--s-4) var(--s-8);
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--s-2);
+        color: var(--text-2);
+        text-decoration: none;
+        font-size: var(--fs-sm);
+        margin-bottom: var(--s-5);
+        transition: color 150ms cubic-bezier(0.2, 0.7, 0.2, 1);
+      }
+
+      .back-link:hover {
+        color: var(--text);
+      }
+
+      .setup-header {
+        margin-bottom: var(--s-6);
+      }
+
+      .quiz-badge {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 3px 10px;
+        border-radius: var(--r-sm);
+        background: var(--accent-soft);
+        color: var(--accent);
+        margin-bottom: var(--s-2);
+      }
+
+      .setup-header h1 {
+        font-size: var(--fs-h1);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        margin-bottom: var(--s-1);
+      }
+
+      .setup-header p {
+        color: var(--text-2);
+        font-size: var(--fs-sm);
+      }
+
+      .config-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        padding: var(--s-5);
+        margin-bottom: var(--s-5);
+      }
+
+      .config-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: var(--s-2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: var(--s-2);
+      }
+
+      .config-subtitle {
+        font-size: var(--fs-xs);
+        color: var(--text-2);
+        margin-bottom: var(--s-4);
+      }
+
+      /* === Game Modes Grid (Bước 1) === */
+      .games-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+        gap: var(--s-3);
+      }
+
+      .game-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--s-2);
+        padding: var(--s-4) var(--s-2);
+        background: var(--surface-2);
+        border: 1.5px solid var(--border);
+        border-radius: var(--r-md);
+        cursor: pointer;
+        text-decoration: none;
+        color: var(--text);
+        transition: all 150ms cubic-bezier(0.2, 0.7, 0.2, 1);
+        user-select: none;
+      }
+
+      .game-btn:hover {
+        border-color: var(--accent);
+        background: var(--surface);
+        transform: translateY(-2px);
+      }
+
+      .game-btn.active {
+        border-color: var(--accent);
+        background: rgba(30, 168, 150, 0.12);
+        color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent);
+        font-weight: 700;
+      }
+
+      .game-btn-icon-svg {
+        color: var(--text);
+        margin-bottom: 2px;
+        transition: color 150ms ease;
+      }
+
+      .game-btn.active .game-btn-icon-svg {
+        color: var(--accent);
+      }
+
+      .game-btn-name {
+        font-size: var(--fs-sm);
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .game-btn-desc {
+        font-size: 0.7rem;
+        color: var(--text-2);
+        text-align: center;
+        line-height: 1.3;
+      }
+
+      /* === Rounds Grid (Bước 2) === */
+      .rounds-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+        gap: var(--s-2);
+      }
+
+      .round-tile {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--r-sm);
+        padding: 10px 8px;
+        min-height: 42px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: var(--fs-sm);
+        font-weight: 500;
+        color: var(--text);
+        font-family: inherit;
+        white-space: nowrap;
+        transition: all 150ms cubic-bezier(0.2, 0.7, 0.2, 1);
+      }
+
+      .round-tile:hover {
+        border-color: var(--border-strong);
+        background: var(--surface);
+        transform: translateY(-1px);
+      }
+
+      .round-tile.active {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 600;
+        box-shadow: 0 0 0 1px var(--accent);
+      }
+
+      .round-tile.practice-tile {
+        border: 1px dashed var(--border-strong);
+        color: var(--text);
+      }
+
+      .round-tile.practice-tile:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .round-tile.practice-tile.active {
+        border-style: solid;
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      /* Nút Bắt đầu chơi */
+      .btn-start-game {
+        width: 100%;
+        padding: 14px 24px;
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        border-radius: var(--r-md);
+        font-size: 1.15rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-decoration: none;
+        transition: all 180ms ease;
+        box-shadow: 0 4px 16px rgba(30, 168, 150, 0.35);
+      }
+
+      .btn-start-game:hover {
+        filter: brightness(1.08);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(30, 168, 150, 0.45);
+      }
+
+      /* === Modal Cấu hình (§5.1) === */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(26, 25, 24, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+      .modal-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        padding: var(--s-6);
+        width: 90%;
+        max-width: 440px;
+        box-shadow: var(--shadow-2);
+        animation: modalFadeIn 150ms cubic-bezier(0.2, 0.7, 0.2, 1);
+      }
+      @keyframes modalFadeIn {
+        from { opacity: 0; transform: scale(0.97); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      .preset-chip {
+        padding: var(--s-2) var(--s-3);
+        border: 1px solid var(--border);
+        border-radius: var(--r-sm);
+        background: var(--surface-2);
+        color: var(--text);
+        font-size: var(--fs-sm);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 120ms ease;
+        text-align: center;
+      }
+      .preset-chip:hover {
+        border-color: var(--border-strong);
+        background: var(--surface);
+      }
+      .preset-chip.active {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .config-input {
+        width: 100%;
+        padding: var(--s-3);
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--r-sm);
+        color: var(--text);
+        font-size: 1.15rem;
+        font-weight: 600;
+        text-align: center;
+        outline: none;
+        box-sizing: border-box;
+        transition: border-color 150ms ease;
+      }
+      .config-input:focus {
+        border-color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="setup-page">
+      <nav class="navbar" style="position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); backdrop-filter: blur(8px);">
+        <div style="display: flex; align-items: center; gap: var(--s-4);">
+          <a href="/" class="navbar-brand">
+            <img src="/static/img/HanziQuizz-Favicon.png" alt="HanziQuizz Logo" />
+            <span>HanziQuizz</span>
+          </a>
+          <div style="display: flex; align-items: center; gap: var(--s-2);">
+            <a href="/" class="btn btn-ghost btn-sm">Học từ</a>
+            <a href="/pages/measure-words.html" class="btn btn-ghost btn-sm">Lượng từ</a>
+            <a href="/pages/grammar.html" class="btn btn-ghost btn-sm">Ngữ pháp</a>
+          </div>
+        </div>
+        <div
+          id="navUser"
+          style="display: flex; align-items: center; gap: var(--s-3);"
+        >
+          <button class="btn btn-secondary btn-sm" id="btnNavConfig" title="Cấu hình số câu / thẻ mỗi màn">⚙️ Cấu hình</button>
+          <span id="navUserName" style="color: var(--text-2); font-size: var(--fs-sm)"></span>
+        </div>
+      </nav>
+
+      <div class="setup-content">
+        <a href="/" class="back-link">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m12 19-7-7 7-7"></path>
+            <path d="M19 12H5"></path>
+          </svg>
+          Quay lại trang chủ
+        </a>
+
+        <div class="setup-header">
+          <span class="quiz-badge" id="quizBadge">Chế độ học</span>
+          <h1 id="quizTitle">Cấu hình bài học</h1>
+          <p id="quizDesc">Chọn trò chơi, màn chơi và chiều hiển thị trước khi bắt đầu.</p>
+        </div>
+
+        <!-- 1. BƯỚC 1: CHỌN TRÒ CHƠI TRƯỚC (Theo yêu cầu) -->
+        <div class="config-card">
+          <div class="config-title">
+            <span>1. Chọn trò chơi bạn muốn tham gia</span>
+          </div>
+          <div class="config-subtitle">
+            Mỗi trò chơi có phương pháp rèn luyện và kho dữ liệu tương ứng.
+          </div>
+          <div class="games-grid" id="gamesGrid">
+            <!-- 5 Games: Lật thẻ, Ghép đôi, Trắc nghiệm, Điền từ, Ghép câu -->
+          </div>
+        </div>
+
+        <!-- 2. BƯỚC 2: CHỌN MÀN CHƠI (Tương ứng theo bảng dữ liệu của game) -->
+        <div class="config-card">
+          <div class="config-title">
+            <span id="setupRoundTitle">2. Chọn màn chơi</span>
+            <span style="font-size: var(--fs-xs); font-weight: normal; color: var(--text-2);" id="setupConfigInfo">Đang tính...</span>
+          </div>
+          <div class="config-subtitle" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--s-2);">
+            <span id="cardsPerRoundNotice">Mỗi màn gồm <strong id="cardsPerRoundDisplay" style="color:var(--text)">10</strong> mục. Bấm vào màn bạn muốn chơi hoặc chọn Luyện tập.</span>
+            <button type="button" class="btn btn-ghost btn-sm" id="btnOpenConfigInline" style="font-size: var(--fs-xs); color: var(--accent); text-decoration: underline; padding: 2px 8px; cursor: pointer;">⚙️ Đổi số lượng/màn</button>
+          </div>
+
+          <div class="rounds-grid" id="roundsGrid">
+            <!-- Injected by JS: Màn 1, Màn 2... Màn M, 🎯 Luyện tập -->
+          </div>
+        </div>
+
+        <!-- 3. BƯỚC 3: CHIỀU HIỂN THỊ CÂU HỎI -->
+        <div class="config-card" id="directionCard">
+          <div class="config-title">3. Chiều hiển thị câu hỏi</div>
+          <div
+            id="directionsWrap"
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+              gap: var(--s-3);
+            "
+          >
+            <label
+              id="dirLabelHanziViet"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 12px;
+                background: var(--surface-2);
+                border: 1px solid var(--border);
+                border-radius: var(--r-sm);
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="directionRadio"
+                value="hanzi_viet"
+                checked
+                style="accent-color: var(--accent)"
+              />
+              <div>
+                <div style="font-weight: 600; font-size: var(--fs-sm); color: var(--text);">
+                  Hán → Việt
+                </div>
+                <div style="font-size: var(--fs-xs); color: var(--text-2)">
+                  Nhìn chữ Hán nhớ nghĩa
+                </div>
+              </div>
+            </label>
+
+            <label
+              id="dirLabelVietHanzi"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 12px;
+                background: var(--surface-2);
+                border: 1px solid var(--border);
+                border-radius: var(--r-sm);
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="directionRadio"
+                value="viet_hanzi"
+                style="accent-color: var(--accent)"
+              />
+              <div>
+                <div style="font-weight: 600; font-size: var(--fs-sm); color: var(--text);">
+                  Việt → Hán
+                </div>
+                <div style="font-size: var(--fs-xs); color: var(--text-2)" id="vietHanziDesc">
+                  Nhìn nghĩa nhớ chữ Hán
+                </div>
+              </div>
+            </label>
+
+            <label
+              id="dirLabelPinyinViet"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 12px;
+                background: var(--surface-2);
+                border: 1px solid var(--border);
+                border-radius: var(--r-sm);
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="directionRadio"
+                value="pinyin_viet"
+                style="accent-color: var(--accent)"
+              />
+              <div>
+                <div style="font-weight: 600; font-size: var(--fs-sm); color: var(--text);">
+                  Pinyin → Việt
+                </div>
+                <div style="font-size: var(--fs-xs); color: var(--text-2)">
+                  Nhìn phiên âm nhớ nghĩa
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 4. NÚT BẮT ĐẦU CHƠI NGAY -->
+        <div style="margin-top: var(--s-6);">
+          <a href="#" class="btn-start-game" id="btnStartGame">
+            <span id="startGameText">Bắt đầu bài học</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Cấu hình số thẻ/câu mỗi màn -->
+    <div class="modal-backdrop" id="configModal" style="display: none; position: fixed; inset: 0; background: rgba(26, 25, 24, 0.45); z-index: 1000; align-items: center; justify-content: center;">
+      <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--s-4);">
+          <div>
+            <h3 style="font-size: var(--fs-h3); font-weight: 600; color: var(--text); margin-bottom: 4px;">Cấu hình số câu / thẻ mỗi màn</h3>
+            <p style="font-size: var(--fs-xs); color: var(--text-2); margin: 0;">Số lượng từ vựng hoặc câu ghép trong mỗi màn chơi.</p>
+          </div>
+          <button id="btnCloseConfigModal" style="background: none; border: none; cursor: pointer; color: var(--text-2); font-size: 1.25rem; line-height: 1; padding: 4px;">✕</button>
+        </div>
+
+        <div style="margin-bottom: var(--s-5);">
+          <label style="display: block; font-size: var(--fs-xs); font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: var(--s-2);">Chọn nhanh số lượng</label>
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--s-2); margin-bottom: var(--s-4);" id="presetChipsWrap">
+            <button type="button" class="preset-chip" data-val="10">10 mục</button>
+            <button type="button" class="preset-chip" data-val="15">15 mục</button>
+            <button type="button" class="preset-chip" data-val="20">20 mục</button>
+            <button type="button" class="preset-chip" data-val="30">30 mục</button>
+            <button type="button" class="preset-chip" data-val="all">Tất cả</button>
+          </div>
+
+          <label for="inputCardsPerRound" style="display: block; font-size: var(--fs-xs); font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: var(--s-2);">Hoặc nhập số tùy chỉnh (>= 10 hoặc gõ 'all')</label>
+          <input type="text" id="inputCardsPerRound" placeholder="Nhập số (>= 10) hoặc 'all'" class="config-input" />
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: var(--s-3);">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnCancelConfig">Hủy</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btnSaveConfig">Lưu cấu hình</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts chuẩn -->
+    <script src="/static/js/core/api.js?v={{ v }}"></script>
+    <script src="/static/js/core/auth.js?v={{ v }}"></script>
+    <script src="/static/js/api/quizApi.js?v={{ v }}"></script>
+    <script src="/static/js/components/toast.js?v={{ v }}"></script>
+
+    <script>
+      (function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const quizId = urlParams.get("quiz_id");
+        const sentenceSetId = urlParams.get("sentence_set_id");
+        const mode = urlParams.get("mode") || (quizId ? "quiz" : (sentenceSetId ? "sentence_set" : "all"));
+        let selectedGameId = urlParams.get("game") || (sentenceSetId ? "sentence" : "flashcard");
+
+        // Auth
+        const user = Auth.getUser();
+        const navUserName = document.getElementById("navUserName");
+        if (user) {
+          navUserName.textContent = user.full_name || user.username || "Thành viên";
+        } else {
+          navUserName.innerHTML = `<span style="color: var(--text-2); font-size: var(--fs-sm); font-weight: 500;">Khách</span> <a href="/pages/login.html" class="btn btn-ghost btn-sm" style="font-size:var(--fs-xs); color: var(--accent);">Đăng nhập</a>`;
+        }
+
+        let cardsPerRound = Auth.getCardsPerRound();
+        document.getElementById("cardsPerRoundDisplay").textContent = cardsPerRound === "all" ? "Tất cả" : cardsPerRound;
+
+        // Modal Cấu hình
+        const configModal = document.getElementById("configModal");
+        const inputCards = document.getElementById("inputCardsPerRound");
+        const presetChips = document.querySelectorAll(".preset-chip");
+
+        function openConfigModal() {
+          const currentVal = cardsPerRound;
+          inputCards.value = currentVal;
+          updateActiveChip(currentVal);
+          configModal.style.display = "flex";
+        }
+
+        function closeConfigModal() {
+          configModal.style.display = "none";
+        }
+
+        function updateActiveChip(val) {
+          const strVal = String(val).toLowerCase().trim();
+          presetChips.forEach((chip) => {
+            const chipVal = chip.getAttribute("data-val").toLowerCase().trim();
+            if (chipVal === strVal) {
+              chip.classList.add("active");
+            } else {
+              chip.classList.remove("active");
+            }
+          });
+        }
+
+        presetChips.forEach((chip) => {
+          chip.addEventListener("click", () => {
+            const v = chip.getAttribute("data-val");
+            inputCards.value = v;
+            updateActiveChip(v);
+          });
+        });
+
+        inputCards.addEventListener("input", () => {
+          updateActiveChip(inputCards.value);
+        });
+
+        document.getElementById("btnNavConfig")?.addEventListener("click", openConfigModal);
+        document.getElementById("btnOpenConfigInline")?.addEventListener("click", openConfigModal);
+        document.getElementById("btnCloseConfigModal")?.addEventListener("click", closeConfigModal);
+        document.getElementById("btnCancelConfig")?.addEventListener("click", closeConfigModal);
+        configModal.addEventListener("click", (e) => {
+          if (e.target === configModal) closeConfigModal();
+        });
+
+        document.getElementById("btnSaveConfig")?.addEventListener("click", async () => {
+          let raw = (inputCards.value || "").trim().toLowerCase();
+          let val;
+          if (raw === "all") {
+            val = "all";
+          } else {
+            val = parseInt(raw, 10);
+            if (isNaN(val) || val < 10) {
+              Toast.show("Vui lòng chọn hoặc nhập số lượng từ 10 trở lên hoặc chọn 'Tất cả'!", "warning");
+              return;
+            }
+          }
+          await Auth.setCardsPerRound(val);
+          cardsPerRound = val;
+          document.getElementById("cardsPerRoundDisplay").textContent = val === "all" ? "Tất cả" : val;
+          renderRoundTiles();
+          updateStartButton();
+          Toast.show(val === "all" ? "Đã cập nhật: Chơi tất cả mục!" : `Đã cập nhật: ${val} mục mỗi màn!`, "success");
+          closeConfigModal();
+        });
+
+        let totalCards = 0;       // Dữ liệu bảng cards
+        let totalSentences = 0;   // Dữ liệu bảng sentences
+        let selectedRound = 1;
+        let isPractice = false;
+
+        // Phân biệt rõ ngữ cảnh: Bộ câu (sentence) vs Bộ Quiz (cards)
+        const isSentenceContext = Boolean(sentenceSetId) || (mode === "sentence_set") || (mode === "all" && selectedGameId === "sentence");
+
+        // Danh sách tất cả Game Modes trong hệ thống
+        const ALL_GAMES = [
+          {
+            id: "flashcard",
+            name: "Lật thẻ",
+            desc: "Tự đánh giá ghi nhớ",
+            type: "cards",
+            svg: '<svg class="game-btn-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="2" y="7" width="15" height="15" rx="2"/><path d="M7 2h13a2 2 0 0 1 2 2v13"/></svg>',
+          },
+          {
+            id: "pikachu",
+            name: "Ghép đôi",
+            desc: "Nối chữ và nghĩa",
+            type: "cards",
+            svg: '<svg class="game-btn-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+          },
+          {
+            id: "multiple_choice",
+            name: "Trắc nghiệm",
+            desc: "4 đáp án nhanh",
+            type: "cards",
+            svg: '<svg class="game-btn-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>',
+          },
+          {
+            id: "fill_in",
+            name: "Điền Pinyin",
+            desc: "Nhập Pinyin không dấu",
+            type: "cards",
+            svg: '<svg class="game-btn-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>',
+          },
+          {
+            id: "sentence",
+            name: "Ghép câu",
+            desc: "Xếp các khối từ",
+            type: "sentences",
+            svg: '<svg class="game-btn-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><line x1="9" y1="7" x2="15" y2="7"></line><line x1="9" y1="11" x2="13" y2="11"></line></svg>',
+          },
+        ];
+
+        // Tách trò chơi theo từng bộ: Bộ câu CHỈ chơi Ghép câu, Bộ quizz chơi các trò còn lại
+        const availableGames = isSentenceContext
+          ? ALL_GAMES.filter((g) => g.type === "sentences")
+          : ALL_GAMES.filter((g) => g.type === "cards");
+
+        // Đảm bảo game được chọn luôn hợp lệ theo bộ tương ứng
+        if (!availableGames.some((g) => g.id === selectedGameId)) {
+          selectedGameId = availableGames[0]?.id || (isSentenceContext ? "sentence" : "flashcard");
+        }
+
+        // 1. Render danh sách trò chơi (Bước 1)
+        function renderGamesSelection() {
+          const grid = document.getElementById("gamesGrid");
+          const step1Title = document.querySelector(".config-card:first-of-type .config-title span");
+          const step1Sub = document.querySelector(".config-card:first-of-type .config-subtitle");
+
+          if (isSentenceContext) {
+            if (step1Title) step1Title.textContent = "1. Trò chơi dành cho Bộ Câu";
+            if (step1Sub) step1Sub.textContent = "Bộ câu hỗ trợ trò chơi Ghép câu: đọc nghĩa tiếng Việt và ghép các khối từ tiếng Trung.";
+          } else {
+            if (step1Title) step1Title.textContent = "1. Chọn trò chơi cho Bộ Quiz";
+            if (step1Sub) step1Sub.textContent = "Bộ Quiz hỗ trợ 4 trò chơi từ vựng rèn luyện toàn diện.";
+          }
+
+          grid.innerHTML = availableGames.map((g) => {
+            const isActive = (g.id === selectedGameId);
+            return `
+              <div class="game-btn ${isActive ? 'active' : ''}" data-game="${g.id}">
+                ${g.svg}
+                <span class="game-btn-name">${g.name}</span>
+                <span class="game-btn-desc">${g.desc}</span>
+              </div>
+            `;
+          }).join("");
+
+          grid.querySelectorAll(".game-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              selectedGameId = btn.getAttribute("data-game");
+              selectedRound = 1;
+              isPractice = false;
+              renderGamesSelection();
+              applyGameModeRules();
+              renderRoundTiles();
+              updateStartButton();
+            });
+          });
+        }
+
+        // Áp dụng quy tắc theo từng game (Ví dụ: Chiều câu hỏi)
+        function applyGameModeRules() {
+          const dirHanziViet = document.getElementById("dirLabelHanziViet");
+          const dirPinyinViet = document.getElementById("dirLabelPinyinViet");
+          const dirVietHanzi = document.getElementById("dirLabelVietHanzi");
+          const vietHanziDesc = document.getElementById("vietHanziDesc");
+
+          if (isSentenceContext || selectedGameId === "sentence") {
+            // Với Ghép câu: Chỉ áp dụng chiều Việt → Hán (dịch tiếng Việt và ghép câu chữ Hán)
+            dirHanziViet.style.display = "none";
+            dirPinyinViet.style.display = "none";
+            dirVietHanzi.querySelector("input").checked = true;
+            vietHanziDesc.textContent = "Đọc tiếng Việt, nhấp ghép câu tiếng Trung hoàn chỉnh";
+          } else {
+            // Với thẻ từ vựng của Bộ Quiz: Hiển thị đầy đủ 3 chiều
+            dirHanziViet.style.display = "flex";
+            dirPinyinViet.style.display = "flex";
+            vietHanziDesc.textContent = "Nhìn nghĩa nhớ chữ Hán";
+          }
+        }
+
+        // 2. Render các màn chơi (Bước 2)
+        function renderRoundTiles() {
+          const container = document.getElementById("roundsGrid");
+          const isSentence = isSentenceContext || (selectedGameId === "sentence");
+          const totalCount = isSentence ? totalSentences : totalCards;
+          const unitName = isSentence ? "câu ghép" : "thẻ từ vựng";
+          const isAll = (cardsPerRound === "all");
+
+          const noticeSpan = document.getElementById("cardsPerRoundNotice");
+          noticeSpan.innerHTML = `Mỗi màn gồm <strong id="cardsPerRoundDisplay" style="color:var(--text)">${isAll ? "Tất cả" : cardsPerRound}</strong> ${unitName}. Bấm vào màn bạn muốn chơi.`;
+
+          if (isAll) {
+            document.getElementById("setupConfigInfo").textContent =
+              `Tổng ${totalCount} ${unitName} · 1 màn (Tất cả)`;
+
+            let html = `
+              <button type="button" class="round-tile ${(!isPractice && selectedRound === 1) ? 'active' : ''}" data-round="1">
+                Màn 1
+              </button>
+              <button type="button" class="round-tile practice-tile ${isPractice ? 'active' : ''}" data-practice="true">
+                🎯 Luyện tập
+              </button>
+            `;
+            container.innerHTML = html;
+          } else {
+            const K = parseInt(cardsPerRound, 10) || 10;
+            const M = Math.ceil(totalCount / K) || 1;
+
+            document.getElementById("setupConfigInfo").textContent =
+              `Tổng ${totalCount} ${unitName} · ${M} màn (${K} ${unitName}/màn)`;
+
+            let html = "";
+            for (let i = 1; i <= M; i++) {
+              const isActive = (!isPractice && selectedRound === i);
+              html += `
+                <button type="button" class="round-tile ${isActive ? 'active' : ''}" data-round="${i}">
+                  Màn ${i}
+                </button>
+              `;
+            }
+
+            // Ô Luyện tập (luôn hiển thị cho cả từ vựng và ghép câu)
+            html += `
+              <button type="button" class="round-tile practice-tile ${isPractice ? 'active' : ''}" data-practice="true">
+                🎯 Luyện tập
+              </button>
+            `;
+
+            container.innerHTML = html;
+          }
+
+          container.querySelectorAll(".round-tile").forEach((tile) => {
+            tile.addEventListener("click", () => {
+              const isP = tile.getAttribute("data-practice") === "true";
+              if (isP) {
+                isPractice = true;
+                selectedRound = 1;
+              } else {
+                isPractice = false;
+                selectedRound = parseInt(tile.getAttribute("data-round"), 10) || 1;
+              }
+              renderRoundTiles();
+              updateStartButton();
+            });
+          });
+        }
+
+        // Cập nhật nút Bắt đầu chơi
+        function updateStartButton() {
+          const gameObj = availableGames.find((g) => g.id === selectedGameId) || availableGames[0];
+          const dir = document.querySelector('input[name="directionRadio"]:checked')?.value || "hanzi_viet";
+          const btn = document.getElementById("btnStartGame");
+          const textEl = document.getElementById("startGameText");
+
+          let targetUrl = "";
+          if (isSentenceContext || selectedGameId === "sentence") {
+            const setParam = sentenceSetId ? `sentence_set_id=${sentenceSetId}&` : "";
+            if (isPractice) {
+              textEl.textContent = `Bắt đầu chơi: ${gameObj.name} · 🎯 Luyện tập`;
+              targetUrl = `/pages/games/sentence.html?${setParam}priority=true&cards=${cardsPerRound}&dir=${dir}`;
+            } else {
+              textEl.textContent = `Bắt đầu chơi: ${gameObj.name} · Màn ${selectedRound}`;
+              targetUrl = `/pages/games/sentence.html?${setParam}round=${selectedRound}&cards=${cardsPerRound}&dir=${dir}`;
+            }
+          } else {
+            if (isPractice) {
+              textEl.textContent = `Bắt đầu chơi: ${gameObj.name} · 🎯 Luyện tập`;
+            } else {
+              textEl.textContent = `Bắt đầu chơi: ${gameObj.name} · Màn ${selectedRound}`;
+            }
+            targetUrl = `/pages/games/${gameObj.id}.html?` +
+              (quizId ? `quiz_id=${quizId}&` : "mode=all&") +
+              `cards=${cardsPerRound}&priority=${isPractice}&round=${selectedRound}&dir=${dir}`;
+          }
+
+          btn.setAttribute("href", targetUrl);
+        }
+
+        document
+          .querySelectorAll('input[name="directionRadio"]')
+          .forEach((r) => r.addEventListener("change", updateStartButton));
+
+        // Tải thông tin dữ liệu theo từng bộ
+        async function loadAllData() {
+          if (isSentenceContext) {
+            // --- Ngữ cảnh Bộ Câu ---
+            document.getElementById("quizBadge").textContent = "BỘ CÂU";
+            if (sentenceSetId) {
+              try {
+                const sSet = await SentenceSetApi.getById(sentenceSetId);
+                document.getElementById("quizTitle").textContent = sSet.title;
+                document.getElementById("quizDesc").textContent =
+                  sSet.description || "Luyện dịch nghĩa và ghép các khối từ tiếng Trung thành câu hoàn chỉnh.";
+                totalSentences = sSet.sentence_count || 0;
+              } catch {
+                document.getElementById("quizTitle").textContent = "Không tìm thấy bộ câu";
+                totalSentences = 0;
+              }
+            } else {
+              document.getElementById("quizTitle").textContent = "Kho câu ghép tiếng Trung";
+              document.getElementById("quizDesc").textContent = "Luyện tập tất cả các câu ghép trong hệ thống.";
+              try {
+                const sentences = await Api.get("/sentences/all");
+                totalSentences = Array.isArray(sentences) ? sentences.length : (sentences?.length || 0);
+              } catch {
+                totalSentences = 0;
+              }
+            }
+          } else {
+            // --- Ngữ cảnh Bộ Quiz ---
+            document.getElementById("quizBadge").textContent = "BỘ QUIZ";
+            if (quizId) {
+              try {
+                const quiz = await QuizApi.getById(quizId);
+                document.getElementById("quizTitle").textContent = quiz.title;
+                document.getElementById("quizDesc").textContent =
+                  quiz.description || "Luyện tập từ vựng chữ Hán qua 4 trò chơi.";
+                totalCards = quiz.card_count || 0;
+              } catch {
+                document.getElementById("quizTitle").textContent = "Không tìm thấy bộ từ";
+                totalCards = 0;
+              }
+            } else {
+              document.getElementById("quizBadge").textContent = "TỔNG HỢP";
+              document.getElementById("quizTitle").textContent = "Kho từ vựng tiếng Trung";
+              document.getElementById("quizDesc").textContent = "Luyện tập tất cả các thẻ từ vựng trong hệ thống.";
+              try {
+                const cards = await CardApi.getAll();
+                totalCards = cards.length;
+              } catch {
+                totalCards = 0;
+              }
+            }
+          }
+
+          renderGamesSelection();
+          applyGameModeRules();
+          renderRoundTiles();
+          updateStartButton();
+        }
+
+        loadAllData();
+      })();
+    </script>
+  </body>
+</html>

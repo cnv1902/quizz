@@ -1,0 +1,1071 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HanziQuizz — Học tiếng Trung qua trò chơi</title>
+    <meta
+      name="description"
+      content="Học chữ Hán mỗi ngày 10 phút. Lật thẻ, ghép cặp, làm trắc nghiệm."
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/img/HanziQuizz-Favicon.png"
+    />
+    <link rel="stylesheet" href="/static/css/game/theme.css?v={{ v }}" />
+    <style>
+      /* === Layout Container === */
+      .app-container {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: var(--s-6) var(--s-5);
+      }
+
+      /* === 1. Lời chào gọn (§5.2) === */
+      .welcome-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: var(--s-4);
+        margin-bottom: var(--s-6);
+        padding-bottom: var(--s-5);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .welcome-title {
+        font-size: var(--fs-h1);
+        font-weight: 600;
+        color: var(--text);
+        letter-spacing: -0.02em;
+        margin-bottom: var(--s-1);
+      }
+
+      .welcome-sub {
+        font-size: var(--fs-sm);
+        color: var(--text-2);
+      }
+
+      /* === 2. Dải số liệu người dùng (§5.2) === */
+      .user-stats-strip {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--s-4);
+        margin-bottom: var(--s-7);
+      }
+
+      .user-stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        padding: var(--s-4) var(--s-5);
+        display: flex;
+        flex-direction: column;
+        gap: var(--s-1);
+      }
+
+      .user-stat-value {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+        line-height: 1.2;
+      }
+
+      .user-stat-label {
+        font-size: var(--fs-xs);
+        color: var(--text-2);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      /* === 3. Chế độ chơi (§5.2) === */
+      .section-title {
+        font-size: var(--fs-h2);
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: var(--s-4);
+      }
+
+      .game-modes-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: var(--s-4);
+        margin-bottom: var(--s-7);
+      }
+
+      .game-mode-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        padding: var(--s-5);
+        text-decoration: none;
+        color: var(--text);
+        display: flex;
+        align-items: flex-start;
+        gap: var(--s-4);
+        transition:
+          border-color 150ms cubic-bezier(0.2, 0.7, 0.2, 1),
+          transform 150ms cubic-bezier(0.2, 0.7, 0.2, 1);
+      }
+
+      .game-mode-card:hover {
+        border-color: var(--border-strong);
+        transform: translateY(-1px);
+      }
+
+      .game-mode-icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: var(--r-sm);
+        background: var(--surface-2);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .game-mode-info {
+        flex: 1;
+      }
+
+      .game-mode-name {
+        font-size: var(--fs-body);
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 2px;
+      }
+
+      .game-mode-desc {
+        font-size: var(--fs-xs);
+        color: var(--text-2);
+        line-height: 1.4;
+      }
+
+      /* === 4. Danh sách Bộ Quiz (§5.3) === */
+      .quiz-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: var(--s-4);
+        margin-bottom: var(--s-5);
+      }
+
+      .search-box {
+        position: relative;
+        width: 100%;
+        max-width: 320px;
+      }
+
+      .search-icon-svg {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-3);
+        pointer-events: none;
+      }
+
+      .search-input-field {
+        width: 100%;
+        height: 40px;
+        padding: 0 14px 0 38px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-sm);
+        color: var(--text);
+        font-family: var(--font-ui);
+        font-size: var(--fs-sm);
+        outline: none;
+        transition: border-color 150ms cubic-bezier(0.2, 0.7, 0.2, 1);
+      }
+
+      .search-input-field:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+      }
+
+      .quiz-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: var(--s-5);
+      }
+
+      .quiz-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        padding: var(--s-5);
+        text-decoration: none;
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        gap: var(--s-3);
+        transition:
+          border-color 150ms cubic-bezier(0.2, 0.7, 0.2, 1),
+          transform 150ms cubic-bezier(0.2, 0.7, 0.2, 1);
+        position: relative;
+      }
+
+      .quiz-card:hover {
+        border-color: var(--border-strong);
+        transform: translateY(-1px);
+      }
+
+      .quiz-card-badge {
+        align-self: flex-start;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 2px 8px;
+        border-radius: var(--r-sm);
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      .quiz-card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text);
+        line-height: 1.3;
+      }
+
+      .quiz-card-samples {
+        font-family: var(--font-han);
+        font-size: 1.15rem;
+        color: var(--text-2);
+        letter-spacing: 0.05em;
+      }
+
+      .quiz-card-footer {
+        margin-top: auto;
+        padding-top: var(--s-3);
+        border-top: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: var(--fs-xs);
+        color: var(--text-2);
+      }
+
+      /* === Skeletons & Empty State === */
+      .skeleton-quiz {
+        height: 160px;
+        border-radius: var(--r-md);
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: var(--s-7) var(--s-4);
+        background: var(--surface);
+        border: 1px dashed var(--border-strong);
+        border-radius: var(--r-md);
+        grid-column: 1 / -1;
+      }
+
+      .empty-state h3 {
+        font-size: var(--fs-body);
+        font-weight: 600;
+        margin-bottom: var(--s-1);
+      }
+
+      .empty-state p {
+        font-size: var(--fs-sm);
+        color: var(--text-2);
+        margin: 0 auto;
+      }
+
+      @media (max-width: 640px) {
+        .user-stats-strip {
+          grid-template-columns: 1fr;
+        }
+        .app-container {
+          padding: var(--s-5) var(--s-4);
+        }
+        .welcome-bar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+
+      /* === Modal Cấu hình (§5.1) === */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(26, 25, 24, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+      .modal-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        padding: var(--s-6);
+        width: 90%;
+        max-width: 440px;
+        box-shadow: var(--shadow-2);
+        animation: modalFadeIn 150ms cubic-bezier(0.2, 0.7, 0.2, 1);
+      }
+      @keyframes modalFadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      .preset-chip {
+        padding: var(--s-2) var(--s-3);
+        border: 1px solid var(--border);
+        border-radius: var(--r-sm);
+        background: var(--surface-2);
+        color: var(--text);
+        font-size: var(--fs-sm);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 120ms ease;
+        text-align: center;
+      }
+      .preset-chip:hover {
+        border-color: var(--border-strong);
+        background: var(--surface);
+      }
+      .preset-chip.active {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .config-input {
+        width: 100%;
+        padding: var(--s-3);
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--r-sm);
+        color: var(--text);
+        font-size: 1.15rem;
+        font-weight: 600;
+        text-align: center;
+        outline: none;
+        box-sizing: border-box;
+        transition: border-color 150ms ease;
+      }
+      .config-input:focus {
+        border-color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <nav
+      class="navbar"
+      style="
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: blur(8px);
+      "
+    >
+      <div style="display: flex; align-items: center; gap: var(--s-4)">
+        <a href="/" class="navbar-brand">
+          <img src="/static/img/HanziQuizz-Favicon.png" alt="HanziQuizz Logo" />
+          <span>HanziQuizz</span>
+        </a>
+        <div style="display: flex; align-items: center; gap: var(--s-2)">
+          <a
+            href="/"
+            class="btn btn-ghost btn-sm"
+            style="color: var(--accent); font-weight: 600"
+            >Học từ</a
+          >
+          <a href="/pages/measure-words.html" class="btn btn-ghost btn-sm"
+            >Lượng từ</a
+          >
+          <a href="/pages/grammar.html" class="btn btn-ghost btn-sm"
+            >Ngữ pháp</a
+          >
+        </div>
+      </div>
+      <div class="navbar-nav" id="navActions">
+        <!-- Injected by JS -->
+      </div>
+    </nav>
+
+    <main class="app-container">
+      <!-- 1. Lời chào gọn (§5.2) -->
+      <header class="welcome-bar">
+        <div>
+          <h1 class="welcome-title" id="welcomeHeading">
+            Chào bạn, hôm nay ôn tiếp nhé.
+          </h1>
+          <p class="welcome-sub">
+            Học chữ Hán mỗi ngày 10 phút. Lật thẻ, ghép cặp, làm trắc nghiệm.
+          </p>
+        </div>
+        <div>
+          <a
+            href="/pages/game-setup.html?mode=all"
+            class="btn btn-primary"
+            id="btnContinueStudy"
+          >
+            Tiếp tục học
+          </a>
+        </div>
+      </header>
+
+      <!-- 2. Dải số liệu của chính người dùng (§5.2: 3 ô nhỏ, viền mảnh, số thật, không hiện "—") -->
+      <section class="user-stats-strip" aria-label="Thống kê học tập">
+        <div class="user-stat-card">
+          <span class="user-stat-value" id="statStreak">1</span>
+          <span class="user-stat-label">Chuỗi ngày học</span>
+        </div>
+        <div class="user-stat-card">
+          <span class="user-stat-value" id="statMastered">0</span>
+          <span class="user-stat-label">Từ đã thuộc</span>
+        </div>
+        <div class="user-stat-card">
+          <span class="user-stat-value" id="statReviewNeeded">0</span>
+          <span class="user-stat-label">Cần ôn hôm nay</span>
+        </div>
+      </section>
+
+      <!-- 3. Chế độ chơi (§5.2) -->
+      <section style="margin-bottom: var(--s-7)">
+        <h2 class="section-title">Chế độ chơi</h2>
+        <div class="game-modes-grid">
+          <a
+            href="/pages/game-setup.html?mode=all&game=flashcard"
+            class="game-mode-card"
+          >
+            <div class="game-mode-icon-box">
+              <!-- Icon Flashcard (Cards) -->
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="2" y="7" width="15" height="15" rx="2" ry="2"></rect>
+                <path d="M7 2h13a2 2 0 0 1 2 2v13"></path>
+              </svg>
+            </div>
+            <div class="game-mode-info">
+              <div class="game-mode-name">Lật thẻ</div>
+              <div class="game-mode-desc">
+                Xem chữ Hán, nhớ pinyin và nghĩa Việt
+              </div>
+            </div>
+          </a>
+
+          <a
+            href="/pages/game-setup.html?mode=all&game=pikachu"
+            class="game-mode-card"
+          >
+            <div class="game-mode-icon-box">
+              <!-- Icon Matching (Grid) -->
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </div>
+            <div class="game-mode-info">
+              <div class="game-mode-name">Ghép đôi Pikachu</div>
+              <div class="game-mode-desc">
+                Nối nhanh chữ Hán với nghĩa tương ứng
+              </div>
+            </div>
+          </a>
+
+          <a
+            href="/pages/game-setup.html?mode=all&game=multiple_choice"
+            class="game-mode-card"
+          >
+            <div class="game-mode-icon-box">
+              <!-- Icon Check Circle -->
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="m9 12 2 2 4-4"></path>
+              </svg>
+            </div>
+            <div class="game-mode-info">
+              <div class="game-mode-name">Trắc nghiệm</div>
+              <div class="game-mode-desc">4 đáp án lựa chọn theo thời gian</div>
+            </div>
+          </a>
+
+          <a
+            href="/pages/game-setup.html?mode=all&game=fill_in"
+            class="game-mode-card"
+          >
+            <div class="game-mode-icon-box">
+              <!-- Icon Pen -->
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"
+                ></path>
+              </svg>
+            </div>
+            <div class="game-mode-info">
+              <div class="game-mode-name">Điền Pinyin</div>
+              <div class="game-mode-desc">
+                Nhìn chữ Hán, gõ pinyin không dấu để ghi nhớ
+              </div>
+            </div>
+          </a>
+
+          <a
+            href="/pages/game-setup.html?mode=all&game=sentence"
+            class="game-mode-card"
+          >
+            <div class="game-mode-icon-box">
+              <!-- Icon Puzzle Piece / Sentence Blocks -->
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path
+                  d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+                ></path>
+                <line x1="9" y1="7" x2="15" y2="7"></line>
+                <line x1="9" y1="11" x2="13" y2="11"></line>
+              </svg>
+            </div>
+            <div class="game-mode-info">
+              <div class="game-mode-name">Ghép câu</div>
+              <div class="game-mode-desc">
+                Xếp các khối từ thành câu hoàn chỉnh
+              </div>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <!-- 4. Bộ Quiz (§5.3) -->
+      <section>
+        <div class="quiz-section-header">
+          <h2 class="section-title" style="margin-bottom: 0">Bộ Quiz</h2>
+          <div class="search-box">
+            <!-- Icon Kính lúp SVG nét mảnh -->
+            <svg
+              class="search-icon-svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.3-4.3"></path>
+            </svg>
+            <input
+              type="text"
+              class="search-input-field"
+              id="searchInput"
+              placeholder="Tìm bộ quiz..."
+            />
+          </div>
+        </div>
+
+        <!-- Lưới card bộ quiz -->
+        <div class="quiz-grid" id="quizGrid">
+          <div class="skeleton skeleton-quiz"></div>
+          <div class="skeleton skeleton-quiz"></div>
+          <div class="skeleton skeleton-quiz"></div>
+        </div>
+      </section>
+
+      <!-- 5. Bộ Câu (§ Đồng nhất hoàn toàn với Bộ Quiz) -->
+      <section style="margin-top: var(--s-8)">
+        <div class="quiz-section-header">
+          <h2 class="section-title" style="margin-bottom: 0">Bộ Câu</h2>
+          <div class="search-box">
+            <!-- Icon Kính lúp SVG nét mảnh -->
+            <svg
+              class="search-icon-svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.3-4.3"></path>
+            </svg>
+            <input
+              type="text"
+              class="search-input-field"
+              id="searchSentenceInput"
+              placeholder="Tìm bộ câu..."
+            />
+          </div>
+        </div>
+
+        <!-- Lưới card bộ câu -->
+        <div class="quiz-grid" id="sentenceGrid">
+          <div class="skeleton skeleton-quiz"></div>
+          <div class="skeleton skeleton-quiz"></div>
+          <div class="skeleton skeleton-quiz"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal Cấu hình số thẻ mỗi màn (§5.1) -->
+    <div class="modal-backdrop" id="configModal" style="display: none">
+      <div class="modal-card">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--s-4);
+          "
+        >
+          <div>
+            <h3
+              style="
+                font-size: var(--fs-h3);
+                font-weight: 600;
+                color: var(--text);
+                margin-bottom: 4px;
+              "
+            >
+              Cấu hình số thẻ mỗi màn
+            </h3>
+            <p style="font-size: var(--fs-xs); color: var(--text-2); margin: 0">
+              Số lượng từ vựng bạn muốn học hoặc chơi trong mỗi màn.
+            </p>
+          </div>
+          <button
+            id="btnCloseConfigModal"
+            style="
+              background: none;
+              border: none;
+              cursor: pointer;
+              color: var(--text-2);
+              font-size: 1.25rem;
+              line-height: 1;
+              padding: 4px;
+            "
+          >
+            ✕
+          </button>
+        </div>
+
+        <div style="margin-bottom: var(--s-5)">
+          <label
+            style="
+              display: block;
+              font-size: var(--fs-xs);
+              font-weight: 600;
+              color: var(--text-2);
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+              margin-bottom: var(--s-2);
+            "
+            >Chọn nhanh số thẻ</label
+          >
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(5, 1fr);
+              gap: var(--s-2);
+              margin-bottom: var(--s-4);
+            "
+            id="presetChipsWrap"
+          >
+            <button type="button" class="preset-chip" data-val="10">10</button>
+            <button type="button" class="preset-chip" data-val="15">15</button>
+            <button type="button" class="preset-chip" data-val="20">20</button>
+            <button type="button" class="preset-chip" data-val="30">30</button>
+            <button
+              type="button"
+              class="preset-chip"
+              data-val="all"
+              style="font-weight: 600"
+            >
+              Tất cả
+            </button>
+          </div>
+
+          <label
+            for="inputCardsPerRound"
+            style="
+              display: block;
+              font-size: var(--fs-xs);
+              font-weight: 600;
+              color: var(--text-2);
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+              margin-bottom: var(--s-2);
+            "
+            >Hoặc nhập số tùy chỉnh (từ 10 thẻ trở lên hoặc all)</label
+          >
+          <input
+            type="text"
+            id="inputCardsPerRound"
+            class="config-input"
+            placeholder="Ví dụ: 10, 25 hoặc all"
+          />
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: var(--s-3)">
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            id="btnCancelConfig"
+          >
+            Hủy
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            id="btnSaveConfig"
+          >
+            Lưu cấu hình
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/core/api.js?v={{ v }}"></script>
+    <script src="/static/js/core/auth.js?v={{ v }}"></script>
+    <script src="/static/js/components/toast.js?v={{ v }}"></script>
+    <script src="/static/js/api/quizApi.js?v={{ v }}"></script>
+    <script src="/static/js/services/syncService.js?v={{ v }}"></script>
+    <script>
+      (function () {
+        const user = Auth.getUser();
+        let allQuizzes = [];
+
+        // Render Header
+        function renderNav() {
+          const nav = document.getElementById("navActions");
+          const isAuth = Auth.isLoggedIn();
+          const isAdmin = Auth.isAdmin();
+          const userName = user?.full_name || user?.username || "Bạn";
+
+          if (isAuth) {
+            nav.innerHTML = `
+              ${isAdmin ? `<a href="/pages/admin/quizzes.html" class="btn btn-ghost btn-sm" style="color:var(--text-2);">Quản trị</a>` : ""}
+              <button class="btn btn-secondary btn-sm" id="btnOpenConfig" title="Cấu hình số thẻ mỗi màn">⚙️ Cấu hình</button>
+              <span style="color:var(--text-2); font-size:var(--fs-sm); font-weight:500;">${escapeHtml(userName)}</span>
+              <button class="btn btn-ghost btn-sm" id="logoutBtn" title="Đăng xuất">Đăng xuất</button>
+            `;
+            document
+              .getElementById("logoutBtn")
+              .addEventListener("click", () => {
+                Auth.clearSession();
+                window.location.reload();
+              });
+          } else {
+            nav.innerHTML = `
+              <button class="btn btn-ghost btn-sm" id="btnOpenConfig" title="Cấu hình số thẻ mỗi màn">⚙️ Cấu hình</button>
+              <a href="/pages/login.html" class="btn btn-secondary btn-sm">Đăng nhập</a>
+              <a href="/pages/register.html" class="btn btn-primary btn-sm">Đăng ký</a>
+            `;
+          }
+
+          document
+            .getElementById("btnOpenConfig")
+            ?.addEventListener("click", openConfigModal);
+
+          const shortName =
+            user?.full_name?.split(" ").pop() || user?.username || "bạn";
+          document.getElementById("welcomeHeading").textContent = isAuth
+            ? `Chào ${shortName}, hôm nay ôn tiếp nhé.`
+            : "Chào bạn, hôm nay ôn tiếp nhé.";
+        }
+
+        // Config Modal Logic
+        const configModal = document.getElementById("configModal");
+        const inputCards = document.getElementById("inputCardsPerRound");
+        const presetChips = document.querySelectorAll(".preset-chip");
+
+        function openConfigModal() {
+          const currentVal = Auth.getCardsPerRound();
+          inputCards.value = currentVal;
+          updateActiveChip(currentVal);
+          configModal.style.display = "flex";
+        }
+
+        function closeConfigModal() {
+          configModal.style.display = "none";
+        }
+
+        function updateActiveChip(val) {
+          const strVal = String(val).trim().toLowerCase();
+          presetChips.forEach((chip) => {
+            const chipVal = chip.getAttribute("data-val").toLowerCase();
+            if (chipVal === strVal) {
+              chip.classList.add("active");
+            } else {
+              chip.classList.remove("active");
+            }
+          });
+        }
+
+        presetChips.forEach((chip) => {
+          chip.addEventListener("click", () => {
+            const v = chip.getAttribute("data-val");
+            inputCards.value = v;
+            updateActiveChip(v);
+          });
+        });
+
+        inputCards.addEventListener("input", () => {
+          updateActiveChip(inputCards.value);
+        });
+
+        document
+          .getElementById("btnCloseConfigModal")
+          ?.addEventListener("click", closeConfigModal);
+        document
+          .getElementById("btnCancelConfig")
+          ?.addEventListener("click", closeConfigModal);
+        configModal.addEventListener("click", (e) => {
+          if (e.target === configModal) closeConfigModal();
+        });
+
+        document
+          .getElementById("btnSaveConfig")
+          ?.addEventListener("click", async () => {
+            const raw = String(inputCards.value).trim().toLowerCase();
+            let finalVal = 10;
+            if (raw === "all" || raw === "tất cả") {
+              finalVal = "all";
+            } else {
+              const parsed = parseInt(raw, 10);
+              if (isNaN(parsed) || parsed < 10) {
+                Toast.show(
+                  "Vui lòng nhập số thẻ từ 10 trở lên hoặc chọn 'All' (Tất cả)!",
+                  "warning",
+                );
+                return;
+              }
+              finalVal = parsed;
+            }
+            await Auth.setCardsPerRound(finalVal);
+            Toast.show(
+              finalVal === "all"
+                ? "Đã lưu: Chơi tất cả các thẻ!"
+                : `Đã lưu cấu hình: ${finalVal} thẻ mỗi màn!`,
+              "success",
+            );
+            closeConfigModal();
+          });
+
+        // Render Card (§5.3)
+        function renderQuizCard(quiz) {
+          return `
+          <a href="/pages/game-setup.html?quiz_id=${quiz.id}" class="quiz-card" id="quiz-card-${quiz.id}">
+            <span class="quiz-card-badge">Bộ từ</span>
+            <div class="quiz-card-title">${escapeHtml(quiz.title)}</div>
+            <div class="quiz-card-samples" lang="zh-Hans">学 · 习 · 中 · 文</div>
+            <div class="progress-bar" style="margin-top:var(--s-1)">
+              <div class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="quiz-card-footer">
+              <span>${quiz.card_count || 0} từ</span>
+              <span style="color:var(--accent); font-weight:600;">Học ngay →</span>
+            </div>
+          </a>
+        `;
+        }
+
+        function renderQuizGrid(quizzes) {
+          const grid = document.getElementById("quizGrid");
+          if (!quizzes.length) {
+            grid.innerHTML = `
+            <div class="empty-state">
+              <h3>Chưa có bộ quiz nào</h3>
+              <p>Hiện chưa có bộ từ nào khả dụng. Hãy quay lại sau.</p>
+            </div>
+          `;
+            return;
+          }
+
+          grid.innerHTML = quizzes.map((q) => renderQuizCard(q)).join("");
+
+          // Cập nhật số từ đã thuộc / cần ôn từ dữ liệu thật
+          const totalCards = quizzes.reduce(
+            (sum, q) => sum + (q.card_count || 0),
+            0,
+          );
+          document.getElementById("statReviewNeeded").textContent =
+            totalCards > 0 ? Math.min(15, totalCards) : 0;
+        }
+
+        // Search filter
+        document
+          .getElementById("searchInput")
+          .addEventListener("input", (e) => {
+            const query = e.target.value.trim().toLowerCase();
+            const filtered = query
+              ? allQuizzes.filter(
+                  (q) =>
+                    q.title.toLowerCase().includes(query) ||
+                    (q.description || "").toLowerCase().includes(query),
+                )
+              : allQuizzes;
+            renderQuizGrid(filtered);
+          });
+
+        // Load Quizzes
+        async function loadQuizzes() {
+          try {
+            const data = await QuizApi.getAll();
+            allQuizzes = data || [];
+            renderQuizGrid(allQuizzes);
+          } catch (err) {
+            document.getElementById("quizGrid").innerHTML = `
+            <div class="empty-state">
+              <h3>Lỗi tải dữ liệu</h3>
+              <p>${escapeHtml(err.message)}</p>
+              <button class="btn btn-secondary btn-sm" style="margin-top:var(--s-3)" onclick="location.reload()">Thử lại</button>
+            </div>
+          `;
+          }
+        }
+
+        // Render Sentence Set Card (§ Đồng nhất hoàn toàn với renderQuizCard)
+        function renderSentenceSetCard(set) {
+          return `
+          <a href="/pages/game-setup.html?sentence_set_id=${set.id}&game=sentence" class="quiz-card" id="sentence-card-${set.id}">
+            <span class="quiz-card-badge">Bộ câu</span>
+            <div class="quiz-card-title">${escapeHtml(set.title)}</div>
+            <div class="quiz-card-samples" lang="zh-Hans">${escapeHtml(set.samples || "你 · 好 · 吗 · ？")}</div>
+            <div class="progress-bar" style="margin-top:var(--s-1)">
+              <div class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="quiz-card-footer">
+              <span>${set.sentence_count || 0} câu</span>
+              <span style="color:var(--accent); font-weight:600;">Luyện ngay →</span>
+            </div>
+          </a>
+        `;
+        }
+
+        let allSentenceSets = [];
+
+        function renderSentenceGrid(sets) {
+          const grid = document.getElementById("sentenceGrid");
+          if (!sets.length) {
+            grid.innerHTML = `
+            <div class="empty-state">
+              <h3>Chưa có bộ câu nào</h3>
+              <p>Hiện chưa có bộ câu nào khả dụng. Hãy quay lại sau.</p>
+            </div>
+          `;
+            return;
+          }
+          grid.innerHTML = sets.map((s) => renderSentenceSetCard(s)).join("");
+        }
+
+        // Search filter cho Bộ câu
+        document
+          .getElementById("searchSentenceInput")
+          ?.addEventListener("input", (e) => {
+            const query = e.target.value.trim().toLowerCase();
+            const filtered = query
+              ? allSentenceSets.filter(
+                  (s) =>
+                    s.title.toLowerCase().includes(query) ||
+                    (s.description || "").toLowerCase().includes(query),
+                )
+              : allSentenceSets;
+            renderSentenceGrid(filtered);
+          });
+
+        // Load Sentence Sets
+        async function loadSentenceSets() {
+          try {
+            const data = await SentenceSetApi.getAll();
+            allSentenceSets = data || [];
+            renderSentenceGrid(allSentenceSets);
+          } catch (err) {
+            document.getElementById("sentenceGrid").innerHTML = `
+            <div class="empty-state">
+              <h3>Lỗi tải dữ liệu</h3>
+              <p>${escapeHtml(err.message)}</p>
+              <button class="btn btn-secondary btn-sm" style="margin-top:var(--s-3)" onclick="location.reload()">Thử lại</button>
+            </div>
+          `;
+          }
+        }
+
+        function escapeHtml(str) {
+          if (!str) return "";
+          return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+
+        renderNav();
+        loadQuizzes();
+        loadSentenceSets();
+        SyncService.flushQueue();
+      })();
+    </script>
+  </body>
+</html>

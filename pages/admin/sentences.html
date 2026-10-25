@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý Bộ Câu — HanziQuizz Admin</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/img/HanziQuizz-Favicon.png"
+    />
+    <link rel="stylesheet" href="/static/css/game/theme.css?v={{ v }}" />
+    <link rel="stylesheet" href="/static/css/admin/admin.css?v={{ v }}" />
+  </head>
+  <body class="admin-layout">
+    <!-- Header -->
+    <header class="admin-header">
+      <a href="/pages/admin/quizzes.html" class="admin-brand">
+        <img
+          src="/static/img/HanziQuizz-Favicon.png"
+          alt="HanziQuizz Logo"
+          style="height: 32px; width: auto; object-fit: contain"
+        />
+        <span class="admin-brand-title">HanziQuizz</span>
+        <span class="badge-admin">Admin</span>
+      </a>
+
+      <nav class="admin-nav">
+        <a href="/pages/admin/quizzes.html" class="admin-nav-link">Bộ Quizz</a>
+        <a href="/pages/admin/measure-words.html" class="admin-nav-link">Lượng từ</a>
+        <a href="/pages/admin/grammar.html" class="admin-nav-link">Ngữ pháp</a>
+        <a href="/pages/admin/sentences.html" class="admin-nav-link active">Bộ câu</a>
+        <a href="/pages/admin/users.html" class="admin-nav-link">Người dùng</a>
+        <a href="/" class="admin-nav-link" title="Quay lại giao diện người chơi">Về trang chủ</a>
+      </nav>
+
+      <div class="admin-user-menu">
+        <span id="adminUserName">Admin</span>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn">Đăng xuất</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-container">
+      <div class="page-header">
+        <div class="page-title-group">
+          <h1>Quản lý Bộ Câu</h1>
+          <p>Tạo mới, chỉnh sửa, xóa và import câu tiếng Trung theo từng bộ câu học tập</p>
+        </div>
+        <div class="header-actions">
+          <a href="/api/v1/sentences/template" class="btn btn-secondary" id="btnDownloadTemplate" download>
+            📥 Tải mẫu Excel (3 cột)
+          </a>
+          <button class="btn btn-primary" id="btnOpenCreateSet">
+            + Tạo Bộ câu mới
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="admin-stat-card">
+          <div class="admin-stat-top">
+            <div class="admin-stat-value" id="statTotalSets">0</div>
+            <div class="admin-stat-icon">📚</div>
+          </div>
+          <div class="admin-stat-label">Tổng số Bộ câu</div>
+          <div class="admin-stat-action">
+            <span class="stat-detail-link" data-filter-status="all">Xem chi tiết</span>
+          </div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-top">
+            <div class="admin-stat-value" id="statTotalSentences">0</div>
+            <div class="admin-stat-icon">🧩</div>
+          </div>
+          <div class="admin-stat-label">Tổng số Câu ghép</div>
+          <div class="admin-stat-action">
+            <span class="stat-detail-link" data-action="focus-table">Xem chi tiết</span>
+          </div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-top">
+            <div class="admin-stat-value" id="statActiveSets">0</div>
+            <div class="admin-stat-icon">✨</div>
+          </div>
+          <div class="admin-stat-label">Đang kích hoạt</div>
+          <div class="admin-stat-action">
+            <span class="stat-detail-link" data-filter-status="active">Xem chi tiết</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Tìm kiếm bộ câu theo tên hoặc mô tả..."
+          />
+        </div>
+        <div class="filter-group">
+          <select class="filter-select" id="filterStatus">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="active">Đang kích hoạt</option>
+            <option value="inactive">Tạm dừng</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 60px">ID</th>
+              <th>Tên Bộ Câu</th>
+              <th>Mô tả</th>
+              <th style="width: 120px; text-align: center">Số câu</th>
+              <th style="width: 130px; text-align: center">Trạng thái</th>
+              <th style="width: 150px">Ngày tạo</th>
+              <th style="width: 220px; text-align: right">Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="setTableBody">
+            <tr>
+              <td colspan="7" class="empty-table">
+                <span class="empty-icon">⏳</span>
+                <div>Đang tải danh sách bộ câu...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- Modal Tạo / Sửa Bộ câu -->
+    <div class="modal-overlay" id="setModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title" id="setModalTitle">Tạo Bộ Câu Mới</h3>
+          <button class="modal-close" data-close="setModal">&times;</button>
+        </div>
+        <form id="setForm">
+          <div class="modal-body">
+            <input type="hidden" id="setEditId" />
+            <div class="form-group">
+              <label class="form-label">Tên Bộ Câu <span style="color: var(--danger)">*</span></label>
+              <input
+                type="text"
+                class="form-control"
+                id="setTitle"
+                placeholder="Ví dụ: HSK 1 — Giao tiếp hàng ngày"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mô tả ngắn</label>
+              <textarea
+                class="form-control"
+                id="setDesc"
+                rows="3"
+                placeholder="Giới thiệu nội dung bộ câu, ngữ cảnh áp dụng..."
+              ></textarea>
+            </div>
+            <div class="form-group" id="setActiveGroup" style="display: none">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;">
+                <input type="checkbox" id="setIsActive" checked />
+                Kích hoạt bộ câu cho người chơi
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-close="setModal">Hủy</button>
+            <button type="submit" class="btn btn-primary" id="btnSubmitSet">Lưu bộ câu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Xóa Bộ câu -->
+    <div class="modal-overlay" id="deleteModal">
+      <div class="modal-card" style="max-width: 440px">
+        <div class="modal-header">
+          <h3 class="modal-title" style="color: var(--danger)">Xác nhận xóa bộ câu</h3>
+          <button class="modal-close" data-close="deleteModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="color: var(--text-2); font-size: var(--fs-sm); line-height: 1.5">
+            Bạn có chắc chắn muốn xóa bộ câu <strong id="deleteSetName" style="color: var(--text)"></strong> không?<br />
+            <span style="color: var(--danger); font-size: var(--fs-xs);">
+              ⚠️ Lưu ý: Toàn bộ câu đố bên trong bộ câu này cũng sẽ bị xóa vĩnh viễn!
+            </span>
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="deleteModal">Hủy</button>
+          <button type="button" class="btn btn-danger" id="btnConfirmDelete">Đồng ý xóa</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Import Nhanh Excel vào Bộ câu -->
+    <div class="modal-overlay" id="importModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">📥 Import Câu vào Bộ Câu</h3>
+          <button class="modal-close" data-close="importModal">&times;</button>
+        </div>
+        <form id="importForm">
+          <div class="modal-body">
+            <input type="hidden" id="importSetId" />
+            <div style="background: var(--surface-2); border-left: 3px solid var(--accent); padding: 10px 14px; border-radius: var(--r-sm); font-size: var(--fs-xs); color: var(--text-2); line-height: 1.5; margin-bottom: var(--s-3);">
+              <strong>Đang import vào:</strong> <span id="importTargetTitle" style="color: var(--accent); font-weight: 600;"></span><br />
+              • Cấu trúc file: <strong>Cột A:</strong> Tiếng Trung | <strong>Cột B:</strong> Pinyin | <strong>Cột C:</strong> Tiếng Việt<br />
+              • Hệ thống sẽ tự động bóc tách từ ghép và tạo giọng đọc phát âm chuẩn MP3.
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Chọn file Excel (.xlsx, .xls) hoặc CSV (.csv)</label>
+              <div id="dropZone" style="border: 2px dashed var(--border); border-radius: var(--r-md); padding: var(--s-6) var(--s-4); text-align: center; cursor: pointer;">
+                <div style="font-size: 2rem; margin-bottom: var(--s-2)">📄</div>
+                <div style="font-weight: 600; margin-bottom: var(--s-1)">
+                  Kéo thả file vào đây hoặc <span style="color: var(--accent)">chọn từ máy tính</span>
+                </div>
+                <div style="font-size: var(--fs-xs); color: var(--text-2)">
+                  Hỗ trợ định dạng .xlsx, .xls, .csv (tối đa 5MB)
+                </div>
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none" />
+              </div>
+              <div id="fileSelectedInfo" style="display: none; margin-top: var(--s-2); font-size: var(--fs-xs); color: var(--accent); font-weight: 600;"></div>
+            </div>
+
+            <div style="text-align: right">
+              <a href="/api/v1/sentences/template" style="font-size: var(--fs-xs); color: var(--accent); text-decoration: none" download>
+                📥 Tải file Excel mẫu 3 cột chuẩn (.xlsx)
+              </a>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-close="importModal">Hủy</button>
+            <button type="submit" class="btn btn-primary" id="btnSubmitImport">Bắt đầu Import</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts chuẩn -->
+    <script src="/static/js/core/api.js?v={{ v }}"></script>
+    <script src="/static/js/core/auth.js?v={{ v }}"></script>
+    <script src="/static/js/api/quizApi.js?v={{ v }}"></script>
+    <script src="/static/js/components/toast.js?v={{ v }}"></script>
+    <script>
+      (function () {
+        if (!Auth.requireAdmin()) return;
+
+        let allSets = [];
+        let filteredSets = [];
+        let deleteTargetId = null;
+
+        const user = Auth.getUser();
+        if (user) {
+          document.getElementById("adminUserName").textContent = user.full_name || user.username || "Admin";
+        }
+
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+          Auth.clearSession();
+          window.location.href = "/pages/login.html";
+        });
+
+        function openModal(id) {
+          document.getElementById(id).classList.add("active");
+        }
+
+        function closeModal(id) {
+          document.getElementById(id).classList.remove("active");
+        }
+
+        document.querySelectorAll("[data-close]").forEach((btn) => {
+          btn.addEventListener("click", () => closeModal(btn.getAttribute("data-close")));
+        });
+
+        // Tải danh sách bộ câu
+        async function loadSentenceSets() {
+          try {
+            allSets = await SentenceSetApi.adminGetAll();
+            updateStats();
+            filterAndRender();
+          } catch (e) {
+            Toast.show(e.message || "Lỗi tải danh sách bộ câu", "danger");
+            document.getElementById("setTableBody").innerHTML = `
+              <tr>
+                <td colspan="7" class="empty-table">
+                  <span class="empty-icon">❌</span>
+                  <div>Lỗi tải dữ liệu: ${e.message}</div>
+                </td>
+              </tr>
+            `;
+          }
+        }
+
+        function updateStats() {
+          const totalSets = allSets.length;
+          const totalSentences = allSets.reduce((sum, s) => sum + (s.sentence_count || 0), 0);
+          const activeSets = allSets.filter((s) => s.is_active).length;
+
+          document.getElementById("statTotalSets").textContent = totalSets;
+          document.getElementById("statTotalSentences").textContent = totalSentences;
+          document.getElementById("statActiveSets").textContent = activeSets;
+        }
+
+        function filterAndRender() {
+          const query = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+          const status = document.getElementById("filterStatus").value;
+
+          filteredSets = allSets.filter((s) => {
+            const matchesQuery =
+              !query ||
+              s.title.toLowerCase().includes(query) ||
+              (s.description || "").toLowerCase().includes(query);
+            const matchesStatus =
+              status === "all" ||
+              (status === "active" && s.is_active) ||
+              (status === "inactive" && !s.is_active);
+            return matchesQuery && matchesStatus;
+          });
+
+          renderTable();
+        }
+
+        function renderTable() {
+          const tbody = document.getElementById("setTableBody");
+          if (filteredSets.length === 0) {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="7" class="empty-table">
+                  <span class="empty-icon">📭</span>
+                  <div>Không tìm thấy bộ câu nào phù hợp.</div>
+                </td>
+              </tr>
+            `;
+            return;
+          }
+
+          tbody.innerHTML = filteredSets
+            .map((item) => {
+              const statusBadge = item.is_active
+                ? `<span class="status-badge status-active">Hoạt động</span>`
+                : `<span class="status-badge status-inactive">Tạm dừng</span>`;
+              const dateStr = item.created_at
+                ? new Date(item.created_at).toLocaleDateString("vi-VN")
+                : "—";
+
+              return `
+                <tr>
+                  <td style="color: var(--text-2); font-size: var(--fs-xs)">#${item.id}</td>
+                  <td>
+                    <a href="/pages/admin/sentence-detail.html?id=${item.id}" style="font-weight: 600; color: var(--accent); text-decoration: none;">
+                      ${item.title}
+                    </a>
+                  </td>
+                  <td style="color: var(--text-2); font-size: var(--fs-sm); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    ${item.description || '—'}
+                  </td>
+                  <td style="text-align: center; font-weight: bold;">${item.sentence_count || 0}</td>
+                  <td style="text-align: center">${statusBadge}</td>
+                  <td style="color: var(--text-2); font-size: var(--fs-xs)">${dateStr}</td>
+                  <td style="text-align: right; white-space: nowrap;">
+                    <a
+                      href="/pages/admin/sentence-detail.html?id=${item.id}"
+                      class="btn btn-ghost btn-sm"
+                      style="padding: 3px 7px; font-size: var(--fs-xs); color: var(--accent);"
+                      title="Quản lý câu trong bộ này"
+                    >
+                      📖 Quản lý câu
+                    </a>
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm btn-import-set"
+                      data-id="${item.id}"
+                      data-title="${encodeURIComponent(item.title)}"
+                      style="padding: 3px 6px; font-size: var(--fs-xs);"
+                      title="Import Excel vào bộ câu này"
+                    >
+                      📥 Import
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm btn-edit-set"
+                      data-id="${item.id}"
+                      style="padding: 3px 6px; font-size: var(--fs-xs);"
+                      title="Sửa thông tin bộ câu"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm btn-delete-set"
+                      data-id="${item.id}"
+                      data-title="${encodeURIComponent(item.title)}"
+                      style="padding: 3px 6px; font-size: var(--fs-xs); color: var(--danger);"
+                      title="Xóa bộ câu"
+                    >
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              `;
+            })
+            .join("");
+
+          // Gắn sự kiện các nút
+          tbody.querySelectorAll(".btn-edit-set").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const id = parseInt(btn.getAttribute("data-id"));
+              const item = allSets.find((s) => s.id === id);
+              if (!item) return;
+
+              document.getElementById("setModalTitle").textContent = "Chỉnh sửa Bộ Câu";
+              document.getElementById("setEditId").value = item.id;
+              document.getElementById("setTitle").value = item.title;
+              document.getElementById("setDesc").value = item.description || "";
+              document.getElementById("setIsActive").checked = item.is_active;
+              document.getElementById("setActiveGroup").style.display = "block";
+              openModal("setModal");
+            });
+          });
+
+          tbody.querySelectorAll(".btn-delete-set").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              deleteTargetId = parseInt(btn.getAttribute("data-id"));
+              const title = decodeURIComponent(btn.getAttribute("data-title") || "");
+              document.getElementById("deleteSetName").textContent = `"${title}"`;
+              openModal("deleteModal");
+            });
+          });
+
+          tbody.querySelectorAll(".btn-import-set").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const id = btn.getAttribute("data-id");
+              const title = decodeURIComponent(btn.getAttribute("data-title") || "");
+              document.getElementById("importSetId").value = id;
+              document.getElementById("importTargetTitle").textContent = title;
+              document.getElementById("fileInput").value = "";
+              document.getElementById("fileSelectedInfo").style.display = "none";
+              openModal("importModal");
+            });
+          });
+        }
+
+        // Toolbar Events
+        document.getElementById("searchInput").addEventListener("input", filterAndRender);
+        document.getElementById("filterStatus").addEventListener("change", filterAndRender);
+
+        // Click stat cards to filter
+        document.querySelectorAll("[data-filter-status]").forEach((el) => {
+          el.addEventListener("click", () => {
+            const st = el.getAttribute("data-filter-status");
+            document.getElementById("filterStatus").value = st;
+            filterAndRender();
+          });
+        });
+
+        // Tạo bộ câu mới
+        document.getElementById("btnOpenCreateSet").addEventListener("click", () => {
+          document.getElementById("setModalTitle").textContent = "Tạo Bộ Câu Mới";
+          document.getElementById("setEditId").value = "";
+          document.getElementById("setTitle").value = "";
+          document.getElementById("setDesc").value = "";
+          document.getElementById("setIsActive").checked = true;
+          document.getElementById("setActiveGroup").style.display = "none";
+          openModal("setModal");
+        });
+
+        // Submit form tạo / sửa bộ câu
+        document.getElementById("setForm").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const editId = document.getElementById("setEditId").value;
+          const title = document.getElementById("setTitle").value.trim();
+          const desc = document.getElementById("setDesc").value.trim();
+          const isActive = document.getElementById("setIsActive").checked;
+
+          if (!title) {
+            Toast.show("Vui lòng nhập tên bộ câu!", "danger");
+            return;
+          }
+
+          try {
+            if (editId) {
+              await SentenceSetApi.adminUpdate(editId, {
+                title: title,
+                description: desc,
+                is_active: isActive,
+              });
+              Toast.show("Đã cập nhật bộ câu thành công!", "success");
+            } else {
+              await SentenceSetApi.adminCreate({
+                title: title,
+                description: desc,
+                is_active: true,
+              });
+              Toast.show("Đã tạo bộ câu mới thành công!", "success");
+            }
+            closeModal("setModal");
+            await loadSentenceSets();
+          } catch (err) {
+            Toast.show(err.message || "Lỗi lưu bộ câu", "danger");
+          }
+        });
+
+        // Xóa bộ câu
+        document.getElementById("btnConfirmDelete").addEventListener("click", async () => {
+          if (!deleteTargetId) return;
+          try {
+            await SentenceSetApi.adminDelete(deleteTargetId);
+            Toast.show("Đã xóa bộ câu thành công!", "success");
+            deleteTargetId = null;
+            closeModal("deleteModal");
+            await loadSentenceSets();
+          } catch (err) {
+            Toast.show(err.message || "Lỗi xóa bộ câu", "danger");
+          }
+        });
+
+        // Import Excel vào bộ câu
+        const dropZone = document.getElementById("dropZone");
+        const fileInput = document.getElementById("fileInput");
+        const fileInfo = document.getElementById("fileSelectedInfo");
+
+        dropZone.addEventListener("click", () => fileInput.click());
+
+        fileInput.addEventListener("change", () => {
+          const file = fileInput.files[0];
+          if (file) {
+            fileInfo.textContent = `Đã chọn: ${file.name} (${Math.round(file.size / 1024)} KB)`;
+            fileInfo.style.display = "block";
+          }
+        });
+
+        dropZone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dropZone.style.borderColor = "var(--accent)";
+        });
+
+        dropZone.addEventListener("dragleave", () => {
+          dropZone.style.borderColor = "var(--border)";
+        });
+
+        dropZone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dropZone.style.borderColor = "var(--border)";
+          if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            const file = fileInput.files[0];
+            fileInfo.textContent = `Đã chọn: ${file.name} (${Math.round(file.size / 1024)} KB)`;
+            fileInfo.style.display = "block";
+          }
+        });
+
+        document.getElementById("importForm").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const setId = document.getElementById("importSetId").value;
+          const file = fileInput.files[0];
+
+          if (!file) {
+            Toast.show("Vui lòng chọn 1 file Excel hoặc CSV!", "danger");
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const btnSubmit = document.getElementById("btnSubmitImport");
+          btnSubmit.disabled = true;
+          btnSubmit.textContent = "Đang xử lý import...";
+
+          try {
+            const res = await SentenceSetApi.adminImportExcel(setId, formData);
+            Toast.show(res.message || "Import thành công!", "success");
+            closeModal("importModal");
+            await loadSentenceSets();
+          } catch (err) {
+            Toast.show(err.message || "Lỗi khi import file", "danger");
+          } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Bắt đầu Import";
+          }
+        });
+
+        loadSentenceSets();
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý Quizz — HanziQuizz Admin</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/img/HanziQuizz-Favicon.png"
+    />
+    <link rel="stylesheet" href="/static/css/game/theme.css?v={{ v }}" />
+    <link rel="stylesheet" href="/static/css/admin/admin.css?v={{ v }}" />
+  </head>
+  <body class="admin-layout">
+    <!-- Header -->
+    <header class="admin-header">
+      <a href="/pages/admin/quizzes.html" class="admin-brand">
+        <img
+          src="/static/img/HanziQuizz-Favicon.png"
+          alt="HanziQuizz Logo"
+          style="height: 32px; width: auto; object-fit: contain"
+        />
+        <span class="admin-brand-title">HanziQuizz</span>
+        <span class="badge-admin">Admin</span>
+      </a>
+
+      <nav class="admin-nav">
+        <a href="/pages/admin/quizzes.html" class="admin-nav-link active"
+          >Bộ Quizz</a
+        >
+        <a href="/pages/admin/measure-words.html" class="admin-nav-link"
+          >Lượng từ</a
+        >
+        <a href="/pages/admin/grammar.html" class="admin-nav-link"
+          >Ngữ pháp</a
+        >
+        <a href="/pages/admin/sentences.html" class="admin-nav-link">Bộ câu</a>
+        <a href="/pages/admin/users.html" class="admin-nav-link">Người dùng</a>
+        <a href="/" class="admin-nav-link" title="Quay lại giao diện người chơi"
+          >Về trang chủ</a
+        >
+      </nav>
+
+      <div class="admin-user-menu">
+        <span id="adminUserName">Admin</span>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn">
+          Đăng xuất
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-container">
+      <div class="page-header">
+        <div class="page-title-group">
+          <h1>Quản lý Bộ Quizz</h1>
+          <p>
+            Tạo mới, chỉnh sửa, xóa và import thẻ học từ file Excel vào các bộ
+            quizz
+          </p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" id="btnDownloadTemplate">
+            📥 Tải mẫu Excel (3 cột)
+          </button>
+          <button class="btn btn-primary" id="btnOpenCreateQuiz">
+            + Tạo Quizz mới
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="admin-stat-card">
+          <div class="admin-stat-top">
+            <div class="admin-stat-value" id="statTotalQuizzes">0</div>
+            <div class="admin-stat-icon">📚</div>
+          </div>
+          <div class="admin-stat-label">Tổng số Quizz</div>
+          <div class="admin-stat-action">
+            <span class="stat-detail-link" data-filter-status="all">Xem chi tiết</span>
+          </div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-top">
+            <div class="admin-stat-value" id="statTotalCards">0</div>
+            <div class="admin-stat-icon">📇</div>
+          </div>
+          <div class="admin-stat-label">Tổng số Thẻ</div>
+          <div class="admin-stat-action">
+            <span class="stat-detail-link" data-action="focus-table">Xem chi tiết</span>
+          </div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-top">
+            <div class="admin-stat-value" id="statActiveQuizzes">0</div>
+            <div class="admin-stat-icon">✨</div>
+          </div>
+          <div class="admin-stat-label">Đang kích hoạt</div>
+          <div class="admin-stat-action">
+            <span class="stat-detail-link" data-filter-status="active">Xem chi tiết</span>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Tìm kiếm quizz theo tên hoặc mô tả..."
+          />
+        </div>
+        <div class="filter-group">
+          <select class="filter-select" id="filterStatus">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="active">Đang kích hoạt</option>
+            <option value="inactive">Tạm dừng</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 60px">ID</th>
+              <th>Tên Bộ Quizz</th>
+              <th>Mô tả</th>
+              <th style="width: 120px; text-align: center">Số thẻ</th>
+              <th style="width: 130px; text-align: center">Trạng thái</th>
+              <th style="width: 150px">Ngày tạo</th>
+              <th style="width: 180px; text-align: right">Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="quizTableBody">
+            <tr>
+              <td colspan="7" class="empty-table">
+                <span class="empty-icon">⏳</span>
+                <div>Đang tải danh sách quizz...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- Modal Tạo / Sửa Quizz -->
+    <div class="modal-overlay" id="quizModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title" id="quizModalTitle">Tạo Quizz Mới</h3>
+          <button class="modal-close" data-close="quizModal">&times;</button>
+        </div>
+        <form id="quizForm">
+          <div class="modal-body">
+            <input type="hidden" id="quizEditId" />
+            <div class="form-group">
+              <label class="form-label"
+                >Tên Quizz <span style="color: var(--danger)">*</span></label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="quizTitle"
+                placeholder="Ví dụ: HSK 1 — 150 từ vựng cơ bản"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mô tả ngắn</label>
+              <textarea
+                class="form-control"
+                id="quizDesc"
+                placeholder="Giới thiệu nội dung bài học, mục tiêu..."
+              ></textarea>
+            </div>
+            <div class="form-group" id="quizActiveGroup" style="display: none">
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  cursor: pointer;
+                  font-size: 0.9rem;
+                "
+              >
+                <input type="checkbox" id="quizIsActive" checked />
+                Kích hoạt quizz cho người chơi
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-close="quizModal"
+            >
+              Hủy
+            </button>
+            <button type="submit" class="btn btn-primary" id="btnSaveQuiz">
+              Lưu Quizz
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Import Excel -->
+    <div class="modal-overlay" id="importModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">Import Thẻ từ Excel</h3>
+          <button class="modal-close" data-close="importModal">&times;</button>
+        </div>
+        <form id="importForm">
+          <div class="modal-body">
+            <input type="hidden" id="importQuizId" />
+            <div
+              style="
+                font-size: var(--fs-sm);
+                color: var(--text-2);
+                margin-bottom: 8px;
+              "
+            >
+              Quizz đích:
+              <strong id="importQuizTitle" style="color: var(--text)"
+                >—</strong
+              >
+            </div>
+
+            <div
+              style="
+                background: rgba(200, 56, 45, 0.08);
+                border-left: 3px solid var(--accent);
+                padding: 10px 14px;
+                border-radius: var(--r-sm);
+                font-size: var(--fs-xs);
+                color: var(--text-2);
+                line-height: 1.5;
+              "
+            >
+              <strong>Yêu cầu định dạng file Excel (.xlsx, .xls) hoặc CSV (.csv):</strong><br />
+              • <strong>Cột A:</strong> Tiếng Việt (Nghĩa)<br />
+              • <strong>Cột B:</strong> Pinyin (Phiên âm có dấu thanh)<br />
+              • <strong>Cột C:</strong> Chữ Hán (Giản thể / Phồn thể)<br />
+              • Dòng đầu tiên là tiêu đề (header) sẽ tự động được bỏ qua.
+            </div>
+
+            <div class="dropzone" id="excelDropzone">
+              <div class="dropzone-icon" style="color:var(--accent)">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="8" y1="13" x2="16" y2="13"></line>
+                  <line x1="8" y1="17" x2="16" y2="17"></line>
+                  <line x1="10" y1="9" x2="8" y2="9"></line>
+                </svg>
+              </div>
+              <div class="dropzone-title">Kéo &amp; thả file Excel hoặc CSV vào đây</div>
+              <div class="dropzone-desc">
+                hoặc nhấp chuột để chọn file từ máy tính (.xlsx, .xls, .csv)
+              </div>
+              <input
+                type="file"
+                id="excelFileInput"
+                accept=".xlsx, .xls, .csv"
+                style="display: none"
+              />
+              <div class="dropzone-file-info" id="selectedFileInfo"></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-close="importModal"
+            >
+              Đóng
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              id="btnSubmitImport"
+              disabled
+            >
+              Bắt đầu Import
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Xác nhận Xóa -->
+    <div class="modal-overlay" id="deleteModal">
+      <div class="modal-card" style="max-width: 440px">
+        <div class="modal-header">
+          <h3 class="modal-title" style="color: var(--danger)">Xác nhận xóa Quizz</h3>
+          <button class="modal-close" data-close="deleteModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p
+            style="
+              color: var(--text-2);
+              font-size: var(--fs-sm);
+              line-height: 1.5;
+            "
+          >
+            Bạn có chắc chắn muốn xóa bộ quizz
+            <strong
+              id="deleteQuizTitle"
+              style="color: var(--text)"
+            ></strong>
+            không?
+          </p>
+          <p style="color: var(--danger); font-size: var(--fs-xs); margin-top: var(--s-2)">
+            ⚠️ Lưu ý: Toàn bộ thẻ từ vựng và lịch sử kết quả của quizz này sẽ bị
+            xóa vĩnh viễn!
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-close="deleteModal"
+          >
+            Hủy
+          </button>
+          <button type="button" class="btn btn-danger" id="btnConfirmDelete">
+            Xóa Quizz
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/core/api.js?v={{ v }}"></script>
+    <script src="/static/js/core/auth.js?v={{ v }}"></script>
+    <script src="/static/js/components/toast.js?v={{ v }}"></script>
+    <script src="/static/js/api/quizApi.js?v={{ v }}"></script>
+    <script>
+      (function () {
+        // 1. Guard check Admin
+        if (!Auth.requireAdmin()) return;
+
+        const user = Auth.getUser();
+        document.getElementById("adminUserName").textContent =
+          user?.full_name || user?.username || "Admin";
+
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+          Auth.clearSession();
+          window.location.href = "/pages/login.html";
+        });
+
+        // 2. State
+        let allQuizzes = [];
+        let currentDeleteId = null;
+        let selectedFile = null;
+
+        // 3. Modals Helpers
+        function openModal(id) {
+          document.getElementById(id).classList.add("open");
+        }
+        function closeModal(id) {
+          document.getElementById(id).classList.remove("open");
+        }
+        document.querySelectorAll("[data-close]").forEach((btn) => {
+          btn.addEventListener("click", () =>
+            closeModal(btn.getAttribute("data-close")),
+          );
+        });
+
+        // 4. Load & Render Quizzes
+        async function loadQuizzes() {
+          try {
+            const list = await QuizApi.adminGetAll();
+            allQuizzes = list || [];
+            renderQuizzes();
+            updateStats();
+          } catch (err) {
+            Toast.show(err.message || "Lỗi khi tải danh sách quizz", "error");
+            document.getElementById("quizTableBody").innerHTML = `
+            <tr>
+              <td colspan="7" class="empty-table">
+                <span class="empty-icon">⚠️</span>
+                <div>Không thể tải dữ liệu: ${escapeHtml(err.message)}</div>
+                <button class="btn btn-secondary btn-sm mt-md" onclick="location.reload()">Thử lại</button>
+              </td>
+            </tr>
+          `;
+          }
+        }
+
+        function updateStats() {
+          const total = allQuizzes.length;
+          const active = allQuizzes.filter((q) => q.is_active).length;
+          const totalCards = allQuizzes.reduce(
+            (s, q) => s + (q.card_count || 0),
+            0,
+          );
+          document.getElementById("statTotalQuizzes").textContent = total;
+          document.getElementById("statActiveQuizzes").textContent = active;
+          document.getElementById("statTotalCards").textContent = totalCards;
+        }
+
+        function renderQuizzes() {
+          const tbody = document.getElementById("quizTableBody");
+          const q = document
+            .getElementById("searchInput")
+            .value.trim()
+            .toLowerCase();
+          const statusFilter = document.getElementById("filterStatus").value;
+
+          const filtered = allQuizzes.filter((item) => {
+            const matchQ =
+              item.title.toLowerCase().includes(q) ||
+              (item.description || "").toLowerCase().includes(q);
+            const matchStatus =
+              statusFilter === "all"
+                ? true
+                : statusFilter === "active"
+                  ? item.is_active
+                  : !item.is_active;
+            return matchQ && matchStatus;
+          });
+
+          if (!filtered.length) {
+            tbody.innerHTML = `
+            <tr>
+              <td colspan="7" class="empty-table">
+                <span class="empty-icon">📭</span>
+                <div>Không tìm thấy quizz nào phù hợp</div>
+              </td>
+            </tr>
+          `;
+            return;
+          }
+
+          tbody.innerHTML = filtered
+            .map((item) => {
+              const createdDate = item.created_at
+                ? new Date(item.created_at).toLocaleDateString("vi-VN")
+                : "—";
+              return `
+            <tr>
+              <td style="color:var(--text-3);font-weight:600">#${item.id}</td>
+              <td>
+                <a href="/pages/admin/quiz-detail.html?quiz_id=${item.id}" style="font-weight:600;color:var(--text);text-decoration:none">
+                  ${escapeHtml(item.title)}
+                </a>
+              </td>
+              <td style="color:var(--text-2);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                ${item.description ? escapeHtml(item.description) : '<span style="color:var(--text-3);font-style:italic">Không có mô tả</span>'}
+              </td>
+              <td style="text-align:center">
+                <span style="font-weight:700;color:var(--accent)">${item.card_count || 0}</span> thẻ
+              </td>
+              <td style="text-align:center">
+                <span class="status-pill ${item.is_active ? "status-active" : "status-inactive"}">
+                  ${item.is_active ? "● Đang mở" : "○ Tạm dừng"}
+                </span>
+              </td>
+              <td style="color:var(--text-2);font-size:var(--fs-xs)">${createdDate}</td>
+              <td>
+                <div class="table-actions">
+                  <a href="/pages/admin/quiz-detail.html?quiz_id=${item.id}" class="btn-icon" title="Quản lý thẻ">
+                    📇
+                  </a>
+                  <button class="btn-icon" title="Import Excel" onclick="openImportModal(${item.id}, '${escapeAttr(item.title)}')">
+                    📥
+                  </button>
+                  <button class="btn-icon" title="Sửa Quizz" onclick="openEditModal(${item.id})">
+                    ✏️
+                  </button>
+                  <button class="btn-icon btn-icon-danger" title="Xóa Quizz" onclick="openDeleteModal(${item.id}, '${escapeAttr(item.title)}')">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+            })
+            .join("");
+        }
+
+        // 5. Create / Edit Quizz Modal
+        document
+          .getElementById("btnOpenCreateQuiz")
+          .addEventListener("click", () => {
+            document.getElementById("quizModalTitle").textContent =
+              "Tạo Quizz Mới";
+            document.getElementById("quizEditId").value = "";
+            document.getElementById("quizTitle").value = "";
+            document.getElementById("quizDesc").value = "";
+            document.getElementById("quizActiveGroup").style.display = "none";
+            openModal("quizModal");
+          });
+
+        window.openEditModal = function (id) {
+          const item = allQuizzes.find((q) => q.id === id);
+          if (!item) return;
+          document.getElementById("quizModalTitle").textContent =
+            "Chỉnh sửa Quizz";
+          document.getElementById("quizEditId").value = item.id;
+          document.getElementById("quizTitle").value = item.title;
+          document.getElementById("quizDesc").value = item.description || "";
+          document.getElementById("quizIsActive").checked = item.is_active;
+          document.getElementById("quizActiveGroup").style.display = "block";
+          openModal("quizModal");
+        };
+
+        document
+          .getElementById("quizForm")
+          .addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const editId = document.getElementById("quizEditId").value;
+            const title = document.getElementById("quizTitle").value.trim();
+            const description = document
+              .getElementById("quizDesc")
+              .value.trim();
+            const is_active = document.getElementById("quizIsActive").checked;
+
+            if (!title) {
+              Toast.show("Vui lòng nhập tên quizz", "error");
+              return;
+            }
+
+            const btnSave = document.getElementById("btnSaveQuiz");
+            btnSave.disabled = true;
+            btnSave.textContent = "Đang lưu...";
+
+            try {
+              if (editId) {
+                await QuizApi.adminUpdate(editId, {
+                  title,
+                  description,
+                  is_active,
+                });
+                Toast.show("Đã cập nhật quizz thành công", "success");
+              } else {
+                await QuizApi.adminCreate({ title, description });
+                Toast.show("Đã tạo quizz mới thành công", "success");
+              }
+              closeModal("quizModal");
+              loadQuizzes();
+            } catch (err) {
+              Toast.show(err.message || "Lỗi khi lưu quizz", "error");
+            } finally {
+              btnSave.disabled = false;
+              btnSave.textContent = "Lưu Quizz";
+            }
+          });
+
+        // 6. Delete Quizz Modal
+        window.openDeleteModal = function (id, title) {
+          currentDeleteId = id;
+          document.getElementById("deleteQuizTitle").textContent = `"${title}"`;
+          openModal("deleteModal");
+        };
+
+        document
+          .getElementById("btnConfirmDelete")
+          .addEventListener("click", async () => {
+            if (!currentDeleteId) return;
+            const btn = document.getElementById("btnConfirmDelete");
+            btn.disabled = true;
+            btn.textContent = "Đang xóa...";
+            try {
+              await QuizApi.adminDelete(currentDeleteId);
+              Toast.show("Đã xóa bộ quizz thành công", "success");
+              closeModal("deleteModal");
+              loadQuizzes();
+            } catch (err) {
+              Toast.show(err.message || "Lỗi khi xóa quizz", "error");
+            } finally {
+              btn.disabled = false;
+              btn.textContent = "Xóa Quizz";
+            }
+          });
+
+        // 7. Excel Import Modal & Drag-Drop
+        const dropzone = document.getElementById("excelDropzone");
+        const fileInput = document.getElementById("excelFileInput");
+        const fileInfo = document.getElementById("selectedFileInfo");
+        const btnSubmitImport = document.getElementById("btnSubmitImport");
+
+        window.openImportModal = function (quizId, quizTitle) {
+          document.getElementById("importQuizId").value = quizId;
+          document.getElementById("importQuizTitle").textContent = quizTitle;
+          selectedFile = null;
+          fileInput.value = "";
+          fileInfo.style.display = "none";
+          btnSubmitImport.disabled = true;
+          openModal("importModal");
+        };
+
+        dropzone.addEventListener("click", () => fileInput.click());
+        dropzone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dropzone.classList.add("dragover");
+        });
+        dropzone.addEventListener("dragleave", () =>
+          dropzone.classList.remove("dragover"),
+        );
+        dropzone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dropzone.classList.remove("dragover");
+          if (e.dataTransfer.files.length) {
+            handleFileSelect(e.dataTransfer.files[0]);
+          }
+        });
+        fileInput.addEventListener("change", (e) => {
+          if (e.target.files.length) {
+            handleFileSelect(e.target.files[0]);
+          }
+        });
+
+        function handleFileSelect(file) {
+          if (!file.name.match(/\.(xlsx|xls)$/i)) {
+            Toast.show("Vui lòng chọn file định dạng .xlsx hoặc .xls", "error");
+            return;
+          }
+          selectedFile = file;
+          fileInfo.textContent = `📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+          fileInfo.style.display = "block";
+          btnSubmitImport.disabled = false;
+        }
+
+        document
+          .getElementById("importForm")
+          .addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const quizId = document.getElementById("importQuizId").value;
+            if (!quizId || !selectedFile) return;
+
+            const formData = new FormData();
+            formData.append("file", selectedFile);
+
+            btnSubmitImport.disabled = true;
+            btnSubmitImport.textContent = "Đang import...";
+
+            try {
+              const res = await QuizApi.adminImportExcel(quizId, formData);
+              Toast.show(res.message || "Import thành công!", "success");
+              closeModal("importModal");
+              loadQuizzes();
+            } catch (err) {
+              Toast.show(err.message || "Lỗi khi import file Excel", "error");
+            } finally {
+              btnSubmitImport.disabled = false;
+              btnSubmitImport.textContent = "Bắt đầu Import";
+            }
+          });
+
+        // 8. Download Sample Template Excel (.xlsx)
+        document
+          .getElementById("btnDownloadTemplate")
+          .addEventListener("click", async () => {
+            try {
+              const token = window.Auth?.getToken?.() || localStorage.getItem("hanziquizz_token");
+              const res = await fetch("/api/v1/quizzes/admin/template", {
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+              });
+              if (!res.ok) throw new Error("Không thể tải file mẫu Excel từ server");
+              const blob = await res.blob();
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "hanziquizz_mau_3cot.xlsx";
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+              Toast.show("Đã tải file Excel mẫu (.xlsx) thành công", "success");
+            } catch (err) {
+              Toast.show(err.message || "Lỗi khi tải file mẫu", "error");
+            }
+          });
+
+        // 9. Filters & Metric Detail Click
+        document
+          .getElementById("searchInput")
+          .addEventListener("input", renderQuizzes);
+        document
+          .getElementById("filterStatus")
+          .addEventListener("change", renderQuizzes);
+
+        document.querySelectorAll(".stat-detail-link").forEach((link) => {
+          link.addEventListener("click", () => {
+            const filterVal = link.getAttribute("data-filter-status");
+            const action = link.getAttribute("data-action");
+            if (filterVal) {
+              const select = document.getElementById("filterStatus");
+              select.value = filterVal;
+              renderQuizzes();
+              document.getElementById("quizTableBody").scrollIntoView({ behavior: "smooth", block: "start" });
+            } else if (action === "focus-table") {
+              document.getElementById("searchInput").focus();
+            }
+          });
+        });
+
+
+        // Utils
+        function escapeHtml(str) {
+          if (!str) return "";
+          return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+        function escapeAttr(str) {
+          if (!str) return "";
+          return String(str).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+        }
+
+        // Init
+        loadQuizzes();
+      })();
+    </script>
+  </body>
+</html>
