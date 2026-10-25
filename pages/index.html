@@ -3,11 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HanziQuizz — Học tiếng Trung qua trò chơi</title>
+    <title>HanziQuizz — Nền Tảng Học Tiếng Trung Qua Trò Chơi Tương Tác</title>
     <meta
       name="description"
-      content="Học chữ Hán mỗi ngày 10 phút. Lật thẻ, ghép cặp, làm trắc nghiệm."
+      content="Học tiếng Trung hiệu quả và hào hứng qua trò chơi tương tác: Lật thẻ Flashcard, Ghép đôi Pikachu, Trắc nghiệm phản xạ, Ghép câu và Điền Pinyin chuẩn HSK."
     />
+    <meta name="keywords" content="học tiếng Trung, học chữ Hán, flashcard tiếng Trung, HSK, ngữ pháp tiếng Trung, lượng từ tiếng Trung, trò chơi học tiếng Trung" />
+    <meta name="theme-color" content="#b33939" />
+    
+    <!-- PWA & Mobile Meta Tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="HanziQuizz" />
+    <link rel="apple-touch-icon" href="/static/img/icons/apple-touch-icon.png" />
+
+    <!-- Open Graph SEO -->
+    <meta property="og:title" content="HanziQuizz — Nền Tảng Học Tiếng Trung Qua Trò Chơi Tương Tác" />
+    <meta property="og:description" content="Học chữ Hán và tiếng Trung mỗi ngày qua các mini-game thú vị: Flashcard, Pikachu, Ghép câu, Điền Pinyin." />
+    <meta property="og:site_name" content="HanziQuizz" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/static/img/HanziQuizz-Favicon.png" />
+
     <link
       rel="icon"
       type="image/png"
@@ -1068,5 +1085,7 @@
         SyncService.flushQueue();
       })();
     </script>
+    <!-- PWA Installation Support -->
+    <script src="/static/js/pwa.js?v={{ v }}"></script>
   </body>
 </html>

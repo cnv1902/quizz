@@ -69,6 +69,24 @@ def serve_robots_txt():
     return "User-agent: *\nAllow: /\n"
 
 
+@app.get("/manifest.json")
+def serve_manifest():
+    """Phục vụ file PWA Web App Manifest."""
+    manifest_path = os.path.join(STATIC_DIR, "manifest.json")
+    if os.path.exists(manifest_path):
+        return FileResponse(manifest_path, media_type="application/manifest+json")
+    raise HTTPException(status_code=404, detail="Manifest not found")
+
+
+@app.get("/sw.js")
+def serve_service_worker():
+    """Phục vụ file Service Worker tại root scope để quản lý toàn bộ website."""
+    sw_path = os.path.join(STATIC_DIR, "sw.js")
+    if os.path.exists(sw_path):
+        return FileResponse(sw_path, media_type="application/javascript", headers={"Service-Worker-Allowed": "/"})
+    raise HTTPException(status_code=404, detail="Service worker not found")
+
+
 # Serve frontend HTML pages
 @app.get("/")
 async def serve_index(request: Request):
@@ -144,5 +162,5 @@ async def custom_403_handler(request: Request, exc: HTTPException):
 async def startup_event():
     """Khởi tạo database khi server start."""
     create_tables()
-    print(f"✅ {settings.APP_NAME} v{settings.APP_VERSION} started!")
-    print(f"📚 API Docs: http://localhost:8000/api/docs")
+    print(f"[OK] {settings.APP_NAME} v{settings.APP_VERSION} started!")
+    print(f"[Docs] API Docs: http://localhost:8000/api/docs")

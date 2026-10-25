@@ -117,6 +117,14 @@
           <span>Cấu hình số câu / thẻ</span>
         </button>
 
+        <button type="button" class="mobile-drawer-link" id="mobileDrawerPwaBtn" style="background:none; border:none; width:100%; text-align:left; cursor:pointer; color: var(--accent);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+          <span style="font-weight:700;">📲 Cài đặt ứng dụng</span>
+        </button>
+
         ${
           isAdmin
             ? `
@@ -192,6 +200,12 @@
         window.location.href = "/pages/game-setup.html?mode=all";
       }
     });
+
+    // Nút Cài đặt ứng dụng PWA trong Drawer
+    const drawerPwaBtn = document.getElementById("mobileDrawerPwaBtn");
+    if (drawerPwaBtn && window.setupPwaInstallButton) {
+      window.setupPwaInstallButton(drawerPwaBtn);
+    }
 
     // Nút Đăng xuất trong Drawer
     document.getElementById("mobileDrawerLogoutBtn")?.addEventListener("click", () => {
