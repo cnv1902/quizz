@@ -8,6 +8,17 @@
 
   const AudioPlayer = {
     currentAudio: null,
+    _sharedAudio: null,
+
+    getAudio: function () {
+      if (!this._sharedAudio) {
+        this._sharedAudio = new Audio();
+        this._sharedAudio.setAttribute('playsinline', 'true');
+        this._sharedAudio.setAttribute('webkit-playsinline', 'true');
+        this._sharedAudio.preload = 'auto';
+      }
+      return this._sharedAudio;
+    },
 
     /**
      * Dừng toàn bộ âm thanh đang phát (cả MP3 lẫn Web Speech).
@@ -78,7 +89,15 @@
       if (audioUrl && typeof audioUrl === 'string' && audioUrl.trim().length > 0) {
         if (btn) btn.classList.add('is-audio-playing');
 
-        var audio = new Audio(audioUrl.trim());
+        var audio = this.getAudio();
+        audio.onended = null;
+        audio.onerror = null;
+        try {
+          audio.pause();
+        } catch (_) {}
+
+        audio.src = audioUrl.trim();
+        audio.playbackRate = options.rate || 0.85;
         this.currentAudio = audio;
 
         var self = this;

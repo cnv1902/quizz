@@ -592,6 +592,32 @@
       </div>
     </main>
 
+    <!-- Mobile Audio Unlock Overlay (chỉ hiện trên di động lần đầu) -->
+    <div id="mobileUnlockOverlay" style="
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.78);
+      z-index: 3000;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      text-align: center;
+      padding: 24px;
+    ">
+      <div style="font-size: 3.5rem;">🎧</div>
+      <p style="color: #fff; font-size: 1.25rem; font-weight: 700; max-width: 320px; line-height: 1.5;">
+        Nhấn để bắt đầu luyện nghe
+      </p>
+      <p style="color: rgba(255,255,255,0.65); font-size: 0.9rem; max-width: 300px;">
+        Trình duyệt di động yêu cầu bạn tương tác trước khi phát âm thanh tự động.
+      </p>
+      <button id="btnUnlockAudio" class="btn btn-primary" style="font-size: 1.1rem; padding: 14px 40px; border-radius: 50px;">
+        ▶ Bắt đầu nghe
+      </button>
+    </div>
+
     <!-- Playlist Drawer -->
     <div class="playlist-drawer" id="playlistDrawer">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s-3);">
@@ -837,22 +863,100 @@
           updateActivePlaylistItem();
         }
 
-        // 4. Audio Playback Sequence Engine (Chống phát chồng âm thanh & tối ưu trên di động)
+        // 4. Audio Unlock & Playback Sequence Engine
         let currentPlaybackToken = 0;
+        let audioUnlocked = false;
+
+        // Shared persistent HTMLAudioElement — bắt buộc để duy trì quyền phát âm thanh liên tục trên di động / Safari / PWA
+        const sharedAudio = new Audio();
+        sharedAudio.preload = "auto";
+        sharedAudio.setAttribute("playsinline", "true");
+        sharedAudio.setAttribute("webkit-playsinline", "true");
+
+        // Phát hiện thiết bị di động (UserAgent)
+        function isMobileBrowser() {
+          return /Android|iPhone|iPad|iPod|Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        // Phát hiện PWA Standalone mode (Add to Home Screen)
+        function isPwaStandalone() {
+          return (
+            window.matchMedia("(display-mode: standalone)").matches ||
+            window.navigator.standalone === true ||
+            window.matchMedia("(display-mode: fullscreen)").matches ||
+            window.matchMedia("(display-mode: minimal-ui)").matches
+          );
+        }
+
+        // Kích hoạt / Unlock phiên Audio một lần duy nhất bằng user gesture
+        function unlockAudioSession() {
+          if (audioUnlocked) return;
+          audioUnlocked = true;
+          try {
+            // Unlock sharedAudio bằng silent wav
+            sharedAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+            const p = sharedAudio.play();
+            if (p !== undefined) {
+              p.catch(() => {});
+            }
+          } catch (_) {}
+
+          // Prime Web Speech API để không bị chặn trên iOS / mobile sau thời gian chờ
+          if ("speechSynthesis" in window) {
+            try {
+              const u = new SpeechSynthesisUtterance("");
+              u.volume = 0;
+              window.speechSynthesis.speak(u);
+            } catch (_) {}
+          }
+        }
+
+        // Kiểm tra xem trình duyệt đã sẵn sàng autoplay chưa
+        async function ensureAudioUnlocked() {
+          if (audioUnlocked) return true;
+
+          // Nếu là desktop: trình duyệt thường cho phép autoplay ngay
+          if (!isMobileBrowser()) {
+            audioUnlocked = true;
+            return true;
+          }
+
+          // Mobile hoặc PWA: thử phát silent audio
+          try {
+            sharedAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+            await sharedAudio.play();
+            audioUnlocked = true;
+            return true;
+          } catch (e) {
+            // Chưa có tương tác cử chỉ người dùng -> cần hiện overlay lần đầu
+            return false;
+          }
+        }
+
+        // Hiện overlay unlock (chỉ hiện duy nhất nếu CHƯA từng unlock)
+        function showMobileUnlockOverlay() {
+          if (audioUnlocked) return;
+          const overlay = document.getElementById("mobileUnlockOverlay");
+          if (overlay) overlay.style.display = "flex";
+        }
+
+        // Nút bắt đầu trong overlay
+        const btnUnlock = document.getElementById("btnUnlockAudio");
+        if (btnUnlock) {
+          btnUnlock.addEventListener("click", () => {
+            unlockAudioSession();
+            const overlay = document.getElementById("mobileUnlockOverlay");
+            if (overlay) overlay.style.display = "none";
+            startPlaying();
+          });
+        }
 
         function stopCurrentAudio() {
-          if (currentAudioObj) {
-            try {
-              currentAudioObj.onended = null;
-              currentAudioObj.onerror = null;
-              currentAudioObj.onplay = null;
-              currentAudioObj.onpause = null;
-              currentAudioObj.pause();
-              currentAudioObj.currentTime = 0;
-              currentAudioObj.src = "";
-            } catch (_) {}
-            currentAudioObj = null;
-          }
+          try {
+            sharedAudio.onended = null;
+            sharedAudio.onerror = null;
+            sharedAudio.pause();
+          } catch (_) {}
           if (pauseTimer) {
             clearTimeout(pauseTimer);
             pauseTimer = null;
@@ -919,6 +1023,81 @@
           });
         }
 
+        // === Hàm phát file MP3 với Audio element tái sử dụng ===
+        function playAudioFile(url, token, onEnded, onError) {
+          if (token !== currentPlaybackToken || !isPlaying) return;
+
+          sharedAudio.onended = null;
+          sharedAudio.onerror = null;
+          try {
+            sharedAudio.pause();
+          } catch (_) {}
+
+          sharedAudio.src = url;
+          sharedAudio.playbackRate = playbackRate;
+
+          let finished = false;
+          const finish = (cb) => {
+            if (finished) return;
+            finished = true;
+            sharedAudio.onended = null;
+            sharedAudio.onerror = null;
+            if (token === currentPlaybackToken) cb();
+          };
+
+          sharedAudio.onended = () => finish(onEnded);
+          sharedAudio.onerror = (e) => {
+            console.warn("[playAudioFile] audio error:", e);
+            finish(onError);
+          };
+
+          const playPromise = sharedAudio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((e) => {
+              if (token !== currentPlaybackToken) return;
+              console.warn("[playAudioFile] play catch:", e);
+              // CHỈ HIỆN OVERLAY NẾU ĐÂY LÀ LẦN ĐẦU TIÊN VÀ CHƯA CÓ USER GESTURE
+              if (e.name === "NotAllowedError" && !audioUnlocked) {
+                isPlaying = false;
+                elIconPlay.style.display = "block";
+                elIconPause.style.display = "none";
+                stopCurrentAudio();
+                showMobileUnlockOverlay();
+                return;
+              }
+              // Đã unlock rồi mà gặp lỗi -> fallback qua onError, tuyệt đối không hiện overlay ngắt quãng
+              finish(onError);
+            });
+          }
+        }
+
+        // === Sinh voice on-demand qua Edge-TTS (khi file MP3 thiếu/hỏng) ===
+        async function retryWithGeneratedAudio(text, lang, token, onEnded) {
+          if (token !== currentPlaybackToken || !isPlaying) return;
+          try {
+            const res = await fetch(
+              `/api/v1/voice/generate?text=${encodeURIComponent(text)}&lang=${encodeURIComponent(lang)}`
+            );
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            if (!data.url) throw new Error("Không có URL");
+            if (token !== currentPlaybackToken || !isPlaying) return;
+
+            // Phát file MP3 vừa sinh — vẫn là Edge-TTS neural voice
+            playAudioFile(data.url, token, onEnded, () => {
+              // Cuối cùng mới dùng Web Speech nếu cả generate cũng thất bại
+              fallbackSpeak(text, lang === "zh" ? "zh-CN" : "vi-VN", token, onEnded);
+            });
+          } catch (err) {
+            console.warn("[Audio] retryWithGeneratedAudio thất bại:", err);
+            // Mạng bị cắt hoàn toàn → Web Speech là lưới an toàn cuối cùng
+            if (token === currentPlaybackToken) {
+              fallbackSpeak(text, lang === "zh" ? "zh-CN" : "vi-VN", token, onEnded);
+            }
+          }
+        }
+
+        // === Phát tiếng Trung ===
         function playChineseAudio(item, token, onEnded) {
           stopCurrentAudio();
           if (token !== currentPlaybackToken) return;
@@ -933,43 +1112,18 @@
           };
 
           if (item.audio_url) {
-            const audio = new Audio(item.audio_url);
-            audio.playbackRate = playbackRate;
-            currentAudioObj = audio;
-
-            audio.onended = () => {
-              if (token !== currentPlaybackToken) return;
-              currentAudioObj = null;
-              finishStep();
-            };
-
-            audio.onerror = () => {
-              if (token !== currentPlaybackToken) return;
-              console.warn("Lỗi tải/phát MP3 tiếng Trung, fallback sang Web Speech API:", item.audio_url);
-              currentAudioObj = null;
-              fallbackSpeak(item.chinese, "zh-CN", token, finishStep);
-            };
-
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-              playPromise.catch((e) => {
-                if (token !== currentPlaybackToken) return;
-                console.warn("Playback bị gián đoạn hoặc bị chặn:", e);
-                currentAudioObj = null;
-                if (e.name === "NotAllowedError") {
-                  // Trình duyệt điện thoại chặn tự động phát khi chưa chạm màn hình
-                  stopPlaying();
-                  Toast.show("Nhấn 'Phát' để bắt đầu nghe trên điện thoại", "info");
-                  return;
-                }
-                fallbackSpeak(item.chinese, "zh-CN", token, finishStep);
-              });
-            }
+            // Có URL → phát trực tiếp, nếu lỗi → generate on-demand (KHÔNG dùng Web Speech)
+            playAudioFile(item.audio_url, token, finishStep, () => {
+              console.warn("[Audio ZH] File hỏng, thử generate on-demand:", item.audio_url);
+              retryWithGeneratedAudio(item.chinese, "zh", token, finishStep);
+            });
           } else {
-            fallbackSpeak(item.chinese, "zh-CN", token, finishStep);
+            // Không có URL → generate on-demand ngay
+            retryWithGeneratedAudio(item.chinese, "zh", token, finishStep);
           }
         }
 
+        // === Phát tiếng Việt ===
         function playVietnameseAudio(item, token, onEnded) {
           stopCurrentAudio();
           if (token !== currentPlaybackToken) return;
@@ -984,71 +1138,39 @@
           };
 
           if (item.audio_vi_url) {
-            const audio = new Audio(item.audio_vi_url);
-            audio.playbackRate = playbackRate;
-            currentAudioObj = audio;
-
-            audio.onended = () => {
-              if (token !== currentPlaybackToken) return;
-              currentAudioObj = null;
-              finishStep();
-            };
-
-            audio.onerror = () => {
-              if (token !== currentPlaybackToken) return;
-              console.warn("Lỗi tải/phát MP3 tiếng Việt, fallback sang Web Speech API:", item.audio_vi_url);
-              currentAudioObj = null;
-              fallbackSpeak(item.vietnamese, "vi-VN", token, finishStep);
-            };
-
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-              playPromise.catch((e) => {
-                if (token !== currentPlaybackToken) return;
-                console.warn("Playback bị gián đoạn:", e);
-                currentAudioObj = null;
-                if (e.name === "NotAllowedError") {
-                  stopPlaying();
-                  return;
-                }
-                fallbackSpeak(item.vietnamese, "vi-VN", token, finishStep);
-              });
-            }
+            // Có URL → phát trực tiếp, nếu lỗi → generate on-demand (KHÔNG dùng Web Speech)
+            playAudioFile(item.audio_vi_url, token, finishStep, () => {
+              console.warn("[Audio VI] File hỏng, thử generate on-demand:", item.audio_vi_url);
+              retryWithGeneratedAudio(item.vietnamese, "vi", token, finishStep);
+            });
           } else {
-            fallbackSpeak(item.vietnamese, "vi-VN", token, finishStep);
+            // Không có URL → generate on-demand ngay
+            retryWithGeneratedAudio(item.vietnamese, "vi", token, finishStep);
           }
         }
 
+        // === Web Speech API — lưới an toàn CUỐI CÙNG (chỉ khi mất mạng hoàn toàn) ===
         function fallbackSpeak(text, lang, token, onEnded) {
           if (token !== currentPlaybackToken) return;
           if (!("speechSynthesis" in window)) {
-            setTimeout(() => {
-              if (token === currentPlaybackToken) onEnded();
-            }, 1200);
+            setTimeout(() => { if (token === currentPlaybackToken) onEnded(); }, 1200);
             return;
           }
-          try {
-            window.speechSynthesis.cancel();
-          } catch (_) {}
+          try { window.speechSynthesis.cancel(); } catch (_) {}
 
-          const cleanText = text ? text.replace(/<[^>]*>/g, "").trim() : "";
-          if (!cleanText) {
-            onEnded();
-            return;
-          }
+          const cleanText = (text || "").replace(/<[^>]*>/g, "").trim();
+          if (!cleanText) { onEnded(); return; }
 
           const utt = new SpeechSynthesisUtterance(cleanText);
           utt.lang = lang;
           utt.rate = playbackRate * (lang.startsWith("vi") ? 0.95 : 0.85);
 
-          // Cố gắng tìm voice khớp ngôn ngữ nếu hệ điều hành hỗ trợ
-          if (window.speechSynthesis.getVoices) {
-            const voices = window.speechSynthesis.getVoices();
-            if (voices && voices.length) {
-              const prefix = lang.toLowerCase().slice(0, 2);
-              const matched = voices.find((v) => v.lang.toLowerCase().startsWith(prefix));
-              if (matched) utt.voice = matched;
-            }
+          // Tìm voice khớp ngôn ngữ
+          const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+          if (voices.length) {
+            const prefix = lang.toLowerCase().slice(0, 2);
+            const matched = voices.find((v) => v.lang.toLowerCase().startsWith(prefix));
+            if (matched) utt.voice = matched;
           }
 
           let ended = false;
@@ -1057,16 +1179,9 @@
             ended = true;
             if (token === currentPlaybackToken) onEnded();
           };
-
           utt.onend = safeEnd;
           utt.onerror = safeEnd;
-
-          try {
-            window.speechSynthesis.speak(utt);
-          } catch (e) {
-            console.warn("SpeechSynthesis error:", e);
-            safeEnd();
-          }
+          try { window.speechSynthesis.speak(utt); } catch (e) { console.warn("SpeechSynthesis error:", e); safeEnd(); }
         }
 
         function updatePlayerStateUI(state) {
@@ -1095,7 +1210,13 @@
         }
 
         // 5. Play / Pause Actions
-        function startPlaying() {
+        async function startPlaying() {
+          // Kiểm tra unlock audio trên di động trước khi phát
+          const unlocked = await ensureAudioUnlocked();
+          if (!unlocked) {
+            showMobileUnlockOverlay();
+            return;
+          }
           isPlaying = true;
           elIconPlay.style.display = "none";
           elIconPause.style.display = "block";
@@ -1110,6 +1231,7 @@
         }
 
         elBtnPlayPause.addEventListener("click", () => {
+          unlockAudioSession();
           if (isPlaying) {
             stopPlaying();
           } else {
@@ -1118,6 +1240,7 @@
         });
 
         document.getElementById("btnNext").addEventListener("click", () => {
+          unlockAudioSession();
           currentPlaybackToken++;
           stopCurrentAudio();
           if (currentIndex < itemsList.length - 1) {
@@ -1133,6 +1256,7 @@
         });
 
         document.getElementById("btnPrev").addEventListener("click", () => {
+          unlockAudioSession();
           currentPlaybackToken++;
           stopCurrentAudio();
           if (currentIndex > 0) {
@@ -1148,6 +1272,7 @@
         });
 
         document.getElementById("btnReplay").addEventListener("click", () => {
+          unlockAudioSession();
           currentPlaybackToken++;
           stopCurrentAudio();
           if (isPlaying) {
@@ -1159,6 +1284,7 @@
         });
 
         document.getElementById("btnSpeakZh").addEventListener("click", () => {
+          unlockAudioSession();
           const item = itemsList[currentIndex];
           if (!item) return;
           stopPlaying();
@@ -1167,6 +1293,7 @@
         });
 
         document.getElementById("btnSpeakVi").addEventListener("click", () => {
+          unlockAudioSession();
           const item = itemsList[currentIndex];
           if (!item) return;
           stopPlaying();
@@ -1188,7 +1315,7 @@
             document.querySelectorAll("#rateGroup .pill-btn").forEach((b) => b.classList.remove("active"));
             btn.classList.add("active");
             playbackRate = parseFloat(btn.getAttribute("data-rate")) || 1.0;
-            if (currentAudioObj) currentAudioObj.playbackRate = playbackRate;
+            sharedAudio.playbackRate = playbackRate;
           });
         });
 
@@ -1224,6 +1351,7 @@
 
           container.querySelectorAll(".playlist-item").forEach((el) => {
             el.addEventListener("click", () => {
+              unlockAudioSession();
               const idx = parseInt(el.getAttribute("data-idx"), 10);
               drawer.classList.remove("open");
               currentPlaybackToken++;

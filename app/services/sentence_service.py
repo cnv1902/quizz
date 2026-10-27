@@ -8,6 +8,11 @@ import openpyxl
 
 from app.crud import crud_sentence
 from app.models.sentence import Sentence
+from app.services.voice_service import is_valid_audio_file
+
+# Re-export enrich_audio_urls từ card_service để dùng chung trong toàn hệ thống
+from app.services.card_service import enrich_audio_urls  # noqa: F401
+
 
 # Regex kiểm tra ký tự chữ Hán (CJK Unified Ideographs)
 HANZI_REGEX = re.compile(r"[\u4e00-\u9fff]")

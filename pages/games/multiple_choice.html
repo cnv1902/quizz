@@ -300,6 +300,22 @@
         let results = [];
         let questionStartTime = Date.now();
 
+        // Audio autoplay unlock tracking
+        // Phát hiện PWA Standalone (Add to Home Screen) — được autoplay tự do
+        function isPwaStandalone() {
+          return (
+            window.matchMedia("(display-mode: standalone)").matches ||
+            window.navigator.standalone === true ||
+            window.matchMedia("(display-mode: fullscreen)").matches ||
+            window.matchMedia("(display-mode: minimal-ui)").matches
+          );
+        }
+        function isMobileBrowser() {
+          return /Android|iPhone|iPad|iPod|Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+        // autoSpeakAllowed: true trên desktop và PWA; false trên mobile browser tab (cần user gesture)
+        let autoSpeakAllowed = !isMobileBrowser() || isPwaStandalone();
+
         // Sound Toggle
         soundToggleBtn.addEventListener("click", () => {
           soundEnabled = !soundEnabled;
@@ -317,8 +333,11 @@
         });
 
         // TTS Speech / Audio Voice
-        function speak(card, btnElement) {
+        function speak(card, btnElement, isAutoPlay = false) {
           if (!soundEnabled || !card) return;
+          // Autoplay bị trình duyệt mobile chặn khi chưa có user gesture.
+          // Nếu là auto-speak (không phải click của user) và chưa unlock → bỏ qua thầm lặng
+          if (isAutoPlay && !autoSpeakAllowed) return;
           AudioPlayer.play(card.audio_url, card.hanzi, {
             btnElement: btnElement,
             rate: 0.9,
@@ -326,7 +345,9 @@
         }
 
         playAudioBtn.addEventListener("click", () => {
-          if (currentCard) speak(currentCard, playAudioBtn);
+          // Click của user → unlock autoplay cho phiên này
+          autoSpeakAllowed = true;
+          if (currentCard) speak(currentCard, playAudioBtn, false);
         });
 
         // Timer
@@ -441,8 +462,8 @@
             questionHanzi.style.fontSize = "var(--fs-han-lg)";
           }
 
-          // Phát âm chữ Hán
-          speak(currentCard, playAudioBtn);
+          // Phát âm chữ Hán (auto-speak — sẽ bị bỏ qua thầm lặng nếu browser mobile chặn)
+          speak(currentCard, playAudioBtn, true);
 
           // Tạo 4 đáp án (1 đúng, 3 sai)
           const distractors = allCards
@@ -492,6 +513,7 @@
         function handleSelectOption(selectedBtn, selectedOpt) {
           if (answered) return;
           answered = true;
+          autoSpeakAllowed = true;
           const responseTimeMs = Date.now() - questionStartTime;
           const isCorrect = selectedOpt.id === currentCard.id;
 

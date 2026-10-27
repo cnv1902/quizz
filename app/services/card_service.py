@@ -4,6 +4,22 @@ from sqlalchemy.orm import Session
 
 from app.crud import crud_card, crud_quiz
 from app.models.card import Card
+from app.services.voice_service import is_valid_audio_file
+
+
+def enrich_audio_urls(item) -> None:
+    """
+    Kiểm tra file MP3 vật lý thực tế tồn tại trên ổ đĩa.
+    Nếu audio_url / audio_vi_url trong DB trỏ đến file không tồn tại hoặc rỗng,
+    set về None để frontend biết cần gọi /voice/generate thay vì load URL hỏng.
+    Gọi in-place — không return.
+    """
+    if hasattr(item, "audio_url") and item.audio_url:
+        if not is_valid_audio_file(item.audio_url):
+            item.audio_url = None
+    if hasattr(item, "audio_vi_url") and item.audio_vi_url:
+        if not is_valid_audio_file(item.audio_vi_url):
+            item.audio_vi_url = None
 
 
 def get_cards_for_quiz(db: Session, quiz_id: int) -> List[Card]:

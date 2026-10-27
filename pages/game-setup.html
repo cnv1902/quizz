@@ -812,18 +812,18 @@
             svg: '<svg class="game-btn-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>',
           },
           {
-            id: "listening",
-            name: "Luyện nghe",
-            desc: "Tự động phát âm & nghĩa",
-            type: "both",
-            svg: '<svg class="game-btn-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>',
-          },
-          {
             id: "sentence",
             name: "Ghép câu",
             desc: "Xếp các khối từ",
             type: "sentences",
             svg: '<svg class="game-btn-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><line x1="9" y1="7" x2="15" y2="7"></line><line x1="9" y1="11" x2="13" y2="11"></line></svg>',
+          },
+          {
+            id: "listening",
+            name: "Luyện nghe",
+            desc: "Tự động phát âm & nghĩa",
+            type: "both",
+            svg: '<svg class="game-btn-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>',
           },
         ];
 
@@ -845,10 +845,10 @@
 
           if (isSentenceContext) {
             if (step1Title) step1Title.textContent = "1. Trò chơi dành cho Bộ Câu";
-            if (step1Sub) step1Sub.textContent = "Bộ câu hỗ trợ trò chơi Ghép câu: đọc nghĩa tiếng Việt và ghép các khối từ tiếng Trung.";
+            if (step1Sub) step1Sub.textContent = "Bộ câu hỗ trợ 2 chế độ: Ghép câu và Luyện nghe tiếng Trung.";
           } else {
             if (step1Title) step1Title.textContent = "1. Chọn trò chơi cho Bộ Quiz";
-            if (step1Sub) step1Sub.textContent = "Bộ Quiz hỗ trợ 4 trò chơi từ vựng rèn luyện toàn diện.";
+            if (step1Sub) step1Sub.textContent = "Bộ Quiz hỗ trợ 5 trò chơi từ vựng rèn luyện toàn diện.";
           }
 
           grid.innerHTML = availableGames.map((g) => {

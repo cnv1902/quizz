@@ -160,7 +160,27 @@ async def custom_403_handler(request: Request, exc: HTTPException):
 
 @app.on_event("startup")
 async def startup_event():
-    """Khởi tạo database khi server start."""
+    """Khởi tạo database và chạy voice sync ngầm khi server start."""
     create_tables()
     print(f"[OK] {settings.APP_NAME} v{settings.APP_VERSION} started!")
     print(f"[Docs] API Docs: http://localhost:8000/api/docs")
+
+    # Chạy voice sync ngầm sau 5 giây — không block server startup
+    import threading
+    import time
+    from app.services import voice_service
+
+    def deferred_voice_sync():
+        time.sleep(5)
+        print("[VoiceSync] Bắt đầu kiểm tra và sinh voice cho các mục còn thiếu...")
+        try:
+            counts = voice_service.sync_all_missing_voices()
+            total = sum(counts.values())
+            if total > 0:
+                print(f"[VoiceSync] Đã sinh {total} file audio mới: {counts}")
+            else:
+                print("[VoiceSync] Tất cả audio đã đầy đủ.")
+        except Exception as e:
+            print(f"[VoiceSync] Lỗi khi sync voice: {e}")
+
+    threading.Thread(target=deferred_voice_sync, daemon=True).start()
