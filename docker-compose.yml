@@ -11,11 +11,10 @@ services:
       - path: .env
         required: false
     volumes:
-      # Mount database SQLite để lưu trữ bền vững (persistent data)
-      - ./hanziquizz.db:/app/hanziquizz.db
+      # Mount thư mục static để lưu bền vững các file voice âm thanh do TTS sinh ra
+      - ./static:/app/static
       # Mount thư mục giao diện tĩnh (hỗ trợ cập nhật giao diện nhanh nếu cần)
       - ./pages:/app/pages
-      - ./static:/app/static
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
       interval: 30s

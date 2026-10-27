@@ -24,3 +24,9 @@ htmlcov/
 .pytest_cache/
 .DS_Store
 Thumbs.db
+*.db
+*.sqlite
+*.sqlite3
+.env
+.env.*
+
