@@ -664,11 +664,38 @@
         const cardsLimit = isAllCards ? "all" : (parseInt(rawCards, 10) || 10);
 
         // Link điều hướng quay về trang cấu hình
-        const setupUrl = quizId
-          ? `/pages/game-setup.html?quiz_id=${quizId}&game=fill_in`
-          : `/pages/game-setup.html?mode=all&game=fill_in`;
-        document.getElementById("btnExitGame").href = setupUrl;
+        const setupUrl =
+          `/pages/game-setup.html?` +
+          (quizId ? `quiz_id=${quizId}&` : "mode=all&") +
+          `game=fill_in&round=${round}&priority=${isPriority}&dir=${dir}`;
+        const exitBtn = document.getElementById("btnExitGame");
+        exitBtn.href = setupUrl;
         document.getElementById("btnSelectOtherRound").href = setupUrl;
+
+        let hasSynced = false;
+        async function syncCurrentResults() {
+          if (hasSynced || results.length === 0) return;
+          hasSynced = true;
+          try {
+            await SyncService.syncResults(
+              results,
+              "fill_in",
+              quizId ? parseInt(quizId, 10) : null,
+            );
+          } catch (err) {
+            console.warn("[FillIn] Sync error:", err);
+          }
+        }
+
+        exitBtn.addEventListener("click", async (e) => {
+          e.preventDefault();
+          await syncCurrentResults();
+          window.location.href = setupUrl;
+        });
+
+        window.addEventListener("pagehide", () => {
+          syncCurrentResults();
+        });
 
         // Elements
         const hudProgress = document.getElementById("hudProgress");
@@ -742,7 +769,7 @@
         async function loadCards() {
           try {
             if (mode === "all") {
-              allCards = await CardApi.getAll();
+              allCards = await CardApi.getAll(isPriority);
             } else if (isPriority) {
               if (Auth.isLoggedIn()) {
                 try {
@@ -1054,13 +1081,7 @@
           document.getElementById("gameOverModal").classList.add("active");
 
           // Đồng bộ kết quả lên server
-          try {
-            if (window.SyncService && results.length > 0) {
-              await SyncService.syncResults(results, "fill_in", quizId ? parseInt(quizId, 10) : null);
-            }
-          } catch (err) {
-            console.warn("[FillIn] Sync error:", err);
-          }
+          await syncCurrentResults();
         }
 
         document.getElementById("btnPlayAgain").addEventListener("click", () => {

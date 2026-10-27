@@ -59,6 +59,57 @@
       .btn-audio-sm:hover {
         color: var(--accent);
       }
+      .rich-html-content {
+        color: inherit;
+        line-height: 1.6;
+        font-size: var(--fs-sm);
+        word-break: break-word;
+      }
+      .rich-html-content div {
+        font-family: inherit !important;
+        color: inherit !important;
+      }
+      .rich-html-content p {
+        margin: 0 0 6px 0;
+        line-height: 1.6;
+        color: inherit;
+      }
+      .rich-html-content p:last-child {
+        margin-bottom: 0;
+      }
+      .rich-html-content b,
+      .rich-html-content strong {
+        font-weight: 600;
+        color: var(--text, inherit);
+      }
+      .rich-html-content i,
+      .rich-html-content em {
+        font-style: italic;
+      }
+      .rich-html-content ul,
+      .rich-html-content ol {
+        margin: 4px 0 8px 0;
+        padding-left: 20px;
+      }
+      .rich-html-content ul {
+        list-style-type: disc !important;
+      }
+      .rich-html-content ol {
+        list-style-type: decimal !important;
+      }
+      .rich-html-content li {
+        margin-bottom: 3px;
+        line-height: 1.5;
+        color: inherit;
+      }
+      .rich-html-content code {
+        background: var(--surface-2);
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: var(--accent);
+        border: 1px solid var(--border);
+        font-size: 0.9em;
+      }
     </style>
   </head>
   <body class="admin-layout">
@@ -177,7 +228,7 @@
               <th style="width: 50px; text-align: center">STT</th>
               <th style="width: 150px">Chữ Hán (汉字)</th>
               <th style="width: 140px">Pinyin (拼音)</th>
-              <th>Tiếng Việt (Ý nghĩa & Ngữ cảnh sử dụng)</th>
+              <th style="min-width: 320px">Tiếng Việt (Ý nghĩa & Ngữ cảnh sử dụng)</th>
               <th style="width: 120px; text-align: right">Hành động</th>
             </tr>
           </thead>
@@ -437,6 +488,25 @@
             .replace(/'/g, "&#039;");
         }
 
+        function formatRichContent(content) {
+          if (!content) return "";
+          const str = String(content).trim();
+          const hasHtml = /<\/?(?:div|p|b|strong|i|em|u|span|ul|ol|li|br|hr|code|pre)[^>]*>/i.test(str);
+          if (hasHtml) {
+            const clean = str
+              .replace(/<\s*(?:script|iframe|object|embed|applet|meta|link)[^>]*>[\s\S]*?<\s*\/\s*(?:script|iframe|object|embed|applet|meta|link)\s*>/gi, "")
+              .replace(/<\s*(?:script|iframe|object|embed|applet|meta|link)[^>]*\/?>/gi, "")
+              .replace(/\s+on\w+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, "")
+              .replace(/javascript\s*:/gi, "disabled:");
+            return `<div class="rich-html-content">${clean}</div>`;
+          }
+          let safe = escapeHtml(str);
+          safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+          safe = safe.replace(/`([^`]+)`/g, '<code>$1</code>');
+          safe = safe.replace(/\n/g, '<br>');
+          return `<div class="rich-html-content">${safe}</div>`;
+        }
+
         const user = Auth.getUser();
         if (user) {
           document.getElementById("adminUserName").textContent = user.full_name || user.username || "Admin";
@@ -509,7 +579,7 @@
                 </div>
               </td>
               <td style="font-weight: 500;">${escapeHtml(item.pinyin || '')}</td>
-              <td style="line-height: 1.5; font-size: var(--fs-sm);">${escapeHtml(item.vietnamese || '')}</td>
+              <td style="vertical-align: top;">${formatRichContent(item.vietnamese || '')}</td>
               <td style="text-align: right; white-space: nowrap;">
                 <button type="button" class="btn btn-ghost btn-sm btn-edit" data-id="${item.id}" title="Chỉnh sửa">
                   ✏️

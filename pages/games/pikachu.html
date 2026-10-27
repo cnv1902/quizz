@@ -227,9 +227,37 @@
         const isPriority = params.get("priority") === "true";
         const currentRound = parseInt(params.get("round")) || 1;
 
-        document.getElementById("btnExitGame").href = quizId
-          ? `/pages/game-setup.html?quiz_id=${quizId}`
-          : `/pages/game-setup.html?mode=all`;
+        const exitUrl =
+          `/pages/game-setup.html?` +
+          (quizId ? `quiz_id=${quizId}&` : "mode=all&") +
+          `game=pikachu&round=${currentRound}&priority=${isPriority}`;
+        const exitBtn = document.getElementById("btnExitGame");
+        exitBtn.href = exitUrl;
+
+        let hasSynced = false;
+        async function syncCurrentResults() {
+          if (hasSynced || roundResults.length === 0) return;
+          hasSynced = true;
+          try {
+            await SyncService.syncResults(
+              roundResults,
+              "pikachu",
+              quizId ? parseInt(quizId, 10) : null,
+            );
+          } catch (err) {
+            console.error("[Pikachu] Sync error:", err);
+          }
+        }
+
+        exitBtn.addEventListener("click", async (e) => {
+          e.preventDefault();
+          await syncCurrentResults();
+          window.location.href = exitUrl;
+        });
+
+        window.addEventListener("pagehide", () => {
+          syncCurrentResults();
+        });
 
         // State
         let allCards = [];
@@ -272,7 +300,7 @@
             if (mode === "all") {
               document.getElementById("quizName").textContent =
                 "Ghép Đôi — Tất cả thẻ";
-              allCards = await CardApi.getAll();
+              allCards = await CardApi.getAll(isPriority);
             } else {
               const quizInfo = await QuizApi.getById(quizId);
               document.getElementById("quizName").textContent = quizInfo.title;
@@ -311,12 +339,11 @@
                 const startIdx = (currentRound - 1) * K;
                 roundCards = allCards.slice(startIdx, startIdx + K);
 
-                // Màn cuối cùng: nếu thiếu thẻ thì random lấy thêm thẻ từ các màn trước để đủ K thẻ
+                // Màn cuối cùng: nếu thiếu thẻ thì lấy thêm thẻ từ các màn trước để đủ K thẻ (cố định)
                 if (roundCards.length > 0 && roundCards.length < K && allCards.length > roundCards.length) {
                   const currentSet = new Set(roundCards.map((c) => c.id));
                   const pool = allCards.filter((c) => !currentSet.has(c.id));
-                  const shuffled = [...pool].sort(() => 0.5 - Math.random());
-                  roundCards = roundCards.concat(shuffled.slice(0, K - roundCards.length));
+                  roundCards = roundCards.concat(pool.slice(0, K - roundCards.length));
                 }
               }
             }
@@ -553,15 +580,7 @@
             window.location.reload();
 
           // Background Sync
-          try {
-            await SyncService.syncResults(
-              roundResults,
-              "pikachu",
-              quizId ? parseInt(quizId) : null,
-            );
-          } catch (err) {
-            console.error("[Pikachu] Sync error:", err);
-          }
+          await syncCurrentResults();
         }
 
         // Confetti

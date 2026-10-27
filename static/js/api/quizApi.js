@@ -41,7 +41,7 @@ const QuizApi = {
 
 const CardApi = {
   /** Lấy tất cả thẻ hệ thống (chế độ Tất cả thẻ). */
-  getAll: () => Api.get('/cards/all'),
+  getAll: (priority = false) => Api.get(`/cards/all${priority ? '?priority=true' : ''}`),
 
   /** [Admin] Tạo thẻ mới. */
   adminCreate: (data) => Api.post('/cards/admin', data),

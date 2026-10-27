@@ -773,8 +773,10 @@
 
         let totalCards = 0;       // Dữ liệu bảng cards
         let totalSentences = 0;   // Dữ liệu bảng sentences
-        let selectedRound = 1;
-        let isPractice = false;
+        const initialRoundParam = parseInt(urlParams.get("round"), 10);
+        const initialPriorityParam = urlParams.get("priority") === "true";
+        let selectedRound = (initialRoundParam && initialRoundParam > 0) ? initialRoundParam : 1;
+        let isPractice = initialPriorityParam;
 
         // Phân biệt rõ ngữ cảnh: Bộ câu (sentence) vs Bộ Quiz (cards)
         const isSentenceContext = Boolean(sentenceSetId) || (mode === "sentence_set") || (mode === "all" && selectedGameId === "sentence");
@@ -910,6 +912,14 @@
               dirHanziViet.querySelector("input").checked = true;
             }
           }
+
+          const urlDir = urlParams.get("dir");
+          if (urlDir) {
+            const matchingRadio = document.querySelector(`input[name="directionRadio"][value="${urlDir}"]`);
+            if (matchingRadio && matchingRadio.closest("label") && matchingRadio.closest("label").style.display !== "none") {
+              matchingRadio.checked = true;
+            }
+          }
         }
 
         // 2. Render các màn chơi (Bước 2)
@@ -939,6 +949,7 @@
           } else {
             const K = parseInt(cardsPerRound, 10) || 10;
             const M = Math.ceil(totalCount / K) || 1;
+            if (selectedRound > M) selectedRound = M;
 
             document.getElementById("setupConfigInfo").textContent =
               `Tổng ${totalCount} ${unitName} · ${M} màn (${K} ${unitName}/màn)`;

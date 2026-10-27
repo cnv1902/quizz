@@ -20,8 +20,8 @@ def get_by_quiz(db: Session, quiz_id: int) -> List[Card]:
 
 
 def get_all_cards(db: Session) -> List[Card]:
-    """Lấy toàn bộ thẻ của hệ thống."""
-    return db.query(Card).order_by(Card.quiz_id, Card.order_index).all()
+    """Lấy toàn bộ thẻ của hệ thống theo thứ tự cố định."""
+    return db.query(Card).order_by(Card.quiz_id, Card.order_index, Card.id).all()
 
 
 def get_by_quiz_with_priority(

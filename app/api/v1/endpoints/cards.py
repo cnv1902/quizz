@@ -15,15 +15,16 @@ router = APIRouter(prefix="/cards", tags=["Cards"])
 
 @router.get("/all", response_model=List[dict])
 def get_all_cards(
+    priority: bool = False,
     current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     """
-    Lấy toàn bộ thẻ hệ thống: sắp xếp theo priority của user hiện tại (nếu đăng nhập)
-    hoặc danh sách toàn bộ thẻ (nếu là khách).
-    Dùng cho chế độ 'Tất cả thẻ'.
+    Lấy toàn bộ thẻ hệ thống:
+    - Nếu priority=True và đã đăng nhập: sắp xếp theo priority của user (Bổ Túc / Luyện tập).
+    - Ngược lại (chơi theo Màn thông thường): sắp xếp theo thứ tự cố định (quiz_id, order_index, id).
     """
-    if current_user:
+    if priority and current_user:
         return card_service.get_all_cards_priority(db, current_user.id)
     cards = crud_card.get_all_cards(db)
     return [

@@ -644,12 +644,44 @@
 
           // Cập nhật link quay về trang cấu hình tương ứng
           const backSetupUrl = sentenceSetId
-            ? `/pages/game-setup.html?sentence_set_id=${sentenceSetId}&game=sentence`
-            : `/pages/game-setup.html?mode=all&game=sentence`;
+            ? `/pages/game-setup.html?sentence_set_id=${sentenceSetId}&game=sentence&round=${round}&priority=${isPriority}`
+            : `/pages/game-setup.html?mode=all&game=sentence&round=${round}&priority=${isPriority}`;
           const exitBtn = document.getElementById("btnExitGame");
-          if (exitBtn) exitBtn.setAttribute("href", backSetupUrl);
           const selectRoundBtn = document.getElementById("btnSelectOtherRound");
-          if (selectRoundBtn) selectRoundBtn.setAttribute("href", backSetupUrl);
+
+          let hasSynced = false;
+          async function syncCurrentResults() {
+            if (hasSynced || sentenceResults.length === 0) return;
+            hasSynced = true;
+            try {
+              if (window.SyncService) {
+                await SyncService.syncSentenceResults(sentenceResults, sentenceSetId);
+              }
+            } catch (err) {
+              console.warn("[Sentence] Sync error:", err);
+            }
+          }
+
+          if (exitBtn) {
+            exitBtn.setAttribute("href", backSetupUrl);
+            exitBtn.onclick = async (e) => {
+              e.preventDefault();
+              await syncCurrentResults();
+              window.location.href = backSetupUrl;
+            };
+          }
+          if (selectRoundBtn) {
+            selectRoundBtn.setAttribute("href", backSetupUrl);
+            selectRoundBtn.onclick = async (e) => {
+              e.preventDefault();
+              await syncCurrentResults();
+              window.location.href = backSetupUrl;
+            };
+          }
+
+          window.addEventListener("pagehide", () => {
+            syncCurrentResults();
+          });
 
           let endpoint = `/api/v1/sentences?cards=${encodeURIComponent(cards)}`;
           if (sentenceSetId) {
@@ -900,15 +932,7 @@
         document.getElementById("gameOverModal").classList.add("active");
 
         // Đồng bộ tổng hợp kết quả lên server
-        try {
-          const urlParams = new URLSearchParams(window.location.search);
-          const setId = urlParams.get("sentence_set_id");
-          if (window.SyncService && sentenceResults.length > 0) {
-            await SyncService.syncSentenceResults(sentenceResults, setId);
-          }
-        } catch (err) {
-          console.warn("[Sentence] Sync error:", err);
-        }
+        await syncCurrentResults();
       }
 
       document.getElementById("btnPlayAgain").addEventListener("click", () => {

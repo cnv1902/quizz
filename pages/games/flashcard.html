@@ -350,9 +350,12 @@
         }
 
         // Exit button
-        document.getElementById("btnExitGame").href = quizId
-          ? `/pages/game-setup.html?quiz_id=${quizId}`
-          : `/pages/game-setup.html?mode=all`;
+        const exitUrl =
+          `/pages/game-setup.html?` +
+          (quizId ? `quiz_id=${quizId}&` : "mode=all&") +
+          `game=flashcard&round=${currentRound}&priority=${isPriority}&dir=${questionDir}`;
+        const exitBtn = document.getElementById("btnExitGame");
+        exitBtn.href = exitUrl;
 
         // 3. State
         let allCards = [];
@@ -364,6 +367,31 @@
         let isFlipped = false;
         const roundResults = []; // [{ card_id, is_correct }]
         const wrongCardsInRound = [];
+        let hasSynced = false;
+
+        async function syncCurrentResults() {
+          if (hasSynced || roundResults.length === 0) return;
+          hasSynced = true;
+          try {
+            await SyncService.syncResults(
+              roundResults,
+              "flashcard",
+              quizId ? parseInt(quizId) : null,
+            );
+          } catch (err) {
+            console.error("[Flashcard] Sync failed:", err);
+          }
+        }
+
+        exitBtn.addEventListener("click", async (e) => {
+          e.preventDefault();
+          await syncCurrentResults();
+          window.location.href = exitUrl;
+        });
+
+        window.addEventListener("pagehide", () => {
+          syncCurrentResults();
+        });
 
         // 4. Voice Audio Service & Speech Synthesis Fallback
         function speakCard(card, btnElement) {
@@ -380,7 +408,7 @@
             if (mode === "all") {
               document.getElementById("gameQuizTitle").textContent =
                 "Tất cả thẻ hệ thống";
-              allCards = await CardApi.getAll();
+              allCards = await CardApi.getAll(isPriority);
             } else {
               const quizInfo = await QuizApi.getById(quizId);
               document.getElementById("gameQuizTitle").textContent =
@@ -423,7 +451,7 @@
                 const startIdx = (currentRound - 1) * K;
                 roundCards = allCards.slice(startIdx, startIdx + K);
 
-                // Màn cuối cùng: nếu thiếu thẻ thì random lấy thêm thẻ từ các màn trước để đủ K thẻ
+                // Màn cuối cùng: nếu thiếu thẻ thì lấy thêm thẻ từ các màn trước để đủ K thẻ (cố định)
                 if (
                   roundCards.length > 0 &&
                   roundCards.length < K &&
@@ -431,9 +459,8 @@
                 ) {
                   const currentSet = new Set(roundCards.map((c) => c.id));
                   const pool = allCards.filter((c) => !currentSet.has(c.id));
-                  const shuffled = [...pool].sort(() => 0.5 - Math.random());
                   roundCards = roundCards.concat(
-                    shuffled.slice(0, K - roundCards.length),
+                    pool.slice(0, K - roundCards.length),
                   );
                 }
               }
@@ -689,15 +716,7 @@
           document.getElementById("gameOverModal").classList.add("show");
 
           // GỬI KẾT QUẢ ĐỒNG BỘ NGẦM (SYNC SERVICE)
-          try {
-            await SyncService.syncResults(
-              roundResults,
-              "flashcard",
-              quizId ? parseInt(quizId) : null,
-            );
-          } catch (err) {
-            console.error("[Flashcard] Sync failed:", err);
-          }
+          await syncCurrentResults();
         }
 
         // 10. Self-contained Confetti Animation

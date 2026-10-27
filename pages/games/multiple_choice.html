@@ -239,9 +239,37 @@
           return;
         }
 
-        document.getElementById("btnExitGame").href = quizId
-          ? `/pages/game-setup.html?quiz_id=${quizId}`
-          : `/pages/game-setup.html?mode=all`;
+        const exitUrl =
+          `/pages/game-setup.html?` +
+          (quizId ? `quiz_id=${quizId}&` : "mode=all&") +
+          `game=multiple_choice&round=${round}&priority=${isPriority}&dir=${questionDir}`;
+        const exitBtn = document.getElementById("btnExitGame");
+        exitBtn.href = exitUrl;
+
+        let hasSynced = false;
+        async function syncCurrentResults() {
+          if (hasSynced || results.length === 0) return;
+          hasSynced = true;
+          try {
+            await SyncService.syncResults(
+              results,
+              "multiple_choice",
+              quizId ? parseInt(quizId, 10) : null,
+            );
+          } catch (e) {
+            console.error("Error syncing quiz results:", e);
+          }
+        }
+
+        exitBtn.addEventListener("click", async (e) => {
+          e.preventDefault();
+          await syncCurrentResults();
+          window.location.href = exitUrl;
+        });
+
+        window.addEventListener("pagehide", () => {
+          syncCurrentResults();
+        });
 
         // Elements
         const progressVal = document.getElementById("progressVal");
@@ -322,7 +350,7 @@
         // Load Cards chuẩn xác
         try {
           if (mode === "all") {
-            allCards = await CardApi.getAll();
+            allCards = await CardApi.getAll(isPriority);
           } else if (isPriority) {
             if (Auth.isLoggedIn()) {
               try {
@@ -358,8 +386,7 @@
               if (quizQuestions.length > 0 && quizQuestions.length < K && allCards.length > quizQuestions.length) {
                 const currentSet = new Set(quizQuestions.map((c) => c.id));
                 const pool = allCards.filter((c) => !currentSet.has(c.id));
-                const shuffled = [...pool].sort(() => 0.5 - Math.random());
-                quizQuestions = quizQuestions.concat(shuffled.slice(0, K - quizQuestions.length));
+                quizQuestions = quizQuestions.concat(pool.slice(0, K - quizQuestions.length));
               }
             }
           }
@@ -568,11 +595,7 @@
             timerVal.textContent;
 
           // Sync results with backend
-          try {
-            await SyncService.syncResults(results, "multiple_choice", quizId);
-          } catch (e) {
-            console.error("Error syncing quiz results:", e);
-          }
+          await syncCurrentResults();
 
           // Next round button
           const btnNext = document.getElementById("btnNextRound");
