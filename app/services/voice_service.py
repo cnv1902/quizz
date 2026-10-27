@@ -89,6 +89,67 @@ def generate_voice_file_sync(
         return asyncio.run(generate_voice_file(text, category, voice, rate))
 
 
+def delete_audio_files(db, audio_urls: List[str]) -> int:
+    """
+    Xóa các file âm thanh trên đĩa cứng tương ứng với danh sách audio_urls.
+    Hàm kiểm tra an toàn:
+    1. Chỉ xóa file nằm trong thư mục hợp lệ VOICE_DIR (static/voice).
+    2. Chỉ xóa nếu trong database (các bảng Card, Sentence, MeasureWord, GrammarPoint)
+       KHÔNG còn bản ghi nào khác đang tham chiếu đến audio_url đó (deduplication check).
+    Trả về số lượng file thực tế đã xóa khỏi ổ đĩa.
+    """
+    if not audio_urls:
+        return 0
+
+    from app.models.card import Card
+    from app.models.sentence import Sentence
+    from app.models.measure_word import MeasureWord
+    from app.models.grammar_point import GrammarPoint
+
+    unique_urls = list({u.strip() for u in audio_urls if u and isinstance(u, str) and u.strip()})
+    if not unique_urls:
+        return 0
+
+    deleted_count = 0
+    normalized_voice_dir = os.path.abspath(VOICE_DIR)
+
+    for url in unique_urls:
+        clean_url = url.lstrip("/\\")
+        abs_path = os.path.abspath(os.path.join(BASE_DIR, clean_url))
+
+        # Kiểm tra an toàn: file phải nằm hoàn toàn trong thư mục VOICE_DIR
+        if not abs_path.startswith(normalized_voice_dir):
+            continue
+
+        # Kiểm tra xem còn bản ghi nào trong database đang dùng audio_url này không
+        if db.query(Card.id).filter(Card.audio_url == url).first():
+            continue
+        if db.query(Sentence.id).filter(Sentence.audio_url == url).first():
+            continue
+        if db.query(MeasureWord.id).filter(MeasureWord.audio_url == url).first():
+            continue
+        if db.query(GrammarPoint.id).filter(GrammarPoint.audio_url == url).first():
+            continue
+
+        # Không còn ai tham chiếu -> Xóa file nếu tồn tại
+        try:
+            if os.path.exists(abs_path):
+                os.remove(abs_path)
+                deleted_count += 1
+        except Exception as e:
+            print(f"[VoiceService] Lỗi khi xóa file audio '{abs_path}': {e}")
+
+    return deleted_count
+
+
+def delete_audio_file(db, audio_url: Optional[str]) -> bool:
+    """Xóa 1 file âm thanh nếu không còn bản ghi nào khác tham chiếu."""
+    if not audio_url:
+        return False
+    return delete_audio_files(db, [audio_url]) > 0
+
+
+
 # === Background Tasks Workers ===
 
 def background_generate_voices_for_cards(card_ids: List[int]):

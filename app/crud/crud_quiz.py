@@ -65,10 +65,21 @@ def update(db: Session, quiz: Quiz, **fields) -> Optional[Quiz]:
 
 
 def delete(db: Session, quiz: Quiz) -> bool:
-    """Xóa quiz và tất cả thẻ liên quan (cascade)."""
+    """Xóa quiz, tất cả thẻ liên quan (cascade) và các file âm thanh tương ứng."""
     try:
+        from app.models.card import Card
+        cards_audio = [
+            r[0]
+            for r in db.query(Card.audio_url)
+            .filter(Card.quiz_id == quiz.id, Card.audio_url.isnot(None))
+            .all()
+            if r[0]
+        ]
         db.delete(quiz)
         db.commit()
+        if cards_audio:
+            from app.services.voice_service import delete_audio_files
+            delete_audio_files(db, cards_audio)
         return True
     except Exception as e:
         db.rollback()

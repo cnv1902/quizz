@@ -4,10 +4,29 @@ from typing import Optional
 
 from app.dependencies import get_db, get_current_user, get_current_user_optional
 from app.models.user import User
-from app.schemas.progress import ProgressBatch, QuizProgressResponse
+from app.schemas.progress import ProgressBatch, QuizProgressResponse, UserProgressSummary
+from app.models.card import Card
+from sqlalchemy import func
 from app.services import progress_service
 
 router = APIRouter(prefix="/progress", tags=["Progress"])
+
+
+@router.get("/summary", response_model=UserProgressSummary)
+def get_user_summary(
+    current_user: Optional[User] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db),
+):
+    """Thống kê tổng quan tiến độ của user cho trang chủ (streak, mastered, review_needed)."""
+    if not current_user:
+        total_cards = db.query(func.count(Card.id)).scalar() or 0
+        return UserProgressSummary(
+            streak=0,
+            mastered_cards=0,
+            review_needed=total_cards,
+            total_cards=total_cards,
+        )
+    return progress_service.get_user_summary(db, current_user.id)
 
 
 @router.post("/batch", response_model=dict)
@@ -41,3 +60,4 @@ def get_quiz_stats(
             accuracy_rate=0.0,
         )
     return progress_service.get_quiz_progress(db, current_user.id, quiz_id)
+

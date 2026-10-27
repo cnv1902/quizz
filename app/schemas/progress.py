@@ -33,3 +33,12 @@ class QuizProgressResponse(BaseModel):
     total_correct: int
     total_wrong: int
     average_priority: float
+
+
+class UserProgressSummary(BaseModel):
+    """Tổng quan tiến độ trang chủ cho user."""
+    streak: int
+    mastered_cards: int
+    review_needed: int
+    total_cards: int
+

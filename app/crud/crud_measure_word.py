@@ -66,19 +66,34 @@ def update(db: Session, item_id: int, **kwargs) -> Optional[MeasureWord]:
 
 
 def delete(db: Session, item_id: int) -> bool:
-    """Xóa 1 lượng từ."""
+    """Xóa 1 lượng từ và dọn dẹp file âm thanh tương ứng."""
     item = get_by_id(db, item_id)
     if not item:
         return False
+    audio_url = item.audio_url
     db.delete(item)
     db.commit()
+    if audio_url:
+        from app.services.voice_service import delete_audio_file
+        delete_audio_file(db, audio_url)
     return True
 
 
 def bulk_delete(db: Session, ids: List[int]) -> int:
-    """Xóa hàng loạt lượng từ theo danh sách IDs."""
+    """Xóa hàng loạt lượng từ theo danh sách IDs và dọn dẹp file âm thanh."""
     if not ids:
         return 0
+    mws_audio = [
+        r[0]
+        for r in db.query(MeasureWord.audio_url)
+        .filter(MeasureWord.id.in_(ids), MeasureWord.audio_url.isnot(None))
+        .all()
+        if r[0]
+    ]
     deleted = db.query(MeasureWord).filter(MeasureWord.id.in_(ids)).delete(synchronize_session=False)
     db.commit()
+    if mws_audio:
+        from app.services.voice_service import delete_audio_files
+        delete_audio_files(db, mws_audio)
     return deleted
+

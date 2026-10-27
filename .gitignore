@@ -1,5 +1,7 @@
 # Environment Variables (Bảo mật: Không commit lên Git)
 .env
+.env.example
+
 .env.local
 .env.*.local
 
@@ -19,7 +21,6 @@ __pycache__/
 venv/
 .venv/
 env/
-.env.example
 ENV/
 env.bak/
 venv.bak/

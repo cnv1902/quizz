@@ -66,19 +66,34 @@ def update(db: Session, item_id: int, **kwargs) -> Optional[GrammarPoint]:
 
 
 def delete(db: Session, item_id: int) -> bool:
-    """Xóa 1 điểm ngữ pháp."""
+    """Xóa 1 điểm ngữ pháp và dọn dẹp file âm thanh tương ứng."""
     item = get_by_id(db, item_id)
     if not item:
         return False
+    audio_url = item.audio_url
     db.delete(item)
     db.commit()
+    if audio_url:
+        from app.services.voice_service import delete_audio_file
+        delete_audio_file(db, audio_url)
     return True
 
 
 def bulk_delete(db: Session, ids: List[int]) -> int:
-    """Xóa hàng loạt điểm ngữ pháp theo danh sách IDs."""
+    """Xóa hàng loạt điểm ngữ pháp theo danh sách IDs và dọn dẹp file âm thanh."""
     if not ids:
         return 0
+    gps_audio = [
+        r[0]
+        for r in db.query(GrammarPoint.audio_url)
+        .filter(GrammarPoint.id.in_(ids), GrammarPoint.audio_url.isnot(None))
+        .all()
+        if r[0]
+    ]
     deleted = db.query(GrammarPoint).filter(GrammarPoint.id.in_(ids)).delete(synchronize_session=False)
     db.commit()
+    if gps_audio:
+        from app.services.voice_service import delete_audio_files
+        delete_audio_files(db, gps_audio)
     return deleted
+

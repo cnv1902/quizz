@@ -93,3 +93,81 @@ def get_quiz_stats(db: Session, user_id: int, quiz_id: int) -> dict:
         "total_wrong": int(total_wrong),
         "average_priority": float(avg_priority),
     }
+
+
+def calculate_user_streak(db: Session, user_id: int) -> int:
+    """
+    Tính chuỗi ngày học liên tục (streak) của user dựa trên last_played trong user_card_stats & user_sentence_stats.
+    """
+    from datetime import date, datetime, timedelta
+    from app.models.user_sentence_stat import UserSentenceStat
+
+    card_dates = (
+        db.query(func.date(UserCardStat.last_played))
+        .filter(UserCardStat.user_id == user_id, UserCardStat.last_played.isnot(None))
+        .distinct()
+        .all()
+    )
+    sentence_dates = (
+        db.query(func.date(UserSentenceStat.last_played))
+        .filter(UserSentenceStat.user_id == user_id, UserSentenceStat.last_played.isnot(None))
+        .distinct()
+        .all()
+    )
+
+    raw_dates = set()
+    for (d_val,) in card_dates + sentence_dates:
+        if not d_val:
+            continue
+        if isinstance(d_val, str):
+            try:
+                parsed_d = datetime.strptime(d_val.split()[0], "%Y-%m-%d").date()
+                raw_dates.add(parsed_d)
+            except ValueError:
+                pass
+        elif isinstance(d_val, (date, datetime)):
+            raw_dates.add(d_val.date() if isinstance(d_val, datetime) else d_val)
+
+    if not raw_dates:
+        return 0
+
+    today = date.today()
+    if today in raw_dates:
+        curr = today
+    elif (today - timedelta(days=1)) in raw_dates:
+        curr = today - timedelta(days=1)
+    else:
+        return 0
+
+    streak = 0
+    while curr in raw_dates:
+        streak += 1
+        curr -= timedelta(days=1)
+
+    return streak
+
+
+def get_user_summary(db: Session, user_id: int) -> dict:
+    """
+    Lấy tổng quan tiến độ của user cho trang chủ:
+    - total_cards: tổng số thẻ hệ thống
+    - mastered_cards: số thẻ có priority <= -1 (đã thuộc)
+    - review_needed: total_cards - mastered_cards (cần học/ôn hôm nay)
+    - streak: chuỗi ngày học liên tục
+    """
+    from app.models.card import Card
+    total_cards = db.query(func.count(Card.id)).scalar() or 0
+    mastered_cards = (
+        db.query(func.count(UserCardStat.id))
+        .filter(UserCardStat.user_id == user_id, UserCardStat.priority <= -1)
+        .scalar() or 0
+    )
+    review_needed = max(0, total_cards - mastered_cards)
+    streak = calculate_user_streak(db, user_id)
+    return {
+        "streak": streak,
+        "mastered_cards": mastered_cards,
+        "review_needed": review_needed,
+        "total_cards": total_cards,
+    }
+

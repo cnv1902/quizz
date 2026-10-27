@@ -124,10 +124,14 @@ def update(db: Session, card: Card, **fields) -> Optional[Card]:
 
 
 def delete(db: Session, card: Card) -> bool:
-    """Xóa thẻ."""
+    """Xóa thẻ và dọn dẹp file âm thanh tương ứng."""
     try:
+        audio_url = card.audio_url
         db.delete(card)
         db.commit()
+        if audio_url:
+            from app.services.voice_service import delete_audio_file
+            delete_audio_file(db, audio_url)
         return True
     except Exception as e:
         db.rollback()
@@ -135,10 +139,20 @@ def delete(db: Session, card: Card) -> bool:
 
 
 def delete_by_quiz(db: Session, quiz_id: int) -> int:
-    """Xóa tất cả thẻ của 1 quiz (dùng khi re-import Excel)."""
+    """Xóa tất cả thẻ của 1 quiz (dùng khi re-import Excel) và dọn file âm thanh."""
     try:
+        cards_audio = [
+            r[0]
+            for r in db.query(Card.audio_url)
+            .filter(Card.quiz_id == quiz_id, Card.audio_url.isnot(None))
+            .all()
+            if r[0]
+        ]
         count = db.query(Card).filter(Card.quiz_id == quiz_id).delete()
         db.commit()
+        if cards_audio:
+            from app.services.voice_service import delete_audio_files
+            delete_audio_files(db, cards_audio)
         return count
     except Exception as e:
         db.rollback()
@@ -146,12 +160,23 @@ def delete_by_quiz(db: Session, quiz_id: int) -> int:
 
 
 def bulk_delete(db: Session, card_ids: List[int]) -> int:
-    """Xóa nhiều thẻ theo danh sách card_ids."""
+    """Xóa nhiều thẻ theo danh sách card_ids và dọn file âm thanh."""
     try:
+        cards_audio = [
+            r[0]
+            for r in db.query(Card.audio_url)
+            .filter(Card.id.in_(card_ids), Card.audio_url.isnot(None))
+            .all()
+            if r[0]
+        ]
         count = db.query(Card).filter(Card.id.in_(card_ids)).delete(synchronize_session=False)
         db.commit()
+        if cards_audio:
+            from app.services.voice_service import delete_audio_files
+            delete_audio_files(db, cards_audio)
         return count
     except Exception as e:
         db.rollback()
         raise e
+
 

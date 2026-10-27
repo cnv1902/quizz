@@ -96,13 +96,24 @@ def update(db: Session, set_id: int, **kwargs) -> Optional[SentenceSet]:
 
 
 def delete(db: Session, set_id: int) -> bool:
-    """[Admin] Xóa bộ câu (các câu thuộc bộ câu sẽ tự động bị xóa cascade)."""
+    """[Admin] Xóa bộ câu (các câu thuộc bộ câu sẽ tự động bị xóa cascade) và dọn dẹp file âm thanh."""
     target_set = get_by_id(db, set_id)
     if not target_set:
         return False
+    sentences_audio = [
+        r[0]
+        for r in db.query(Sentence.audio_url)
+        .filter(Sentence.set_id == set_id, Sentence.audio_url.isnot(None))
+        .all()
+        if r[0]
+    ]
     db.delete(target_set)
     db.commit()
+    if sentences_audio:
+        from app.services.voice_service import delete_audio_files
+        delete_audio_files(db, sentences_audio)
     return True
+
 
 
 def get_sentences_by_set(db: Session, set_id: int) -> List[Sentence]:

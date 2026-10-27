@@ -962,14 +962,6 @@
           }
 
           grid.innerHTML = quizzes.map((q) => renderQuizCard(q)).join("");
-
-          // Cập nhật số từ đã thuộc / cần ôn từ dữ liệu thật
-          const totalCards = quizzes.reduce(
-            (sum, q) => sum + (q.card_count || 0),
-            0,
-          );
-          document.getElementById("statReviewNeeded").textContent =
-            totalCards > 0 ? Math.min(15, totalCards) : 0;
         }
 
         // Search filter
@@ -1079,7 +1071,27 @@
             .replace(/"/g, "&quot;");
         }
 
+        async function loadUserStats() {
+          try {
+            if (typeof ProgressApi !== "undefined" && ProgressApi.getSummary) {
+              const summary = await ProgressApi.getSummary();
+              if (summary) {
+                const elStreak = document.getElementById("statStreak");
+                const elMastered = document.getElementById("statMastered");
+                const elReview = document.getElementById("statReviewNeeded");
+
+                if (elStreak) elStreak.textContent = summary.streak ?? 0;
+                if (elMastered) elMastered.textContent = summary.mastered_cards ?? 0;
+                if (elReview) elReview.textContent = summary.review_needed ?? 0;
+              }
+            }
+          } catch (err) {
+            console.warn("Could not load user stats:", err);
+          }
+        }
+
         renderNav();
+        loadUserStats();
         loadQuizzes();
         loadSentenceSets();
         SyncService.flushQueue();

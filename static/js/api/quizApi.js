@@ -67,6 +67,9 @@ const ProgressApi = {
 
   /** Lấy thống kê tiến độ theo quiz. */
   getStats: (quizId) => Api.get(`/progress/stats/${quizId}`),
+
+  /** Lấy tổng quan tiến độ người dùng (streak, mastered, review_needed). */
+  getSummary: () => Api.get('/progress/summary'),
 };
 
 const UserApi = {

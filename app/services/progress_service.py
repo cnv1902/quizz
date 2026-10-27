@@ -1,7 +1,7 @@
 from typing import List
 from sqlalchemy.orm import Session
 from app.crud import crud_progress
-from app.schemas.progress import ProgressBatch, QuizProgressResponse
+from app.schemas.progress import ProgressBatch, QuizProgressResponse, UserProgressSummary
 
 
 def sync_game_results(db: Session, user_id: int, batch: ProgressBatch) -> dict:
@@ -31,3 +31,10 @@ def get_quiz_progress(db: Session, user_id: int, quiz_id: int) -> QuizProgressRe
     """Lấy thống kê tiến độ của user trong 1 quiz."""
     stats = crud_progress.get_quiz_stats(db, user_id, quiz_id)
     return QuizProgressResponse(**stats)
+
+
+def get_user_summary(db: Session, user_id: int) -> UserProgressSummary:
+    """Lấy tổng quan tiến độ của user cho trang chủ."""
+    summary = crud_progress.get_user_summary(db, user_id)
+    return UserProgressSummary(**summary)
+
