@@ -54,17 +54,41 @@ async def generate_voice_file(
     relative_url = f"/static/voice/{category}/{filename}"
 
     # Nếu file đã tồn tại và kích thước > 0 thì trả về URL ngay
-    if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-        return relative_url
+    if os.path.exists(file_path):
+        if os.path.getsize(file_path) > 0:
+            return relative_url
+        else:
+            try:
+                os.remove(file_path)
+            except Exception:
+                pass
 
     try:
         import edge_tts
         communicate = edge_tts.Communicate(clean_text, voice=voice, rate=rate)
         await communicate.save(file_path)
-        return relative_url
+        if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+            return relative_url
+        else:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            return None
     except Exception as e:
         print(f"[VoiceService] Loi sinh audio cho '{clean_text}': {e}")
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception:
+                pass
         return None
+
+
+def is_valid_audio_file(relative_url: Optional[str]) -> bool:
+    """Kiểm tra đường dẫn audio có tồn tại trên ổ đĩa và kích thước > 0 bytes."""
+    if not relative_url or not isinstance(relative_url, str):
+        return False
+    abs_path = os.path.abspath(os.path.join(BASE_DIR, relative_url.lstrip("/\\")))
+    return os.path.exists(abs_path) and os.path.getsize(abs_path) > 0
 
 
 def generate_voice_file_sync(
@@ -167,12 +191,12 @@ def background_generate_voices_for_cards(card_ids: List[int]):
         cards = db.query(Card).filter(Card.id.in_(card_ids)).all()
         for card in cards:
             # 1. Voice Tiếng Trung
-            if not card.audio_url or not os.path.exists(os.path.join(BASE_DIR, card.audio_url.lstrip("/\\"))):
+            if not is_valid_audio_file(card.audio_url):
                 url = generate_voice_file_sync(card.hanzi, category="cards")
                 if url:
                     card.audio_url = url
             # 2. Voice Tiếng Việt
-            if not card.audio_vi_url or not os.path.exists(os.path.join(BASE_DIR, card.audio_vi_url.lstrip("/\\"))):
+            if not is_valid_audio_file(card.audio_vi_url):
                 url_vi = generate_voice_file_sync(card.vietnamese, category="cards_vi", voice=DEFAULT_VOICE_VI, rate=DEFAULT_RATE_VI)
                 if url_vi:
                     card.audio_vi_url = url_vi
@@ -194,7 +218,7 @@ def background_generate_voices_for_measure_words(mw_ids: List[int]):
     try:
         items = db.query(MeasureWord).filter(MeasureWord.id.in_(mw_ids)).all()
         for item in items:
-            if not item.audio_url or not os.path.exists(os.path.join(BASE_DIR, item.audio_url.lstrip("/\\"))):
+            if not is_valid_audio_file(item.audio_url):
                 url = generate_voice_file_sync(item.hanzi, category="measure_words")
                 if url:
                     item.audio_url = url
@@ -216,7 +240,7 @@ def background_generate_voices_for_grammar(grammar_ids: List[int]):
     try:
         items = db.query(GrammarPoint).filter(GrammarPoint.id.in_(grammar_ids)).all()
         for item in items:
-            if not item.audio_url or not os.path.exists(os.path.join(BASE_DIR, item.audio_url.lstrip("/\\"))):
+            if not is_valid_audio_file(item.audio_url):
                 url = generate_voice_file_sync(item.hanzi, category="grammar")
                 if url:
                     item.audio_url = url
@@ -239,12 +263,12 @@ def background_generate_voices_for_sentences(sentence_ids: List[int]):
         items = db.query(Sentence).filter(Sentence.id.in_(sentence_ids)).all()
         for item in items:
             # 1. Voice Tiếng Trung
-            if not item.audio_url or not os.path.exists(os.path.join(BASE_DIR, item.audio_url.lstrip("/\\"))):
+            if not is_valid_audio_file(item.audio_url):
                 url = generate_voice_file_sync(item.chinese, category="sentences")
                 if url:
                     item.audio_url = url
             # 2. Voice Tiếng Việt
-            if not item.audio_vi_url or not os.path.exists(os.path.join(BASE_DIR, item.audio_vi_url.lstrip("/\\"))):
+            if not is_valid_audio_file(item.audio_vi_url):
                 url_vi = generate_voice_file_sync(item.vietnamese, category="sentences_vi", voice=DEFAULT_VOICE_VI, rate=DEFAULT_RATE_VI)
                 if url_vi:
                     item.audio_vi_url = url_vi
@@ -257,7 +281,7 @@ def background_generate_voices_for_sentences(sentence_ids: List[int]):
 
 
 def sync_all_missing_voices():
-    """Hàm quét toàn bộ database và tự động sinh voice cho các mục chưa có audio_url hoặc audio_vi_url."""
+    """Hàm quét toàn bộ database và tự động sinh voice cho các mục chưa có audio_url hoặc audio_vi_url hoặc file hỏng trên đĩa."""
     from app.models.card import Card
     from app.models.measure_word import MeasureWord
     from app.models.grammar_point import GrammarPoint
@@ -269,42 +293,44 @@ def sync_all_missing_voices():
         # 1. Cards (Trung & Việt)
         cards = db.query(Card).all()
         for c in cards:
-            if not c.audio_url:
+            if not is_valid_audio_file(c.audio_url):
                 url = generate_voice_file_sync(c.hanzi, category="cards")
                 if url:
                     c.audio_url = url
                     counts["cards"] += 1
-            if not c.audio_vi_url:
+            if not is_valid_audio_file(c.audio_vi_url):
                 url_vi = generate_voice_file_sync(c.vietnamese, category="cards_vi", voice=DEFAULT_VOICE_VI, rate=DEFAULT_RATE_VI)
                 if url_vi:
                     c.audio_vi_url = url_vi
                     counts["cards_vi"] += 1
 
         # 2. Measure words
-        mws = db.query(MeasureWord).filter((MeasureWord.audio_url == None) | (MeasureWord.audio_url == "")).all()
+        mws = db.query(MeasureWord).all()
         for m in mws:
-            url = generate_voice_file_sync(m.hanzi, category="measure_words")
-            if url:
-                m.audio_url = url
-                counts["measure_words"] += 1
+            if not is_valid_audio_file(m.audio_url):
+                url = generate_voice_file_sync(m.hanzi, category="measure_words")
+                if url:
+                    m.audio_url = url
+                    counts["measure_words"] += 1
 
         # 3. Grammar
-        gps = db.query(GrammarPoint).filter((GrammarPoint.audio_url == None) | (GrammarPoint.audio_url == "")).all()
+        gps = db.query(GrammarPoint).all()
         for g in gps:
-            url = generate_voice_file_sync(g.hanzi, category="grammar")
-            if url:
-                g.audio_url = url
-                counts["grammar"] += 1
+            if not is_valid_audio_file(g.audio_url):
+                url = generate_voice_file_sync(g.hanzi, category="grammar")
+                if url:
+                    g.audio_url = url
+                    counts["grammar"] += 1
 
         # 4. Sentences (Trung & Việt)
         sentences = db.query(Sentence).all()
         for s in sentences:
-            if not s.audio_url:
+            if not is_valid_audio_file(s.audio_url):
                 url = generate_voice_file_sync(s.chinese, category="sentences")
                 if url:
                     s.audio_url = url
                     counts["sentences"] += 1
-            if not s.audio_vi_url:
+            if not is_valid_audio_file(s.audio_vi_url):
                 url_vi = generate_voice_file_sync(s.vietnamese, category="sentences_vi", voice=DEFAULT_VOICE_VI, rate=DEFAULT_RATE_VI)
                 if url_vi:
                     s.audio_vi_url = url_vi

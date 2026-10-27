@@ -696,7 +696,30 @@
           try {
             if (contentType === "sentences") {
               // --- Load Sentences ---
-              elQuizTitle.textContent = "Bộ câu";
+              let totalSentencesCount = 0;
+              if (sentenceSetId) {
+                try {
+                  const sSet = await SentenceSetApi.getById(sentenceSetId);
+                  elQuizTitle.textContent = sSet.title || "Bộ câu";
+                  totalSentencesCount = sSet.sentence_count || 0;
+                } catch {
+                  elQuizTitle.textContent = "Bộ câu";
+                }
+              } else {
+                elQuizTitle.textContent = "Kho câu ghép tiếng Trung";
+                try {
+                  const allSentences = await Api.get("/sentences/all");
+                  totalSentencesCount = Array.isArray(allSentences) ? allSentences.length : 0;
+                } catch {}
+              }
+
+              if (isAllCards) {
+                totalRounds = 1;
+              } else {
+                const K = parseInt(cardsPerRound, 10) || 10;
+                totalRounds = Math.ceil(totalSentencesCount / K) || 1;
+              }
+
               let endpoint = `/api/v1/sentences?cards=${encodeURIComponent(cardsParam)}`;
               if (sentenceSetId) endpoint += `&set_id=${encodeURIComponent(sentenceSetId)}`;
               if (isPriority) {
@@ -814,16 +837,30 @@
           updateActivePlaylistItem();
         }
 
-        // 4. Audio Playback Sequence Engine
+        // 4. Audio Playback Sequence Engine (Chống phát chồng âm thanh & tối ưu trên di động)
+        let currentPlaybackToken = 0;
+
         function stopCurrentAudio() {
           if (currentAudioObj) {
-            currentAudioObj.pause();
-            currentAudioObj.currentTime = 0;
+            try {
+              currentAudioObj.onended = null;
+              currentAudioObj.onerror = null;
+              currentAudioObj.onplay = null;
+              currentAudioObj.onpause = null;
+              currentAudioObj.pause();
+              currentAudioObj.currentTime = 0;
+              currentAudioObj.src = "";
+            } catch (_) {}
             currentAudioObj = null;
           }
           if (pauseTimer) {
             clearTimeout(pauseTimer);
             pauseTimer = null;
+          }
+          if ("speechSynthesis" in window) {
+            try {
+              window.speechSynthesis.cancel();
+            } catch (_) {}
           }
           isSpeakingZh = false;
           isSpeakingVi = false;
@@ -833,6 +870,8 @@
 
         function playSequenceForItem(idx) {
           if (!isPlaying) return;
+          const token = ++currentPlaybackToken;
+
           if (idx >= itemsList.length) {
             // Hết danh sách
             if (chkLoopPlaylist.checked) {
@@ -849,25 +888,25 @@
           const item = itemsList[idx];
 
           // Bước 1: Phát tiếng Trung
-          playChineseAudio(item, () => {
-            if (!isPlaying) return;
+          playChineseAudio(item, token, () => {
+            if (token !== currentPlaybackToken || !isPlaying) return;
 
             // Bước 2: Dừng nghỉ (Gap pause)
             updatePlayerStateUI("pause");
             isPausingGap = true;
 
             pauseTimer = setTimeout(() => {
+              if (token !== currentPlaybackToken || !isPlaying) return;
               isPausingGap = false;
-              if (!isPlaying) return;
 
               // Bước 3: Phát tiếng Việt
-              playVietnameseAudio(item, () => {
-                if (!isPlaying) return;
+              playVietnameseAudio(item, token, () => {
+                if (token !== currentPlaybackToken || !isPlaying) return;
 
                 // Nghỉ ngắn trước khi qua câu tiếp theo
                 updatePlayerStateUI("pause");
                 pauseTimer = setTimeout(() => {
-                  if (!isPlaying) return;
+                  if (token !== currentPlaybackToken || !isPlaying) return;
                   if (chkAutoPlay.checked) {
                     currentIndex++;
                     playSequenceForItem(currentIndex);
@@ -880,10 +919,18 @@
           });
         }
 
-        function playChineseAudio(item, onEnded) {
+        function playChineseAudio(item, token, onEnded) {
           stopCurrentAudio();
+          if (token !== currentPlaybackToken) return;
+
           updatePlayerStateUI("zh");
           isSpeakingZh = true;
+
+          const finishStep = () => {
+            if (token !== currentPlaybackToken) return;
+            isSpeakingZh = false;
+            onEnded();
+          };
 
           if (item.audio_url) {
             const audio = new Audio(item.audio_url);
@@ -891,28 +938,50 @@
             currentAudioObj = audio;
 
             audio.onended = () => {
-              isSpeakingZh = false;
-              onEnded();
+              if (token !== currentPlaybackToken) return;
+              currentAudioObj = null;
+              finishStep();
             };
 
             audio.onerror = () => {
-              console.warn("Lỗi phát audio tiếng Trung, dùng Web Speech API");
-              fallbackSpeak(item.chinese, "zh-CN", onEnded);
+              if (token !== currentPlaybackToken) return;
+              console.warn("Lỗi tải/phát MP3 tiếng Trung, fallback sang Web Speech API:", item.audio_url);
+              currentAudioObj = null;
+              fallbackSpeak(item.chinese, "zh-CN", token, finishStep);
             };
 
-            audio.play().catch((e) => {
-              console.warn("Auto-play blocked or error:", e);
-              fallbackSpeak(item.chinese, "zh-CN", onEnded);
-            });
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+              playPromise.catch((e) => {
+                if (token !== currentPlaybackToken) return;
+                console.warn("Playback bị gián đoạn hoặc bị chặn:", e);
+                currentAudioObj = null;
+                if (e.name === "NotAllowedError") {
+                  // Trình duyệt điện thoại chặn tự động phát khi chưa chạm màn hình
+                  stopPlaying();
+                  Toast.show("Nhấn 'Phát' để bắt đầu nghe trên điện thoại", "info");
+                  return;
+                }
+                fallbackSpeak(item.chinese, "zh-CN", token, finishStep);
+              });
+            }
           } else {
-            fallbackSpeak(item.chinese, "zh-CN", onEnded);
+            fallbackSpeak(item.chinese, "zh-CN", token, finishStep);
           }
         }
 
-        function playVietnameseAudio(item, onEnded) {
+        function playVietnameseAudio(item, token, onEnded) {
           stopCurrentAudio();
+          if (token !== currentPlaybackToken) return;
+
           updatePlayerStateUI("vi");
           isSpeakingVi = true;
+
+          const finishStep = () => {
+            if (token !== currentPlaybackToken) return;
+            isSpeakingVi = false;
+            onEnded();
+          };
 
           if (item.audio_vi_url) {
             const audio = new Audio(item.audio_vi_url);
@@ -920,41 +989,84 @@
             currentAudioObj = audio;
 
             audio.onended = () => {
-              isSpeakingVi = false;
-              onEnded();
+              if (token !== currentPlaybackToken) return;
+              currentAudioObj = null;
+              finishStep();
             };
 
             audio.onerror = () => {
-              console.warn("Lỗi phát audio tiếng Việt, dùng Web Speech API");
-              fallbackSpeak(item.vietnamese, "vi-VN", onEnded);
+              if (token !== currentPlaybackToken) return;
+              console.warn("Lỗi tải/phát MP3 tiếng Việt, fallback sang Web Speech API:", item.audio_vi_url);
+              currentAudioObj = null;
+              fallbackSpeak(item.vietnamese, "vi-VN", token, finishStep);
             };
 
-            audio.play().catch((e) => {
-              console.warn("Auto-play blocked or error:", e);
-              fallbackSpeak(item.vietnamese, "vi-VN", onEnded);
-            });
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+              playPromise.catch((e) => {
+                if (token !== currentPlaybackToken) return;
+                console.warn("Playback bị gián đoạn:", e);
+                currentAudioObj = null;
+                if (e.name === "NotAllowedError") {
+                  stopPlaying();
+                  return;
+                }
+                fallbackSpeak(item.vietnamese, "vi-VN", token, finishStep);
+              });
+            }
           } else {
-            fallbackSpeak(item.vietnamese, "vi-VN", onEnded);
+            fallbackSpeak(item.vietnamese, "vi-VN", token, finishStep);
           }
         }
 
-        function fallbackSpeak(text, lang, onEnded) {
+        function fallbackSpeak(text, lang, token, onEnded) {
+          if (token !== currentPlaybackToken) return;
           if (!("speechSynthesis" in window)) {
-            setTimeout(onEnded, 1200);
+            setTimeout(() => {
+              if (token === currentPlaybackToken) onEnded();
+            }, 1200);
             return;
           }
-          window.speechSynthesis.cancel();
+          try {
+            window.speechSynthesis.cancel();
+          } catch (_) {}
+
           const cleanText = text ? text.replace(/<[^>]*>/g, "").trim() : "";
           if (!cleanText) {
             onEnded();
             return;
           }
+
           const utt = new SpeechSynthesisUtterance(cleanText);
           utt.lang = lang;
           utt.rate = playbackRate * (lang.startsWith("vi") ? 0.95 : 0.85);
-          utt.onend = () => onEnded();
-          utt.onerror = () => onEnded();
-          window.speechSynthesis.speak(utt);
+
+          // Cố gắng tìm voice khớp ngôn ngữ nếu hệ điều hành hỗ trợ
+          if (window.speechSynthesis.getVoices) {
+            const voices = window.speechSynthesis.getVoices();
+            if (voices && voices.length) {
+              const prefix = lang.toLowerCase().slice(0, 2);
+              const matched = voices.find((v) => v.lang.toLowerCase().startsWith(prefix));
+              if (matched) utt.voice = matched;
+            }
+          }
+
+          let ended = false;
+          const safeEnd = () => {
+            if (ended) return;
+            ended = true;
+            if (token === currentPlaybackToken) onEnded();
+          };
+
+          utt.onend = safeEnd;
+          utt.onerror = safeEnd;
+
+          try {
+            window.speechSynthesis.speak(utt);
+          } catch (e) {
+            console.warn("SpeechSynthesis error:", e);
+            safeEnd();
+          }
         }
 
         function updatePlayerStateUI(state) {
@@ -1006,6 +1118,7 @@
         });
 
         document.getElementById("btnNext").addEventListener("click", () => {
+          currentPlaybackToken++;
           stopCurrentAudio();
           if (currentIndex < itemsList.length - 1) {
             currentIndex++;
@@ -1020,6 +1133,7 @@
         });
 
         document.getElementById("btnPrev").addEventListener("click", () => {
+          currentPlaybackToken++;
           stopCurrentAudio();
           if (currentIndex > 0) {
             currentIndex--;
@@ -1034,6 +1148,7 @@
         });
 
         document.getElementById("btnReplay").addEventListener("click", () => {
+          currentPlaybackToken++;
           stopCurrentAudio();
           if (isPlaying) {
             playSequenceForItem(currentIndex);
@@ -1047,14 +1162,16 @@
           const item = itemsList[currentIndex];
           if (!item) return;
           stopPlaying();
-          playChineseAudio(item, () => updatePlayerStateUI("idle"));
+          const token = ++currentPlaybackToken;
+          playChineseAudio(item, token, () => updatePlayerStateUI("idle"));
         });
 
         document.getElementById("btnSpeakVi").addEventListener("click", () => {
           const item = itemsList[currentIndex];
           if (!item) return;
           stopPlaying();
-          playVietnameseAudio(item, () => updatePlayerStateUI("idle"));
+          const token = ++currentPlaybackToken;
+          playVietnameseAudio(item, token, () => updatePlayerStateUI("idle"));
         });
 
         // 6. Settings controls
@@ -1109,6 +1226,7 @@
             el.addEventListener("click", () => {
               const idx = parseInt(el.getAttribute("data-idx"), 10);
               drawer.classList.remove("open");
+              currentPlaybackToken++;
               stopCurrentAudio();
               currentIndex = idx;
               if (isPlaying) {
@@ -1139,7 +1257,6 @@
 
           // Listening là chế độ nghe thụ động, không tính điểm đúng/sai và không đánh dấu đã thuộc
 
-
           // Check if there is next round
           const btnNextRound = document.getElementById("btnNextRound");
           if (currentRound < totalRounds && !isPriority) {
@@ -1155,6 +1272,8 @@
 
         document.getElementById("btnReplayRound").addEventListener("click", () => {
           document.getElementById("modalComplete").style.display = "none";
+          currentPlaybackToken++;
+          stopCurrentAudio();
           currentIndex = 0;
           renderCard(0);
           startPlaying();

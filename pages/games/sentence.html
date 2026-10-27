@@ -583,6 +583,9 @@
         </div>
 
         <div class="game-over-actions">
+          <button type="button" class="btn btn-primary" id="btnNextRound" style="display: none; width: 100%; margin-bottom: var(--s-2);">
+            ⏩ Màn tiếp theo
+          </button>
           <button type="button" class="btn btn-secondary" id="btnPlayAgain">
             ↺ Chơi lại
           </button>
@@ -633,6 +636,13 @@
         if (timerInterval) clearInterval(timerInterval);
       }
 
+      let totalRounds = 1;
+      let currentRoundNum = 1;
+      let sentenceSetIdParam = null;
+      let cardsParam = "10";
+      let isPriorityParam = false;
+      let dirParam = "viet_hanzi";
+
       // Tải danh sách câu từ API
       async function loadPuzzles() {
         try {
@@ -641,6 +651,33 @@
           const round = urlParams.get("round") || "1";
           const cards = urlParams.get("cards") || "10";
           const isPriority = urlParams.get("priority") === "true";
+          const dir = urlParams.get("dir") || "viet_hanzi";
+
+          sentenceSetIdParam = sentenceSetId;
+          currentRoundNum = parseInt(round, 10) || 1;
+          cardsParam = cards;
+          isPriorityParam = isPriority;
+          dirParam = dir;
+
+          // Tính tổng số màn
+          try {
+            let totalSentencesCount = 0;
+            if (sentenceSetId) {
+              const sSet = await SentenceSetApi.getById(sentenceSetId);
+              totalSentencesCount = sSet.sentence_count || 0;
+            } else {
+              const allSentences = await Api.get("/sentences/all");
+              totalSentencesCount = Array.isArray(allSentences) ? allSentences.length : 0;
+            }
+            if (cards.toLowerCase() === "all") {
+              totalRounds = 1;
+            } else {
+              const K = parseInt(cards, 10) || 10;
+              totalRounds = Math.ceil(totalSentencesCount / K) || 1;
+            }
+          } catch (_) {
+            totalRounds = 1;
+          }
 
           // Cập nhật link quay về trang cấu hình tương ứng
           const backSetupUrl = sentenceSetId
@@ -661,6 +698,7 @@
               console.warn("[Sentence] Sync error:", err);
             }
           }
+          window.syncCurrentResults = syncCurrentResults;
 
           if (exitBtn) {
             exitBtn.setAttribute("href", backSetupUrl);
@@ -930,6 +968,21 @@
         document.getElementById("statAccuracy").textContent = `${accuracy}%`;
 
         document.getElementById("gameOverModal").classList.add("active");
+
+        // Hiển thị nút Màn tiếp theo nếu còn màn
+        const btnNext = document.getElementById("btnNextRound");
+        if (btnNext) {
+          if (currentRoundNum < totalRounds && !isPriorityParam) {
+            btnNext.style.display = "block";
+            const nextRoundUrl = `/pages/games/sentence.html?${sentenceSetIdParam ? `sentence_set_id=${sentenceSetIdParam}&` : ""}round=${currentRoundNum + 1}&cards=${cardsParam}&dir=${dirParam}`;
+            btnNext.onclick = async () => {
+              await syncCurrentResults();
+              window.location.href = nextRoundUrl;
+            };
+          } else {
+            btnNext.style.display = "none";
+          }
+        }
 
         // Đồng bộ tổng hợp kết quả lên server
         await syncCurrentResults();
