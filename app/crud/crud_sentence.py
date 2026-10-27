@@ -29,6 +29,7 @@ def create(
     tokens: Optional[str] = None,
     order_index: int = 0,
     audio_url: Optional[str] = None,
+    audio_vi_url: Optional[str] = None,
     set_id: Optional[int] = None,
 ) -> Sentence:
     """Tạo câu mới."""
@@ -39,6 +40,7 @@ def create(
         tokens=tokens.strip() if tokens else None,
         order_index=order_index,
         audio_url=audio_url.strip() if audio_url else None,
+        audio_vi_url=audio_vi_url.strip() if audio_vi_url else None,
         set_id=set_id,
     )
     db.add(item)
@@ -65,6 +67,7 @@ def bulk_create(db: Session, items: List[dict], set_id: Optional[int] = None) ->
             tokens=str(d["tokens"]).strip() if d.get("tokens") else None,
             order_index=d.get("order_index", max_order + idx + 1),
             audio_url=str(d["audio_url"]).strip() if d.get("audio_url") else None,
+            audio_vi_url=str(d["audio_vi_url"]).strip() if d.get("audio_vi_url") else None,
         )
         db.add(item)
         created.append(item)
@@ -88,34 +91,38 @@ def update(db: Session, sentence_id: int, **kwargs) -> Optional[Sentence]:
 
 
 def delete(db: Session, sentence_id: int) -> bool:
-    """Xóa 1 câu và dọn dẹp file âm thanh tương ứng."""
+    """Xóa 1 câu và dọn dẹp file âm thanh tương ứng (Trung & Việt)."""
     item = get_by_id(db, sentence_id)
     if not item:
         return False
-    audio_url = item.audio_url
+    urls_to_delete = [u for u in [item.audio_url, item.audio_vi_url] if u]
     db.delete(item)
     db.commit()
-    if audio_url:
-        from app.services.voice_service import delete_audio_file
-        delete_audio_file(db, audio_url)
+    if urls_to_delete:
+        from app.services.voice_service import delete_audio_files
+        delete_audio_files(db, urls_to_delete)
     return True
 
 
 def bulk_delete(db: Session, ids: List[int]) -> int:
-    """Xóa hàng loạt câu theo danh sách IDs và dọn dẹp file âm thanh."""
+    """Xóa hàng loạt câu theo danh sách IDs và dọn dẹp file âm thanh (Trung & Việt)."""
     if not ids:
         return 0
-    sentences_audio = [
-        r[0]
-        for r in db.query(Sentence.audio_url)
-        .filter(Sentence.id.in_(ids), Sentence.audio_url.isnot(None))
+    sentences_rows = (
+        db.query(Sentence.audio_url, Sentence.audio_vi_url)
+        .filter(Sentence.id.in_(ids))
         .all()
-        if r[0]
-    ]
+    )
+    sentences_audio = []
+    for r in sentences_rows:
+        if r[0]: sentences_audio.append(r[0])
+        if r[1]: sentences_audio.append(r[1])
+
     deleted = db.query(Sentence).filter(Sentence.id.in_(ids)).delete(synchronize_session=False)
     db.commit()
     if sentences_audio:
         from app.services.voice_service import delete_audio_files
         delete_audio_files(db, sentences_audio)
     return deleted
+
 

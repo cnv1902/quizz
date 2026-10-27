@@ -812,6 +812,13 @@
             svg: '<svg class="game-btn-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>',
           },
           {
+            id: "listening",
+            name: "Luyện nghe",
+            desc: "Tự động phát âm & nghĩa",
+            type: "both",
+            svg: '<svg class="game-btn-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>',
+          },
+          {
             id: "sentence",
             name: "Ghép câu",
             desc: "Xếp các khối từ",
@@ -820,10 +827,10 @@
           },
         ];
 
-        // Tách trò chơi theo từng bộ: Bộ câu CHỈ chơi Ghép câu, Bộ quizz chơi các trò còn lại
+        // Tách trò chơi theo từng bộ: Bộ câu chơi Ghép câu & Luyện nghe, Bộ quiz chơi các trò thẻ & Luyện nghe
         const availableGames = isSentenceContext
-          ? ALL_GAMES.filter((g) => g.type === "sentences")
-          : ALL_GAMES.filter((g) => g.type === "cards");
+          ? ALL_GAMES.filter((g) => g.type === "sentences" || g.type === "both")
+          : ALL_GAMES.filter((g) => g.type === "cards" || g.type === "both");
 
         // Đảm bảo game được chọn luôn hợp lệ theo bộ tương ứng
         if (!availableGames.some((g) => g.id === selectedGameId)) {
@@ -996,6 +1003,21 @@
           const dir = document.querySelector('input[name="directionRadio"]:checked')?.value || "hanzi_viet";
           const btn = document.getElementById("btnStartGame");
           const textEl = document.getElementById("startGameText");
+          const dirCard = document.getElementById("directionCard");
+
+          if (selectedGameId === "listening") {
+            if (dirCard) dirCard.style.display = "none";
+            const setParam = sentenceSetId ? `sentence_set_id=${sentenceSetId}&` : "";
+            const quizParam = quizId ? `quiz_id=${quizId}&` : (sentenceSetId ? "" : "mode=all&");
+            const typeParam = isSentenceContext ? "type=sentences&" : "type=cards&";
+            
+            textEl.textContent = `Bắt đầu nghe: ${gameObj.name} · ${isPractice ? "🎯 Luyện tập" : "Màn " + selectedRound}`;
+            const targetUrl = `/pages/games/listening.html?${typeParam}${isSentenceContext ? setParam : quizParam}cards=${cardsPerRound}&priority=${isPractice}&round=${selectedRound}`;
+            btn.setAttribute("href", targetUrl);
+            return;
+          }
+
+          if (dirCard) dirCard.style.display = "";
 
           let targetUrl = "";
           if (isSentenceContext || selectedGameId === "sentence") {

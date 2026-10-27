@@ -160,6 +160,7 @@ def get_quiz_cards(
             "pinyin": c.pinyin,
             "hanzi": c.hanzi,
             "audio_url": c.audio_url,
+            "audio_vi_url": getattr(c, "audio_vi_url", None),
             "order_index": c.order_index,
         }
         for c in cards
@@ -188,6 +189,7 @@ def get_quiz_cards_priority(
             "pinyin": c.pinyin,
             "hanzi": c.hanzi,
             "audio_url": c.audio_url,
+            "audio_vi_url": getattr(c, "audio_vi_url", None),
             "order_index": c.order_index,
         }
         for c in cards

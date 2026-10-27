@@ -12,6 +12,7 @@ class SentenceBase(BaseModel):
     tokens: Optional[str] = Field(None, description="JSON array các khối từ đã phân tách")
     order_index: Optional[int] = Field(0, description="Thứ tự hiển thị")
     audio_url: Optional[str] = None
+    audio_vi_url: Optional[str] = None
 
 
 class SentenceCreate(SentenceBase):
@@ -26,11 +27,13 @@ class SentenceUpdate(BaseModel):
     tokens: Optional[str] = None
     order_index: Optional[int] = None
     audio_url: Optional[str] = None
+    audio_vi_url: Optional[str] = None
 
 
 class SentenceResponse(SentenceBase):
     id: int
     audio_url: Optional[str] = None
+    audio_vi_url: Optional[str] = None
     created_at: datetime
     token_list: Optional[List[str]] = None
 
@@ -45,8 +48,10 @@ class SentencePuzzleItem(BaseModel):
     vietnamese: str
     pinyin: Optional[str] = None
     audio_url: Optional[str] = None
+    audio_vi_url: Optional[str] = None
     shuffled_tokens: List[str] = []
     total_tokens: int = 0
+
 
 
 class SentenceBulkCreateRequest(BaseModel):

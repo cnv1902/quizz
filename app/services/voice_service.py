@@ -13,6 +13,10 @@ from app.database import SessionLocal
 DEFAULT_VOICE = "zh-CN-XiaoxiaoNeural"  # Giọng phổ thông Bắc Kinh chuẩn, trong trẻo, tự nhiên
 DEFAULT_RATE = "-8%"                    # Tốc độ đọc chậm hơn 8% để nghe rõ thanh điệu HSK
 
+DEFAULT_VOICE_VI = "vi-VN-HoaiMyNeural" # Giọng đọc Tiếng Việt truyền cảm, chuẩn phổ thông
+DEFAULT_RATE_VI = "-4%"                 # Tốc độ đọc Tiếng Việt tự nhiên
+
+
 # Thư mục gốc lưu trữ âm thanh
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -122,9 +126,9 @@ def delete_audio_files(db, audio_urls: List[str]) -> int:
             continue
 
         # Kiểm tra xem còn bản ghi nào trong database đang dùng audio_url này không
-        if db.query(Card.id).filter(Card.audio_url == url).first():
+        if db.query(Card.id).filter((Card.audio_url == url) | (Card.audio_vi_url == url)).first():
             continue
-        if db.query(Sentence.id).filter(Sentence.audio_url == url).first():
+        if db.query(Sentence.id).filter((Sentence.audio_url == url) | (Sentence.audio_vi_url == url)).first():
             continue
         if db.query(MeasureWord.id).filter(MeasureWord.audio_url == url).first():
             continue
@@ -153,7 +157,7 @@ def delete_audio_file(db, audio_url: Optional[str]) -> bool:
 # === Background Tasks Workers ===
 
 def background_generate_voices_for_cards(card_ids: List[int]):
-    """Background task: Quét danh sách cards theo ID và sinh file voice MP3."""
+    """Background task: Quét danh sách cards theo ID và sinh file voice MP3 (Trung & Việt)."""
     if not card_ids:
         return
 
@@ -162,10 +166,16 @@ def background_generate_voices_for_cards(card_ids: List[int]):
     try:
         cards = db.query(Card).filter(Card.id.in_(card_ids)).all()
         for card in cards:
+            # 1. Voice Tiếng Trung
             if not card.audio_url or not os.path.exists(os.path.join(BASE_DIR, card.audio_url.lstrip("/\\"))):
                 url = generate_voice_file_sync(card.hanzi, category="cards")
                 if url:
                     card.audio_url = url
+            # 2. Voice Tiếng Việt
+            if not card.audio_vi_url or not os.path.exists(os.path.join(BASE_DIR, card.audio_vi_url.lstrip("/\\"))):
+                url_vi = generate_voice_file_sync(card.vietnamese, category="cards_vi", voice=DEFAULT_VOICE_VI, rate=DEFAULT_RATE_VI)
+                if url_vi:
+                    card.audio_vi_url = url_vi
         db.commit()
     except Exception as e:
         print(f"[VoiceService] Loi background cards: {e}")
@@ -219,7 +229,7 @@ def background_generate_voices_for_grammar(grammar_ids: List[int]):
 
 
 def background_generate_voices_for_sentences(sentence_ids: List[int]):
-    """Background task: Quét danh sách câu và sinh file voice MP3 phát âm toàn câu."""
+    """Background task: Quét danh sách câu và sinh file voice MP3 (Trung & Việt)."""
     if not sentence_ids:
         return
 
@@ -228,10 +238,16 @@ def background_generate_voices_for_sentences(sentence_ids: List[int]):
     try:
         items = db.query(Sentence).filter(Sentence.id.in_(sentence_ids)).all()
         for item in items:
+            # 1. Voice Tiếng Trung
             if not item.audio_url or not os.path.exists(os.path.join(BASE_DIR, item.audio_url.lstrip("/\\"))):
                 url = generate_voice_file_sync(item.chinese, category="sentences")
                 if url:
                     item.audio_url = url
+            # 2. Voice Tiếng Việt
+            if not item.audio_vi_url or not os.path.exists(os.path.join(BASE_DIR, item.audio_vi_url.lstrip("/\\"))):
+                url_vi = generate_voice_file_sync(item.vietnamese, category="sentences_vi", voice=DEFAULT_VOICE_VI, rate=DEFAULT_RATE_VI)
+                if url_vi:
+                    item.audio_vi_url = url_vi
         db.commit()
     except Exception as e:
         print(f"[VoiceService] Loi background sentences: {e}")
@@ -241,22 +257,28 @@ def background_generate_voices_for_sentences(sentence_ids: List[int]):
 
 
 def sync_all_missing_voices():
-    """Hàm quét toàn bộ database và tự động sinh voice cho các mục chưa có audio_url."""
+    """Hàm quét toàn bộ database và tự động sinh voice cho các mục chưa có audio_url hoặc audio_vi_url."""
     from app.models.card import Card
     from app.models.measure_word import MeasureWord
     from app.models.grammar_point import GrammarPoint
     from app.models.sentence import Sentence
 
     db = SessionLocal()
-    counts = {"cards": 0, "measure_words": 0, "grammar": 0, "sentences": 0}
+    counts = {"cards": 0, "cards_vi": 0, "measure_words": 0, "grammar": 0, "sentences": 0, "sentences_vi": 0}
     try:
-        # 1. Cards
-        cards = db.query(Card).filter((Card.audio_url == None) | (Card.audio_url == "")).all()
+        # 1. Cards (Trung & Việt)
+        cards = db.query(Card).all()
         for c in cards:
-            url = generate_voice_file_sync(c.hanzi, category="cards")
-            if url:
-                c.audio_url = url
-                counts["cards"] += 1
+            if not c.audio_url:
+                url = generate_voice_file_sync(c.hanzi, category="cards")
+                if url:
+                    c.audio_url = url
+                    counts["cards"] += 1
+            if not c.audio_vi_url:
+                url_vi = generate_voice_file_sync(c.vietnamese, category="cards_vi", voice=DEFAULT_VOICE_VI, rate=DEFAULT_RATE_VI)
+                if url_vi:
+                    c.audio_vi_url = url_vi
+                    counts["cards_vi"] += 1
 
         # 2. Measure words
         mws = db.query(MeasureWord).filter((MeasureWord.audio_url == None) | (MeasureWord.audio_url == "")).all()
@@ -274,13 +296,19 @@ def sync_all_missing_voices():
                 g.audio_url = url
                 counts["grammar"] += 1
 
-        # 4. Sentences
-        sentences = db.query(Sentence).filter((Sentence.audio_url == None) | (Sentence.audio_url == "")).all()
+        # 4. Sentences (Trung & Việt)
+        sentences = db.query(Sentence).all()
         for s in sentences:
-            url = generate_voice_file_sync(s.chinese, category="sentences")
-            if url:
-                s.audio_url = url
-                counts["sentences"] += 1
+            if not s.audio_url:
+                url = generate_voice_file_sync(s.chinese, category="sentences")
+                if url:
+                    s.audio_url = url
+                    counts["sentences"] += 1
+            if not s.audio_vi_url:
+                url_vi = generate_voice_file_sync(s.vietnamese, category="sentences_vi", voice=DEFAULT_VOICE_VI, rate=DEFAULT_RATE_VI)
+                if url_vi:
+                    s.audio_vi_url = url_vi
+                    counts["sentences_vi"] += 1
 
         db.commit()
         return counts
@@ -290,3 +318,4 @@ def sync_all_missing_voices():
         return counts
     finally:
         db.close()
+

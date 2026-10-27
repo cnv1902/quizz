@@ -98,6 +98,7 @@ def get_puzzle_sentences(
             vietnamese=s.vietnamese,
             pinyin=s.pinyin or sentence_service.get_pinyin_for_sentence(s.chinese),
             audio_url=s.audio_url,
+            audio_vi_url=s.audio_vi_url,
             shuffled_tokens=shuffled,
             total_tokens=len(tok_list),
         ))

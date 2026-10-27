@@ -96,6 +96,7 @@ def bulk_create_cards(db: Session, quiz_id: int, cards: List[dict]) -> List[dict
             "pinyin": c.pinyin,
             "hanzi": c.hanzi,
             "audio_url": c.audio_url,
+            "audio_vi_url": c.audio_vi_url,
             "order_index": c.order_index,
         }
         for c in db_cards

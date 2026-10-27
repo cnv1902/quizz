@@ -14,7 +14,8 @@ class Sentence(Base):
     vietnamese = Column(String(500), nullable=False)    # Nghĩa tiếng Việt (vd: Bạn đang ở đâu?)
     pinyin = Column(String(500), nullable=True)         # Phiên âm Pinyin
     tokens = Column(Text, nullable=True)                # JSON string các khối từ sau tách (vd: ["你", "在", "哪"])
-    audio_url = Column(String(500), nullable=True)      # URL file MP3 phát âm chuẩn (/static/voice/sentences/xxx.mp3)
+    audio_url = Column(String(500), nullable=True)      # URL file MP3 tiếng Trung (/static/voice/sentences/xxx.mp3)
+    audio_vi_url = Column(String(500), nullable=True)   # URL file MP3 tiếng Việt (/static/voice/sentences_vi/xxx.mp3)
     order_index = Column(Integer, default=0, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

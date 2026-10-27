@@ -13,7 +13,8 @@ class Card(Base):
     vietnamese = Column(String(500), nullable=False)   # Nghĩa Tiếng Việt
     pinyin = Column(String(500), nullable=False)       # Phiên âm Pinyin (có dấu thanh)
     hanzi = Column(String(200), nullable=False)        # Chữ Hán
-    audio_url = Column(String(500), nullable=True)     # URL file MP3 phát âm chuẩn
+    audio_url = Column(String(500), nullable=True)     # URL file MP3 tiếng Trung
+    audio_vi_url = Column(String(500), nullable=True)  # URL file MP3 tiếng Việt
     order_index = Column(Integer, default=0, nullable=False)  # Thứ tự trong quiz
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 

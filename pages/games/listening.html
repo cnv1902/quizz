@@ -1,0 +1,1190 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Luyện Nghe Tiếng Trung & Nghĩa Tiếng Việt — HanziQuizz</title>
+    <meta
+      name="description"
+      content="Chế độ luyện nghe thụ động & phản xạ tiếng Trung chuẩn HSK. Tự động phát âm tiếng Trung, dừng nghỉ và đọc nghĩa tiếng Việt liên tục."
+    />
+    <meta name="theme-color" content="#b33939" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="HanziQuizz" />
+    <link rel="apple-touch-icon" href="/static/img/icons/apple-touch-icon.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/img/HanziQuizz-Favicon.png"
+    />
+    <link rel="stylesheet" href="/static/css/game/theme.css?v={{ v }}" />
+    <style>
+      :root {
+        --player-max-w: 640px;
+      }
+
+      /* === Listening Player Custom Layout === */
+      .player-stage {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: var(--s-3) var(--s-4) var(--s-6);
+        max-width: var(--player-max-w);
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      /* HUD Strip */
+      .hud-listening {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        padding: 8px 16px;
+        margin-bottom: var(--s-3);
+      }
+
+      .hud-badge {
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 20px;
+        background: var(--surface-2);
+        color: var(--accent);
+        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      /* Big Flash / Player Card */
+      .player-card {
+        background: var(--surface);
+        border: 1.5px solid var(--border);
+        border-radius: var(--r-lg);
+        width: 100%;
+        padding: var(--s-6) var(--s-5);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        transition: border-color 200ms ease, box-shadow 200ms ease;
+      }
+
+      .player-card.speaking-zh {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent-soft), 0 12px 32px rgba(30, 168, 150, 0.12);
+      }
+
+      .player-card.speaking-vi {
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15), 0 12px 32px rgba(245, 158, 11, 0.1);
+      }
+
+      .player-card.pausing {
+        border-color: var(--border-strong);
+      }
+
+      /* Status Pill */
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 14px;
+        border-radius: 30px;
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: var(--s-4);
+        background: var(--surface-2);
+        color: var(--text-2);
+        border: 1px solid var(--border);
+        transition: all 180ms ease;
+      }
+
+      .status-pill.zh {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+
+      .status-pill.vi {
+        background: rgba(245, 158, 11, 0.12);
+        color: #d97706;
+        border-color: #f59e0b;
+      }
+
+      .status-pill.pause {
+        background: rgba(100, 116, 139, 0.12);
+        color: var(--text-2);
+      }
+
+      /* Typography */
+      .card-hanzi {
+        font-size: clamp(2.4rem, 7vw, 3.8rem);
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1.25;
+        margin-bottom: var(--s-2);
+        font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+        word-break: break-word;
+      }
+
+      .card-pinyin {
+        font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+        font-weight: 600;
+        color: var(--accent);
+        margin-bottom: var(--s-4);
+        letter-spacing: 0.02em;
+      }
+
+      .card-vietnamese-wrap {
+        min-height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin-top: var(--s-2);
+      }
+
+      .card-vietnamese {
+        font-size: clamp(1.15rem, 3.2vw, 1.45rem);
+        font-weight: 600;
+        color: var(--text);
+        line-height: 1.4;
+        transition: filter 200ms ease, opacity 200ms ease;
+      }
+
+      .card-vietnamese.hidden-blur {
+        filter: blur(8px);
+        opacity: 0.35;
+        user-select: none;
+      }
+
+      /* Audio Wave Animation */
+      .wave-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        height: 28px;
+        margin: var(--s-2) 0;
+      }
+
+      .wave-bar {
+        width: 4px;
+        height: 8px;
+        background: var(--border-strong);
+        border-radius: 4px;
+        transition: height 150ms ease, background 150ms ease;
+      }
+
+      .speaking-zh .wave-bar {
+        background: var(--accent);
+        animation: waveAnim 0.7s infinite alternate ease-in-out;
+      }
+
+      .speaking-vi .wave-bar {
+        background: #f59e0b;
+        animation: waveAnim 0.7s infinite alternate ease-in-out;
+      }
+
+      .speaking-zh .wave-bar:nth-child(2),
+      .speaking-vi .wave-bar:nth-child(2) { animation-delay: 0.15s; }
+      .speaking-zh .wave-bar:nth-child(3),
+      .speaking-vi .wave-bar:nth-child(3) { animation-delay: 0.3s; }
+      .speaking-zh .wave-bar:nth-child(4),
+      .speaking-vi .wave-bar:nth-child(4) { animation-delay: 0.45s; }
+      .speaking-zh .wave-bar:nth-child(5),
+      .speaking-vi .wave-bar:nth-child(5) { animation-delay: 0.6s; }
+
+      @keyframes waveAnim {
+        0% { height: 6px; }
+        100% { height: 26px; }
+      }
+
+      /* Quick Speaker Buttons */
+      .quick-speakers {
+        display: flex;
+        gap: 12px;
+        margin-top: var(--s-3);
+      }
+
+      .speaker-btn {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--r-sm);
+        padding: 6px 14px;
+        font-size: var(--fs-xs);
+        font-weight: 600;
+        color: var(--text-2);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 150ms ease;
+      }
+
+      .speaker-btn:hover {
+        background: var(--surface);
+        color: var(--text);
+        border-color: var(--border-strong);
+      }
+
+      /* Main Player Controls Bar */
+      .player-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        width: 100%;
+        margin-top: var(--s-5);
+      }
+
+      .ctrl-btn {
+        background: var(--surface);
+        border: 1.5px solid var(--border);
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text);
+        transition: all 150ms ease;
+      }
+
+      .ctrl-btn:hover {
+        background: var(--surface-2);
+        border-color: var(--border-strong);
+        transform: scale(1.05);
+      }
+
+      .ctrl-btn-primary {
+        width: 68px;
+        height: 68px;
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #ffffff;
+        box-shadow: 0 6px 20px rgba(30, 168, 150, 0.35);
+      }
+
+      .ctrl-btn-primary:hover {
+        background: var(--accent-hover, #168576);
+        border-color: var(--accent-hover, #168576);
+        transform: scale(1.06);
+      }
+
+      /* Settings Panel Card */
+      .player-settings-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        width: 100%;
+        padding: var(--s-4) var(--s-5);
+        margin-top: var(--s-5);
+      }
+
+      .setting-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: var(--fs-sm);
+      }
+
+      .setting-row:last-child {
+        border-bottom: none;
+      }
+
+      .setting-label {
+        color: var(--text-2);
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .pill-group {
+        display: flex;
+        gap: 6px;
+      }
+
+      .pill-btn {
+        padding: 4px 10px;
+        border-radius: var(--r-sm);
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        color: var(--text-2);
+        font-size: var(--fs-xs);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 120ms ease;
+      }
+
+      .pill-btn.active {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+
+      /* Playlist Drawer Modal */
+      .playlist-drawer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--surface);
+        border-top: 1.5px solid var(--border);
+        border-radius: 20px 20px 0 0;
+        padding: var(--s-5);
+        max-height: 70vh;
+        overflow-y: auto;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        transform: translateY(100%);
+        transition: transform 250ms cubic-bezier(0.2, 0.7, 0.2, 1);
+      }
+
+      .playlist-drawer.open {
+        transform: translateY(0);
+      }
+
+      .playlist-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        border-radius: var(--r-sm);
+        cursor: pointer;
+        transition: background 150ms ease;
+        margin-bottom: 4px;
+      }
+
+      .playlist-item:hover {
+        background: var(--surface-2);
+      }
+
+      .playlist-item.active {
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      /* Completion Modal */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 2000;
+      }
+
+      .modal-box {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        padding: var(--s-6);
+        max-width: 440px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+        animation: popIn 200ms ease;
+      }
+
+      @keyframes popIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+    </style>
+  </head>
+  <body class="game-layout">
+    <!-- Game Top Nav -->
+    <nav class="game-nav">
+      <a href="/" class="nav-brand">
+        <img
+          src="/static/img/HanziQuizz-Favicon.png"
+          alt="HanziQuizz Logo"
+          style="height: 30px; width: auto; object-fit: contain"
+        />
+        <span>HanziQuizz</span>
+        <span style="font-size: var(--fs-xs); background: var(--surface-2); padding: 2px 8px; border-radius: 4px; color: var(--accent); border: 1px solid var(--border);">
+          🎧 Luyện nghe
+        </span>
+      </a>
+
+      <div class="nav-actions">
+        <span
+          id="priorityBadge"
+          style="
+            display: none;
+            font-size: var(--fs-xs);
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(30, 168, 150, 0.15);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+          "
+        >🎯 Bổ Túc</span>
+        <span id="gameQuizTitle" style="font-size: var(--fs-sm); color: var(--text-2); font-weight: 500;">Đang nạp...</span>
+        <a href="#" id="btnExitGame" class="btn-text">Thoát</a>
+      </div>
+    </nav>
+
+    <!-- Main Player Stage -->
+    <main class="player-stage">
+      <!-- HUD Bar: Tiến trình & Màn chơi -->
+      <div class="hud-listening">
+        <span class="hud-badge" id="badgeRound">Màn 1</span>
+        <div style="font-weight: 700; font-size: var(--fs-sm); color: var(--text);">
+          <span id="currentIndexText">1</span> / <span id="totalItemsText">10</span>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnTogglePlaylist" style="font-size: var(--fs-xs); color: var(--accent);">
+          📑 Danh sách
+        </button>
+      </div>
+
+      <!-- Linear Progress Bar -->
+      <div class="progress-bar" style="width: 100%; margin-bottom: var(--s-3);">
+        <div class="progress-fill" id="progressBarFill" style="width: 0%; transition: width 300ms ease;"></div>
+      </div>
+
+      <!-- Big Listening Display Card -->
+      <div class="player-card" id="playerCard">
+        <!-- Status Pill: Trạng thái đọc -->
+        <div class="status-pill zh" id="statusPill">
+          <span id="statusIcon">🇨🇳</span>
+          <span id="statusText">Tiếng Trung</span>
+        </div>
+
+        <!-- Hanzi / Chinese Text -->
+        <div class="card-hanzi" id="displayChinese">...</div>
+
+        <!-- Pinyin -->
+        <div class="card-pinyin" id="displayPinyin">...</div>
+
+        <!-- Animated Audio Wave -->
+        <div class="wave-container" id="waveContainer">
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+        </div>
+
+        <!-- Vietnamese Meaning -->
+        <div class="card-vietnamese-wrap">
+          <div class="card-vietnamese" id="displayVietnamese">...</div>
+        </div>
+
+        <!-- Quick Speaker Buttons (Nghe lại lẻ) -->
+        <div class="quick-speakers">
+          <button type="button" class="speaker-btn" id="btnSpeakZh">
+            🔊 Tiếng Trung
+          </button>
+          <button type="button" class="speaker-btn" id="btnSpeakVi">
+            🇻🇳 Tiếng Việt
+          </button>
+        </div>
+      </div>
+
+      <!-- Playback Controls -->
+      <div class="player-controls">
+        <!-- Prev Button -->
+        <button type="button" class="ctrl-btn" id="btnPrev" title="Từ trước">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="19 20 9 12 19 4 19 20"></polygon>
+            <line x1="5" y1="19" x2="5" y2="5"></line>
+          </svg>
+        </button>
+
+        <!-- Big Play / Pause Button -->
+        <button type="button" class="ctrl-btn ctrl-btn-primary" id="btnPlayPause" title="Phát / Tạm dừng">
+          <svg id="iconPlay" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <svg id="iconPause" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+            <rect x="6" y="4" width="4" height="16"></rect>
+            <rect x="14" y="4" width="4" height="16"></rect>
+          </svg>
+        </button>
+
+        <!-- Next Button -->
+        <button type="button" class="ctrl-btn" id="btnNext" title="Từ tiếp theo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 4 15 12 5 20 5 4"></polygon>
+            <line x1="19" y1="5" x2="19" y2="19"></line>
+          </svg>
+        </button>
+
+        <!-- Replay Current -->
+        <button type="button" class="ctrl-btn" id="btnReplay" title="Nghe lại từ này">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Player Settings -->
+      <div class="player-settings-card">
+        <!-- 1. Khoảng nghỉ Trung -> Việt -->
+        <div class="setting-row">
+          <span class="setting-label">⏱ Khoảng nghỉ giữa Trung & Việt</span>
+          <div class="pill-group" id="gapGroup">
+            <button type="button" class="pill-btn" data-gap="1000">1s</button>
+            <button type="button" class="pill-btn active" data-gap="1500">1.5s</button>
+            <button type="button" class="pill-btn" data-gap="2000">2s</button>
+            <button type="button" class="pill-btn" data-gap="3000">3s</button>
+          </div>
+        </div>
+
+        <!-- 2. Tốc độ đọc -->
+        <div class="setting-row">
+          <span class="setting-label">⚡ Tốc độ đọc</span>
+          <div class="pill-group" id="rateGroup">
+            <button type="button" class="pill-btn" data-rate="0.85">0.8x</button>
+            <button type="button" class="pill-btn active" data-rate="1.0">1.0x</button>
+            <button type="button" class="pill-btn" data-rate="1.15">1.2x</button>
+          </div>
+        </div>
+
+        <!-- 3. Tự động chuyển từ tiếp theo -->
+        <div class="setting-row">
+          <span class="setting-label">⏩ Tự động phát toàn bộ màn</span>
+          <label style="display: flex; align-items: center; cursor: pointer;">
+            <input type="checkbox" id="chkAutoPlay" checked style="accent-color: var(--accent); width: 18px; height: 18px;" />
+          </label>
+        </div>
+
+        <!-- 4. Lặp lại danh sách -->
+        <div class="setting-row">
+          <span class="setting-label">🔁 Lặp lại màn khi hết</span>
+          <label style="display: flex; align-items: center; cursor: pointer;">
+            <input type="checkbox" id="chkLoopPlaylist" style="accent-color: var(--accent); width: 18px; height: 18px;" />
+          </label>
+        </div>
+
+        <!-- 5. Che nghĩa tiếng Việt -->
+        <div class="setting-row">
+          <span class="setting-label">👁 Che nghĩa tiếng Việt (tự nhớ)</span>
+          <label style="display: flex; align-items: center; cursor: pointer;">
+            <input type="checkbox" id="chkHideVietnamese" style="accent-color: var(--accent); width: 18px; height: 18px;" />
+          </label>
+        </div>
+      </div>
+    </main>
+
+    <!-- Playlist Drawer -->
+    <div class="playlist-drawer" id="playlistDrawer">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s-3);">
+        <h3 style="font-size: var(--fs-md); font-weight: 700; color: var(--text);">Danh sách từ trong màn</h3>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnClosePlaylist">Đóng ✕</button>
+      </div>
+      <div id="playlistContainer">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Completion Modal -->
+    <div class="modal-backdrop" id="modalComplete" style="display: none;">
+      <div class="modal-box">
+        <div style="font-size: 3.5rem; margin-bottom: var(--s-2);">🎉</div>
+        <h2 style="font-size: var(--fs-xl); font-weight: 700; color: var(--text); margin-bottom: var(--s-2);">
+          Hoàn thành bài luyện nghe!
+        </h2>
+        <p style="color: var(--text-2); font-size: var(--fs-sm); margin-bottom: var(--s-5);">
+          Bạn đã nghe trọn vẹn toàn bộ các mục trong màn chơi này.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button type="button" class="btn btn-primary" id="btnReplayRound" style="width: 100%;">
+            🔁 Nghe lại màn này
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnNextRound" style="width: 100%; display: none;">
+            Màn tiếp theo →
+          </button>
+          <button type="button" class="btn btn-ghost" id="btnExitToSetup" style="width: 100%;">
+            Trở về danh sách màn
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="/static/js/core/api.js?v={{ v }}"></script>
+    <script src="/static/js/core/auth.js?v={{ v }}"></script>
+    <script src="/static/js/api/quizApi.js?v={{ v }}"></script>
+    <script src="/static/js/components/toast.js?v={{ v }}"></script>
+
+    <script>
+      (function () {
+        // 1. URL Params
+        const params = new URLSearchParams(window.location.search);
+        const contentType = params.get("type") || "cards"; // "cards" hoặc "sentences"
+        const quizId = params.get("quiz_id");
+        const sentenceSetId = params.get("sentence_set_id");
+        const mode = params.get("mode") || (quizId ? "quiz" : (sentenceSetId ? "sentence_set" : "all"));
+        const isPriority = params.get("priority") === "true";
+        const currentRound = parseInt(params.get("round") || "1", 10);
+        const cardsParam = params.get("cards") || "10";
+        const isAllCards = cardsParam === "all";
+        const cardsPerRound = isAllCards ? "all" : (parseInt(cardsParam, 10) || 10);
+
+        // State
+        let itemsList = [];
+        let currentIndex = 0;
+        let isPlaying = false;
+        let isSpeakingZh = false;
+        let isSpeakingVi = false;
+        let isPausingGap = false;
+        let gapDuration = 1500; // ms
+        let playbackRate = 1.0;
+        let totalRounds = 1;
+        let pauseTimer = null;
+        let currentAudioObj = null;
+
+        // Elements
+        const elChinese = document.getElementById("displayChinese");
+        const elPinyin = document.getElementById("displayPinyin");
+        const elVietnamese = document.getElementById("displayVietnamese");
+        const elStatusPill = document.getElementById("statusPill");
+        const elStatusIcon = document.getElementById("statusIcon");
+        const elStatusText = document.getElementById("statusText");
+        const elPlayerCard = document.getElementById("playerCard");
+        const elProgressBarFill = document.getElementById("progressBarFill");
+        const elCurrentIdx = document.getElementById("currentIndexText");
+        const elTotalItems = document.getElementById("totalItemsText");
+        const elBadgeRound = document.getElementById("badgeRound");
+        const elQuizTitle = document.getElementById("gameQuizTitle");
+        const elBtnPlayPause = document.getElementById("btnPlayPause");
+        const elIconPlay = document.getElementById("iconPlay");
+        const elIconPause = document.getElementById("iconPause");
+        const chkAutoPlay = document.getElementById("chkAutoPlay");
+        const chkLoopPlaylist = document.getElementById("chkLoopPlaylist");
+        const chkHideVietnamese = document.getElementById("chkHideVietnamese");
+
+        // Back Link
+        const exitUrl = contentType === "sentences"
+          ? (sentenceSetId
+              ? `/pages/game-setup.html?sentence_set_id=${sentenceSetId}&game=listening&round=${currentRound}&priority=${isPriority}`
+              : `/pages/game-setup.html?mode=all&game=listening&round=${currentRound}&priority=${isPriority}`)
+          : (quizId
+              ? `/pages/game-setup.html?quiz_id=${quizId}&game=listening&round=${currentRound}&priority=${isPriority}`
+              : `/pages/game-setup.html?mode=all&game=listening&round=${currentRound}&priority=${isPriority}`);
+        document.getElementById("btnExitGame").setAttribute("href", exitUrl);
+        document.getElementById("btnExitToSetup").addEventListener("click", () => window.location.href = exitUrl);
+
+        // 2. Fetch Data
+        async function loadItems() {
+          try {
+            if (contentType === "sentences") {
+              // --- Load Sentences ---
+              elQuizTitle.textContent = "Bộ câu";
+              let endpoint = `/api/v1/sentences?cards=${encodeURIComponent(cardsParam)}`;
+              if (sentenceSetId) endpoint += `&set_id=${encodeURIComponent(sentenceSetId)}`;
+              if (isPriority) {
+                endpoint += `&priority=true`;
+                document.getElementById("priorityBadge").style.display = "inline";
+                elBadgeRound.textContent = "🎯 Luyện tập";
+              } else {
+                endpoint += `&round=${encodeURIComponent(currentRound)}`;
+                elBadgeRound.textContent = `Màn ${currentRound}`;
+              }
+
+              const res = await fetch(endpoint);
+              if (!res.ok) throw new Error("Không thể tải danh sách câu");
+              const data = await res.json();
+              itemsList = (data || []).map((s) => ({
+                id: s.id,
+                chinese: s.chinese,
+                pinyin: s.pinyin || "",
+                vietnamese: s.vietnamese,
+                audio_url: s.audio_url,
+                audio_vi_url: s.audio_vi_url,
+              }));
+            } else {
+              // --- Load Cards ---
+              let allCards = [];
+              if (mode === "all") {
+                elQuizTitle.textContent = "Tất cả thẻ hệ thống";
+                allCards = await CardApi.getAll(isPriority);
+              } else {
+                const quizInfo = await QuizApi.getById(quizId);
+                elQuizTitle.textContent = quizInfo.title || "Bộ từ";
+                if (isPriority) {
+                  document.getElementById("priorityBadge").style.display = "inline";
+                  if (Auth.isLoggedIn()) {
+                    try { allCards = await QuizApi.getCardsPriority(quizId); }
+                    catch { allCards = await QuizApi.getCards(quizId); }
+                  } else {
+                    allCards = await QuizApi.getCards(quizId);
+                  }
+                } else {
+                  allCards = await QuizApi.getCards(quizId);
+                }
+              }
+
+              if (!allCards || allCards.length === 0) {
+                Toast.show("Không có thẻ nào khả dụng!", "warning");
+                return;
+              }
+
+              // Slice according to round
+              if (isAllCards) {
+                totalRounds = 1;
+                itemsList = allCards.map((c) => ({
+                  id: c.id,
+                  chinese: c.hanzi,
+                  pinyin: c.pinyin,
+                  vietnamese: c.vietnamese,
+                  audio_url: c.audio_url,
+                  audio_vi_url: c.audio_vi_url,
+                }));
+              } else {
+                const K = parseInt(cardsPerRound, 10) || 10;
+                totalRounds = Math.ceil(allCards.length / K) || 1;
+                let sliced = [];
+                if (isPriority) {
+                  sliced = allCards.slice(0, K);
+                  elBadgeRound.textContent = "🎯 Luyện tập";
+                } else {
+                  const startIdx = (currentRound - 1) * K;
+                  sliced = allCards.slice(startIdx, startIdx + K);
+                  elBadgeRound.textContent = `Màn ${currentRound}`;
+                }
+                itemsList = sliced.map((c) => ({
+                  id: c.id,
+                  chinese: c.hanzi,
+                  pinyin: c.pinyin,
+                  vietnamese: c.vietnamese,
+                  audio_url: c.audio_url,
+                  audio_vi_url: c.audio_vi_url,
+                }));
+              }
+            }
+
+            if (!itemsList.length) {
+              Toast.show("Màn này chưa có từ nào!", "warning");
+              return;
+            }
+
+            elTotalItems.textContent = itemsList.length;
+            renderPlaylistItem();
+            renderCard(0);
+
+            // Tự động phát khi tải xong
+            startPlaying();
+          } catch (err) {
+            console.error(err);
+            Toast.show("Lỗi tải dữ liệu luyện nghe", "error");
+          }
+        }
+
+        // 3. Render Card
+        function renderCard(idx) {
+          if (idx < 0 || idx >= itemsList.length) return;
+          currentIndex = idx;
+          const item = itemsList[idx];
+
+          elChinese.textContent = item.chinese || "";
+          elPinyin.textContent = item.pinyin || "";
+          elVietnamese.textContent = item.vietnamese || "";
+          elCurrentIdx.textContent = idx + 1;
+
+          const pct = ((idx + 1) / itemsList.length) * 100;
+          elProgressBarFill.style.width = `${pct}%`;
+
+          updateActivePlaylistItem();
+        }
+
+        // 4. Audio Playback Sequence Engine
+        function stopCurrentAudio() {
+          if (currentAudioObj) {
+            currentAudioObj.pause();
+            currentAudioObj.currentTime = 0;
+            currentAudioObj = null;
+          }
+          if (pauseTimer) {
+            clearTimeout(pauseTimer);
+            pauseTimer = null;
+          }
+          isSpeakingZh = false;
+          isSpeakingVi = false;
+          isPausingGap = false;
+          updatePlayerStateUI("idle");
+        }
+
+        function playSequenceForItem(idx) {
+          if (!isPlaying) return;
+          if (idx >= itemsList.length) {
+            // Hết danh sách
+            if (chkLoopPlaylist.checked) {
+              currentIndex = 0;
+              renderCard(0);
+              playSequenceForItem(0);
+            } else {
+              onRoundComplete();
+            }
+            return;
+          }
+
+          renderCard(idx);
+          const item = itemsList[idx];
+
+          // Bước 1: Phát tiếng Trung
+          playChineseAudio(item, () => {
+            if (!isPlaying) return;
+
+            // Bước 2: Dừng nghỉ (Gap pause)
+            updatePlayerStateUI("pause");
+            isPausingGap = true;
+
+            pauseTimer = setTimeout(() => {
+              isPausingGap = false;
+              if (!isPlaying) return;
+
+              // Bước 3: Phát tiếng Việt
+              playVietnameseAudio(item, () => {
+                if (!isPlaying) return;
+
+                // Nghỉ ngắn trước khi qua câu tiếp theo
+                updatePlayerStateUI("pause");
+                pauseTimer = setTimeout(() => {
+                  if (!isPlaying) return;
+                  if (chkAutoPlay.checked) {
+                    currentIndex++;
+                    playSequenceForItem(currentIndex);
+                  } else {
+                    stopPlaying();
+                  }
+                }, 800);
+              });
+            }, gapDuration);
+          });
+        }
+
+        function playChineseAudio(item, onEnded) {
+          stopCurrentAudio();
+          updatePlayerStateUI("zh");
+          isSpeakingZh = true;
+
+          if (item.audio_url) {
+            const audio = new Audio(item.audio_url);
+            audio.playbackRate = playbackRate;
+            currentAudioObj = audio;
+
+            audio.onended = () => {
+              isSpeakingZh = false;
+              onEnded();
+            };
+
+            audio.onerror = () => {
+              console.warn("Lỗi phát audio tiếng Trung, dùng Web Speech API");
+              fallbackSpeak(item.chinese, "zh-CN", onEnded);
+            };
+
+            audio.play().catch((e) => {
+              console.warn("Auto-play blocked or error:", e);
+              fallbackSpeak(item.chinese, "zh-CN", onEnded);
+            });
+          } else {
+            fallbackSpeak(item.chinese, "zh-CN", onEnded);
+          }
+        }
+
+        function playVietnameseAudio(item, onEnded) {
+          stopCurrentAudio();
+          updatePlayerStateUI("vi");
+          isSpeakingVi = true;
+
+          if (item.audio_vi_url) {
+            const audio = new Audio(item.audio_vi_url);
+            audio.playbackRate = playbackRate;
+            currentAudioObj = audio;
+
+            audio.onended = () => {
+              isSpeakingVi = false;
+              onEnded();
+            };
+
+            audio.onerror = () => {
+              console.warn("Lỗi phát audio tiếng Việt, dùng Web Speech API");
+              fallbackSpeak(item.vietnamese, "vi-VN", onEnded);
+            };
+
+            audio.play().catch((e) => {
+              console.warn("Auto-play blocked or error:", e);
+              fallbackSpeak(item.vietnamese, "vi-VN", onEnded);
+            });
+          } else {
+            fallbackSpeak(item.vietnamese, "vi-VN", onEnded);
+          }
+        }
+
+        function fallbackSpeak(text, lang, onEnded) {
+          if (!("speechSynthesis" in window)) {
+            setTimeout(onEnded, 1200);
+            return;
+          }
+          window.speechSynthesis.cancel();
+          const cleanText = text ? text.replace(/<[^>]*>/g, "").trim() : "";
+          if (!cleanText) {
+            onEnded();
+            return;
+          }
+          const utt = new SpeechSynthesisUtterance(cleanText);
+          utt.lang = lang;
+          utt.rate = playbackRate * (lang.startsWith("vi") ? 0.95 : 0.85);
+          utt.onend = () => onEnded();
+          utt.onerror = () => onEnded();
+          window.speechSynthesis.speak(utt);
+        }
+
+        function updatePlayerStateUI(state) {
+          elPlayerCard.classList.remove("speaking-zh", "speaking-vi", "pausing");
+          elStatusPill.classList.remove("zh", "vi", "pause");
+
+          if (state === "zh") {
+            elPlayerCard.classList.add("speaking-zh");
+            elStatusPill.classList.add("zh");
+            elStatusIcon.textContent = "🇨🇳";
+            elStatusText.textContent = "Phát Tiếng Trung";
+          } else if (state === "vi") {
+            elPlayerCard.classList.add("speaking-vi");
+            elStatusPill.classList.add("vi");
+            elStatusIcon.textContent = "🇻🇳";
+            elStatusText.textContent = "Nghĩa Tiếng Việt";
+          } else if (state === "pause") {
+            elPlayerCard.classList.add("pausing");
+            elStatusPill.classList.add("pause");
+            elStatusIcon.textContent = "⏱";
+            elStatusText.textContent = "Khoảng nghỉ...";
+          } else {
+            elStatusIcon.textContent = "🎧";
+            elStatusText.textContent = "Sẵn sàng";
+          }
+        }
+
+        // 5. Play / Pause Actions
+        function startPlaying() {
+          isPlaying = true;
+          elIconPlay.style.display = "none";
+          elIconPause.style.display = "block";
+          playSequenceForItem(currentIndex);
+        }
+
+        function stopPlaying() {
+          isPlaying = false;
+          elIconPlay.style.display = "block";
+          elIconPause.style.display = "none";
+          stopCurrentAudio();
+        }
+
+        elBtnPlayPause.addEventListener("click", () => {
+          if (isPlaying) {
+            stopPlaying();
+          } else {
+            startPlaying();
+          }
+        });
+
+        document.getElementById("btnNext").addEventListener("click", () => {
+          stopCurrentAudio();
+          if (currentIndex < itemsList.length - 1) {
+            currentIndex++;
+          } else {
+            currentIndex = 0;
+          }
+          if (isPlaying) {
+            playSequenceForItem(currentIndex);
+          } else {
+            renderCard(currentIndex);
+          }
+        });
+
+        document.getElementById("btnPrev").addEventListener("click", () => {
+          stopCurrentAudio();
+          if (currentIndex > 0) {
+            currentIndex--;
+          } else {
+            currentIndex = itemsList.length - 1;
+          }
+          if (isPlaying) {
+            playSequenceForItem(currentIndex);
+          } else {
+            renderCard(currentIndex);
+          }
+        });
+
+        document.getElementById("btnReplay").addEventListener("click", () => {
+          stopCurrentAudio();
+          if (isPlaying) {
+            playSequenceForItem(currentIndex);
+          } else {
+            renderCard(currentIndex);
+            startPlaying();
+          }
+        });
+
+        document.getElementById("btnSpeakZh").addEventListener("click", () => {
+          const item = itemsList[currentIndex];
+          if (!item) return;
+          stopPlaying();
+          playChineseAudio(item, () => updatePlayerStateUI("idle"));
+        });
+
+        document.getElementById("btnSpeakVi").addEventListener("click", () => {
+          const item = itemsList[currentIndex];
+          if (!item) return;
+          stopPlaying();
+          playVietnameseAudio(item, () => updatePlayerStateUI("idle"));
+        });
+
+        // 6. Settings controls
+        document.querySelectorAll("#gapGroup .pill-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            document.querySelectorAll("#gapGroup .pill-btn").forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            gapDuration = parseInt(btn.getAttribute("data-gap"), 10) || 1500;
+          });
+        });
+
+        document.querySelectorAll("#rateGroup .pill-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            document.querySelectorAll("#rateGroup .pill-btn").forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            playbackRate = parseFloat(btn.getAttribute("data-rate")) || 1.0;
+            if (currentAudioObj) currentAudioObj.playbackRate = playbackRate;
+          });
+        });
+
+        chkHideVietnamese.addEventListener("change", (e) => {
+          if (e.target.checked) {
+            elVietnamese.classList.add("hidden-blur");
+          } else {
+            elVietnamese.classList.remove("hidden-blur");
+          }
+        });
+
+        // 7. Playlist Drawer
+        const drawer = document.getElementById("playlistDrawer");
+        document.getElementById("btnTogglePlaylist").addEventListener("click", () => drawer.classList.add("open"));
+        document.getElementById("btnClosePlaylist").addEventListener("click", () => drawer.classList.remove("open"));
+
+        function renderPlaylistItem() {
+          const container = document.getElementById("playlistContainer");
+          container.innerHTML = itemsList
+            .map(
+              (item, idx) => `
+            <div class="playlist-item" data-idx="${idx}">
+              <div style="text-align: left;">
+                <span style="font-weight: 700; font-size: 1.1rem; color: var(--text);">${escapeHtml(item.chinese)}</span>
+                <span style="color: var(--accent); font-size: var(--fs-xs); margin-left: 8px;">${escapeHtml(item.pinyin || "")}</span>
+                <div style="font-size: var(--fs-xs); color: var(--text-2);">${escapeHtml(item.vietnamese || "")}</div>
+              </div>
+              <span style="font-size: var(--fs-xs); color: var(--text-2); font-weight: 600;">#${idx + 1}</span>
+            </div>
+          `,
+            )
+            .join("");
+
+          container.querySelectorAll(".playlist-item").forEach((el) => {
+            el.addEventListener("click", () => {
+              const idx = parseInt(el.getAttribute("data-idx"), 10);
+              drawer.classList.remove("open");
+              stopCurrentAudio();
+              currentIndex = idx;
+              if (isPlaying) {
+                playSequenceForItem(currentIndex);
+              } else {
+                renderCard(currentIndex);
+                startPlaying();
+              }
+            });
+          });
+        }
+
+        function updateActivePlaylistItem() {
+          document.querySelectorAll(".playlist-item").forEach((el, idx) => {
+            if (idx === currentIndex) {
+              el.classList.add("active");
+            } else {
+              el.classList.remove("active");
+            }
+          });
+        }
+
+        // 8. Round Completion
+        function onRoundComplete() {
+          stopPlaying();
+          const modal = document.getElementById("modalComplete");
+          modal.style.display = "flex";
+
+          // Listening là chế độ nghe thụ động, không tính điểm đúng/sai và không đánh dấu đã thuộc
+
+
+          // Check if there is next round
+          const btnNextRound = document.getElementById("btnNextRound");
+          if (currentRound < totalRounds && !isPriority) {
+            btnNextRound.style.display = "block";
+            const nextRoundUrl = contentType === "sentences"
+              ? `/pages/games/listening.html?type=sentences&${sentenceSetId ? `sentence_set_id=${sentenceSetId}&` : ""}cards=${cardsPerRound}&priority=false&round=${currentRound + 1}`
+              : `/pages/games/listening.html?type=cards&${quizId ? `quiz_id=${quizId}&` : "mode=all&"}cards=${cardsPerRound}&priority=false&round=${currentRound + 1}`;
+            btnNextRound.onclick = () => window.location.href = nextRoundUrl;
+          } else {
+            btnNextRound.style.display = "none";
+          }
+        }
+
+        document.getElementById("btnReplayRound").addEventListener("click", () => {
+          document.getElementById("modalComplete").style.display = "none";
+          currentIndex = 0;
+          renderCard(0);
+          startPlaying();
+        });
+
+        function escapeHtml(str) {
+          if (!str) return "";
+          return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+
+        // Keyboard shortcuts
+        window.addEventListener("keydown", (e) => {
+          if (e.code === "Space") {
+            e.preventDefault();
+            if (isPlaying) stopPlaying();
+            else startPlaying();
+          } else if (e.code === "ArrowRight") {
+            document.getElementById("btnNext").click();
+          } else if (e.code === "ArrowLeft") {
+            document.getElementById("btnPrev").click();
+          }
+        });
+
+        loadItems();
+      })();
+    </script>
+    <script src="/static/js/pwa.js?v={{ v }}"></script>
+  </body>
+</html>

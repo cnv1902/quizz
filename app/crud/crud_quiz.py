@@ -65,16 +65,19 @@ def update(db: Session, quiz: Quiz, **fields) -> Optional[Quiz]:
 
 
 def delete(db: Session, quiz: Quiz) -> bool:
-    """Xóa quiz, tất cả thẻ liên quan (cascade) và các file âm thanh tương ứng."""
+    """Xóa quiz, tất cả thẻ liên quan (cascade) và các file âm thanh tương ứng (Trung & Việt)."""
     try:
         from app.models.card import Card
-        cards_audio = [
-            r[0]
-            for r in db.query(Card.audio_url)
-            .filter(Card.quiz_id == quiz.id, Card.audio_url.isnot(None))
+        cards_rows = (
+            db.query(Card.audio_url, Card.audio_vi_url)
+            .filter(Card.quiz_id == quiz.id)
             .all()
-            if r[0]
-        ]
+        )
+        cards_audio = []
+        for r in cards_rows:
+            if r[0]: cards_audio.append(r[0])
+            if r[1]: cards_audio.append(r[1])
+
         db.delete(quiz)
         db.commit()
         if cards_audio:

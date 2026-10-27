@@ -10,6 +10,7 @@ class CardBase(BaseModel):
     hanzi: str
     order_index: int = 0
     audio_url: Optional[str] = None
+    audio_vi_url: Optional[str] = None
 
 
 class CardCreate(CardBase):
@@ -24,6 +25,7 @@ class CardUpdate(BaseModel):
     hanzi: Optional[str] = None
     order_index: Optional[int] = None
     audio_url: Optional[str] = None
+    audio_vi_url: Optional[str] = None
 
 
 class CardResponse(CardBase):
@@ -31,6 +33,7 @@ class CardResponse(CardBase):
     id: int
     quiz_id: int
     audio_url: Optional[str] = None
+    audio_vi_url: Optional[str] = None
     created_at: datetime
     # Thống kê cá nhân (optional, chỉ có khi user đã đăng nhập)
     correct_count: Optional[int] = 0

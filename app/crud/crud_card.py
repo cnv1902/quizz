@@ -33,7 +33,7 @@ def get_by_quiz_with_priority(
     """
     sql = text("""
         SELECT
-            c.id, c.quiz_id, c.vietnamese, c.pinyin, c.hanzi, c.order_index, c.audio_url, c.created_at,
+            c.id, c.quiz_id, c.vietnamese, c.pinyin, c.hanzi, c.order_index, c.audio_url, c.audio_vi_url, c.created_at,
             COALESCE(s.correct_count, 0) AS correct_count,
             COALESCE(s.wrong_count, 0)   AS wrong_count,
             COALESCE(s.wrong_count, 0) - COALESCE(s.correct_count, 0) AS priority
@@ -53,7 +53,7 @@ def get_all_with_priority(db: Session, user_id: int) -> List[Dict[str, Any]]:
     """
     sql = text("""
         SELECT
-            c.id, c.quiz_id, c.vietnamese, c.pinyin, c.hanzi, c.order_index, c.audio_url, c.created_at,
+            c.id, c.quiz_id, c.vietnamese, c.pinyin, c.hanzi, c.order_index, c.audio_url, c.audio_vi_url, c.created_at,
             COALESCE(s.correct_count, 0) AS correct_count,
             COALESCE(s.wrong_count, 0)   AS wrong_count,
             COALESCE(s.wrong_count, 0) - COALESCE(s.correct_count, 0) AS priority
@@ -124,14 +124,14 @@ def update(db: Session, card: Card, **fields) -> Optional[Card]:
 
 
 def delete(db: Session, card: Card) -> bool:
-    """Xóa thẻ và dọn dẹp file âm thanh tương ứng."""
+    """Xóa thẻ và dọn dẹp file âm thanh tương ứng (Trung & Việt)."""
     try:
-        audio_url = card.audio_url
+        urls_to_delete = [u for u in [card.audio_url, card.audio_vi_url] if u]
         db.delete(card)
         db.commit()
-        if audio_url:
-            from app.services.voice_service import delete_audio_file
-            delete_audio_file(db, audio_url)
+        if urls_to_delete:
+            from app.services.voice_service import delete_audio_files
+            delete_audio_files(db, urls_to_delete)
         return True
     except Exception as e:
         db.rollback()
@@ -141,13 +141,16 @@ def delete(db: Session, card: Card) -> bool:
 def delete_by_quiz(db: Session, quiz_id: int) -> int:
     """Xóa tất cả thẻ của 1 quiz (dùng khi re-import Excel) và dọn file âm thanh."""
     try:
-        cards_audio = [
-            r[0]
-            for r in db.query(Card.audio_url)
-            .filter(Card.quiz_id == quiz_id, Card.audio_url.isnot(None))
+        cards_rows = (
+            db.query(Card.audio_url, Card.audio_vi_url)
+            .filter(Card.quiz_id == quiz_id)
             .all()
-            if r[0]
-        ]
+        )
+        cards_audio = []
+        for r in cards_rows:
+            if r[0]: cards_audio.append(r[0])
+            if r[1]: cards_audio.append(r[1])
+
         count = db.query(Card).filter(Card.quiz_id == quiz_id).delete()
         db.commit()
         if cards_audio:
@@ -162,13 +165,16 @@ def delete_by_quiz(db: Session, quiz_id: int) -> int:
 def bulk_delete(db: Session, card_ids: List[int]) -> int:
     """Xóa nhiều thẻ theo danh sách card_ids và dọn file âm thanh."""
     try:
-        cards_audio = [
-            r[0]
-            for r in db.query(Card.audio_url)
-            .filter(Card.id.in_(card_ids), Card.audio_url.isnot(None))
+        cards_rows = (
+            db.query(Card.audio_url, Card.audio_vi_url)
+            .filter(Card.id.in_(card_ids))
             .all()
-            if r[0]
-        ]
+        )
+        cards_audio = []
+        for r in cards_rows:
+            if r[0]: cards_audio.append(r[0])
+            if r[1]: cards_audio.append(r[1])
+
         count = db.query(Card).filter(Card.id.in_(card_ids)).delete(synchronize_session=False)
         db.commit()
         if cards_audio:
@@ -178,5 +184,6 @@ def bulk_delete(db: Session, card_ids: List[int]) -> int:
     except Exception as e:
         db.rollback()
         raise e
+
 
 
