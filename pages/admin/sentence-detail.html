@@ -126,13 +126,13 @@
             ＋ Thêm câu
           </button>
           <button type="button" class="btn btn-secondary" id="btnOpenBulkAdd">
-            📋 Nhập hàng loạt
+            Nhập hàng loạt
           </button>
           <button type="button" class="btn btn-secondary" id="btnOpenImport">
-            📥 Import Excel
+            Import Excel
           </button>
           <a href="#" id="btnPlayGame" class="btn btn-secondary" target="_blank" title="Chơi thử bộ câu này">
-            🎮 Luyện tập ↗
+            Luyện tập ↗
           </a>
         </div>
       </div>
@@ -140,7 +140,7 @@
       <!-- Toolbar -->
       <div class="toolbar">
         <div class="search-box">
-          <span class="search-icon">🔍</span>
+          <span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
           <input
             type="text"
             id="searchInput"
@@ -159,7 +159,7 @@
               id="btnBulkDeleteOpen"
               style="padding: 3px 8px; font-size: var(--fs-xs)"
             >
-              🗑️ Xóa đã chọn
+              Xóa đã chọn
             </button>
             <button
               type="button"
@@ -317,7 +317,7 @@
     <div class="modal-overlay" id="bulkAddModal">
       <div class="modal-card" style="max-width: 680px">
         <div class="modal-header">
-          <h3 class="modal-title">📋 Nhập Câu Ghép Hàng Loạt</h3>
+          <h3 class="modal-title">Nhập Câu Ghép Hàng Loạt</h3>
           <button class="modal-close" data-close="bulkAddModal">&times;</button>
         </div>
         <form id="bulkAddForm">
@@ -355,7 +355,7 @@
     <div class="modal-overlay" id="importModal">
       <div class="modal-card">
         <div class="modal-header">
-          <h3 class="modal-title">📥 Import File Excel vào Bộ Câu</h3>
+          <h3 class="modal-title">Import File Excel vào Bộ Câu</h3>
           <button class="modal-close" data-close="importModal">&times;</button>
         </div>
         <form id="importForm">
@@ -370,7 +370,9 @@
             <div class="form-group">
               <label class="form-label">Chọn file Excel (.xlsx, .xls) hoặc CSV (.csv)</label>
               <div id="dropZone" style="border: 2px dashed var(--border); border-radius: var(--r-md); padding: var(--s-6) var(--s-4); text-align: center; cursor: pointer;">
-                <div style="font-size: 2rem; margin-bottom: var(--s-2)">📄</div>
+                <div style="margin-bottom: var(--s-2)">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="color: var(--accent);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                </div>
                 <div style="font-weight: 600; margin-bottom: var(--s-1)">
                   Kéo thả file vào đây hoặc <span style="color: var(--accent)">chọn từ máy tính</span>
                 </div>
@@ -384,7 +386,7 @@
 
             <div style="text-align: right">
               <a href="/api/v1/sentences/template" style="font-size: var(--fs-xs); color: var(--accent); text-decoration: none" download>
-                📥 Tải file Excel mẫu 3 cột chuẩn (.xlsx)
+                Tải file Excel mẫu 3 cột chuẩn (.xlsx)
               </a>
             </div>
           </div>
@@ -479,7 +481,7 @@
             document.getElementById("tableBody").innerHTML = `
               <tr>
                 <td colspan="6" class="empty-table">
-                  <span class="empty-icon">❌</span>
+                  <span class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="color: var(--danger);"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></span>
                   <div>Lỗi tải dữ liệu. Vui lòng thử lại sau.</div>
                 </td>
               </tr>
@@ -515,7 +517,7 @@
             const emptyRow = document.createElement("tr");
             emptyRow.innerHTML = `
               <td colspan="6" class="empty-table">
-                <span class="empty-icon">📭</span>
+                <span class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="color: var(--text-3);"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg></span>
                 <div>Chưa có câu nào trong bộ này hoặc không khớp với tìm kiếm.</div>
               </td>
             `;
@@ -535,7 +537,7 @@
                   data-text="${encodeURIComponent(item.chinese || '')}"
                   title="Nghe phát âm chuẩn"
                 >
-                  🔊
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
                 </button>
               `;
 
@@ -563,7 +565,7 @@
                       data-id="${item.id}"
                       style="padding: 3px 6px; font-size: var(--fs-xs)"
                     >
-                      ✏️ Sửa
+                      Sửa
                     </button>
                     <button
                       type="button"
@@ -572,7 +574,7 @@
                       data-chinese="${encodeURIComponent(item.chinese)}"
                       style="padding: 3px 6px; font-size: var(--fs-xs); color: var(--danger)"
                     >
-                      🗑️ Xóa
+                      Xóa
                     </button>
                   </td>
                 </tr>

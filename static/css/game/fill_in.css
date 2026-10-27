@@ -320,7 +320,6 @@
   justify-content: center;
   z-index: 1000;
   padding: var(--s-4);
-  backdrop-filter: blur(2px);
 }
 
 .game-over-modal.show {

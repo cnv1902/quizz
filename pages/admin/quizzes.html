@@ -64,7 +64,7 @@
         </div>
         <div class="header-actions">
           <button class="btn btn-secondary" id="btnDownloadTemplate">
-            📥 Tải mẫu Excel (3 cột)
+            Tải mẫu Excel (3 cột)
           </button>
           <button class="btn btn-primary" id="btnOpenCreateQuiz">
             + Tạo Quizz mới
@@ -77,7 +77,7 @@
         <div class="admin-stat-card">
           <div class="admin-stat-top">
             <div class="admin-stat-value" id="statTotalQuizzes">0</div>
-            <div class="admin-stat-icon">📚</div>
+            <div class="admin-stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path><path d="M6 6h10"></path><path d="M6 10h10"></path></svg></div>
           </div>
           <div class="admin-stat-label">Tổng số Quizz</div>
           <div class="admin-stat-action">
@@ -87,7 +87,7 @@
         <div class="admin-stat-card">
           <div class="admin-stat-top">
             <div class="admin-stat-value" id="statTotalCards">0</div>
-            <div class="admin-stat-icon">📇</div>
+            <div class="admin-stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect width="18" height="18" x="3" y="3" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg></div>
           </div>
           <div class="admin-stat-label">Tổng số Thẻ</div>
           <div class="admin-stat-action">
@@ -97,7 +97,7 @@
         <div class="admin-stat-card">
           <div class="admin-stat-top">
             <div class="admin-stat-value" id="statActiveQuizzes">0</div>
-            <div class="admin-stat-icon">✨</div>
+            <div class="admin-stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
           </div>
           <div class="admin-stat-label">Đang kích hoạt</div>
           <div class="admin-stat-action">
@@ -110,7 +110,7 @@
       <!-- Toolbar -->
       <div class="toolbar">
         <div class="search-box">
-          <span class="search-icon">🔍</span>
+          <span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
           <input
             type="text"
             id="searchInput"
@@ -321,7 +321,7 @@
             không?
           </p>
           <p style="color: var(--danger); font-size: var(--fs-xs); margin-top: var(--s-2)">
-            ⚠️ Lưu ý: Toàn bộ thẻ từ vựng và lịch sử kết quả của quizz này sẽ bị
+            Lưu ý: Toàn bộ thẻ từ vựng và lịch sử kết quả của quizz này sẽ bị
             xóa vĩnh viễn!
           </p>
         </div>
@@ -392,7 +392,7 @@
             document.getElementById("quizTableBody").innerHTML = `
             <tr>
               <td colspan="7" class="empty-table">
-                <span class="empty-icon">⚠️</span>
+                <span class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="color: var(--danger);"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></span>
                 <div>Không thể tải dữ liệu: ${escapeHtml(err.message)}</div>
                 <button class="btn btn-secondary btn-sm mt-md" onclick="location.reload()">Thử lại</button>
               </td>
@@ -438,7 +438,7 @@
             tbody.innerHTML = `
             <tr>
               <td colspan="7" class="empty-table">
-                <span class="empty-icon">📭</span>
+                <span class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="color: var(--text-3);"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg></span>
                 <div>Không tìm thấy quizz nào phù hợp</div>
               </td>
             </tr>
@@ -474,16 +474,16 @@
               <td>
                 <div class="table-actions">
                   <a href="/pages/admin/quiz-detail.html?quiz_id=${item.id}" class="btn-icon" title="Quản lý thẻ">
-                    📇
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect width="18" height="18" x="3" y="3" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
                   </a>
                   <button class="btn-icon" title="Import Excel" onclick="openImportModal(${item.id}, '${escapeAttr(item.title)}')">
-                    📥
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                   </button>
                   <button class="btn-icon" title="Sửa Quizz" onclick="openEditModal(${item.id})">
-                    ✏️
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
                   </button>
                   <button class="btn-icon btn-icon-danger" title="Xóa Quizz" onclick="openDeleteModal(${item.id}, '${escapeAttr(item.title)}')">
-                    🗑️
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>
                 </div>
               </td>
@@ -631,7 +631,7 @@
             return;
           }
           selectedFile = file;
-          fileInfo.textContent = `📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+          fileInfo.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
           fileInfo.style.display = "block";
           btnSubmitImport.disabled = false;
         }

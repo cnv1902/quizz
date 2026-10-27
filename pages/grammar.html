@@ -120,7 +120,7 @@
         display: flex;
         align-items: center;
         gap: 6px;
-        transition: all 120ms ease;
+        transition: color 120ms ease, background-color 120ms ease;
       }
 
       .view-toggle button.active {
@@ -194,7 +194,7 @@
         justify-content: center;
         cursor: pointer;
         color: var(--text-2);
-        transition: all 120ms ease;
+        transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
       }
 
       .btn-audio:hover {
@@ -368,7 +368,7 @@
   </head>
   <body>
     <!-- Navbar đồng nhất 100% index.html -->
-    <nav class="navbar" style="position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); backdrop-filter: blur(8px);">
+    <nav class="navbar" style="position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border);">
       <div style="display: flex; align-items: center; gap: var(--s-4);">
         <a href="/" class="navbar-brand">
           <img src="/static/img/HanziQuizz-Favicon.png" alt="HanziQuizz Logo" />
@@ -378,6 +378,7 @@
           <a href="/" class="btn btn-ghost btn-sm">Học từ</a>
           <a href="/pages/measure-words.html" class="btn btn-ghost btn-sm">Lượng từ</a>
           <a href="/pages/grammar.html" class="btn btn-ghost btn-sm" style="color:var(--accent); font-weight:600;">Ngữ pháp</a>
+          <a href="/pages/custom-speech.html" class="btn btn-ghost btn-sm">Đọc văn bản</a>
         </div>
       </div>
       <div class="navbar-nav" id="navActions">
@@ -396,7 +397,7 @@
         </div>
         <div id="adminActionWrap" style="display: none;">
           <a href="/pages/admin/grammar.html" class="btn btn-secondary btn-sm">
-            ⚙️ Quản trị ngữ pháp
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px; vertical-align:-2px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Quản trị ngữ pháp
           </a>
         </div>
       </header>
@@ -545,7 +546,7 @@
             cardsView.classList.add("is-empty");
             const emptyHtml = `
               <div class="empty-state">
-                <div style="font-size: 2rem; margin-bottom: var(--s-2);">📖</div>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-3); margin-bottom: var(--s-2);"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
                 <h3 style="font-size: var(--fs-body); font-weight: 600; margin-bottom: var(--s-1);">Chưa có điểm ngữ pháp nào</h3>
                 <p style="font-size: var(--fs-sm); color: var(--text-2); margin: 0;">Dữ liệu ngữ pháp hiện đang trống hoặc không khớp với tìm kiếm.</p>
               </div>

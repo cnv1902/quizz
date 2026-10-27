@@ -158,16 +158,16 @@
             ＋ Thêm nhanh
           </button>
           <button type="button" class="btn btn-secondary" id="btnOpenBulkAdd">
-            📋 Nhập hàng loạt
+            Nhập hàng loạt
           </button>
           <button type="button" class="btn btn-secondary" id="btnOpenImport">
-            📥 Import Excel
+            Import Excel
           </button>
           <a href="/api/v1/measure-words/template" class="btn btn-secondary" title="Tải file Excel mẫu" download>
-            📄 Tải file mẫu
+            Tải file mẫu
           </a>
           <a href="/pages/measure-words.html" target="_blank" class="btn btn-secondary" title="Xem giao diện người học">
-            👁️ Xem trang học ↗
+            Xem trang học ↗
           </a>
         </div>
       </div>
@@ -175,7 +175,7 @@
       <!-- Toolbar -->
       <div class="toolbar">
         <div class="search-box">
-          <span class="search-icon">🔍</span>
+          <span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
           <input
             type="text"
             id="searchInput"
@@ -194,7 +194,7 @@
               id="btnBulkDeleteOpen"
               style="padding: 3px 8px; font-size: var(--fs-xs)"
             >
-              🗑️ Xóa đã chọn
+              Xóa đã chọn
             </button>
             <button
               type="button"
@@ -352,7 +352,7 @@
     <div class="modal-overlay" id="bulkAddModal">
       <div class="modal-card" style="max-width: 680px">
         <div class="modal-header">
-          <h3 class="modal-title">📋 Nhập Lượng Từ Hàng Loạt</h3>
+          <h3 class="modal-title">Nhập Lượng Từ Hàng Loạt</h3>
           <button class="modal-close" data-close="bulkAddModal">&times;</button>
         </div>
         <form id="bulkAddForm">
@@ -401,7 +401,7 @@
     <div class="modal-overlay" id="importModal">
       <div class="modal-card">
         <div class="modal-header">
-          <h3 class="modal-title">📥 Import Lượng Từ từ File Excel (.xlsx / .csv)</h3>
+          <h3 class="modal-title">Import Lượng Từ từ File Excel (.xlsx / .csv)</h3>
           <button class="modal-close" data-close="importModal">&times;</button>
         </div>
         <form id="importForm">
@@ -431,7 +431,9 @@
             </div>
 
             <div class="dropzone" id="excelDropzone">
-              <div class="dropzone-icon">📊</div>
+              <div class="dropzone-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="color: var(--accent);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+              </div>
               <div class="dropzone-title">Kéo & thả file Excel/CSV vào đây</div>
               <div class="dropzone-desc">hoặc nhấp chuột để chọn file</div>
               <input
@@ -552,8 +554,10 @@
             const tr = document.createElement("tr");
             tr.innerHTML = `
               <td colspan="6" class="empty-table">
-                <span class="empty-icon">📂</span>
-                <div>Chưa có lượng từ nào. Hãy bấm "＋ Thêm nhanh", "📋 Nhập hàng loạt" hoặc "📥 Import Excel".</div>
+                <span class="empty-icon">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="color: var(--text-3);"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></svg>
+                </span>
+                <div>Chưa có lượng từ nào. Hãy bấm "＋ Thêm nhanh", "Nhập hàng loạt" hoặc "Import Excel".</div>
               </td>
             `;
             tableBody.appendChild(tr);
@@ -574,7 +578,7 @@
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span class="hanzi-text">${escapeHtml(item.hanzi)}</span>
                   <button type="button" class="btn-audio-sm" data-speak="${escapeHtml(item.hanzi)}" data-audio="${escapeHtml(item.audio_url || '')}" title="Phát âm tiếng Trung">
-                    🔊
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
                   </button>
                 </div>
               </td>
@@ -582,10 +586,10 @@
               <td style="vertical-align: top;">${formatRichContent(item.vietnamese || '')}</td>
               <td style="text-align: right; white-space: nowrap;">
                 <button type="button" class="btn btn-ghost btn-sm btn-edit" data-id="${item.id}" title="Chỉnh sửa">
-                  ✏️
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
                 </button>
                 <button type="button" class="btn btn-ghost btn-sm btn-delete" data-id="${item.id}" title="Xóa" style="color: var(--danger);">
-                  🗑️
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
               </td>
             `;
@@ -929,7 +933,7 @@
 
         function handleFileSelect(file) {
           selectedFile = file;
-          fileInfo.textContent = `📄 Đã chọn: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+          fileInfo.textContent = `Đã chọn: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
           btnSubmitImport.disabled = false;
         }
 

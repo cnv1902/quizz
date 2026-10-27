@@ -39,4 +39,5 @@ def create_tables():
     import app.models.sentence_set       # noqa: F401
     import app.models.sentence           # noqa: F401
     import app.models.user_sentence_stat # noqa: F401
+    import app.models.custom_speech      # noqa: F401
     Base.metadata.create_all(bind=engine)

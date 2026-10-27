@@ -58,11 +58,11 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 4px 14px;
-        background: rgba(244, 63, 94, 0.12);
-        color: #f43f5e;
-        border: 1px solid rgba(244, 63, 94, 0.25);
-        border-radius: var(--r-full);
+        padding: 4px 12px;
+        background: var(--danger-soft);
+        color: var(--danger);
+        border: 1px solid var(--border);
+        border-radius: var(--r-sm);
         font-size: 0.82rem;
         font-weight: 700;
         text-transform: uppercase;
@@ -74,12 +74,9 @@
         font-size: clamp(3.5rem, 12vw, 5.5rem);
         font-weight: 900;
         line-height: 1;
-        color: var(--text);
+        color: var(--accent);
         letter-spacing: -0.04em;
         margin-bottom: var(--s-2);
-        background: linear-gradient(135deg, var(--text) 30%, var(--accent) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
       }
 
       .error-title {
@@ -127,7 +124,7 @@
     <main class="error-container">
       <div class="error-card">
         <div class="error-badge">
-          <span>⚠️ 404 &middot; Quyền truy cập</span>
+          <span>404 &middot; Quyền truy cập</span>
         </div>
         <div class="error-code">404</div>
         <h1 class="error-title">Không tìm thấy hoặc không có quyền</h1>
@@ -137,10 +134,10 @@
 
         <div class="error-actions">
           <a href="/" class="btn btn-primary">
-            🏠 Về trang chủ
+            Về trang chủ
           </a>
           <a href="/pages/login.html" class="btn btn-secondary">
-            🔑 Đăng nhập Quản trị
+            Đăng nhập Quản trị
           </a>
         </div>
 

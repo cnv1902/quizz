@@ -234,7 +234,6 @@
         const questionDir = urlParams.get("dir") || "hanzi_viet";
 
         if (!quizId && mode !== "all") {
-          alert("Thiếu thông tin bộ đề");
           window.location.href = "/";
           return;
         }
@@ -388,7 +387,6 @@
           }
 
           if (!allCards || allCards.length < 4) {
-            alert("Bộ đề cần ít nhất 4 thẻ từ để chơi trắc nghiệm!");
             window.location.href = "/";
             return;
           }
@@ -415,8 +413,7 @@
           startTimer();
           renderQuestion();
         } catch (err) {
-          console.error(err);
-          alert("Không thể tải dữ liệu câu hỏi!");
+          console.error("Error loading quiz questions:", err);
         }
 
         // Render Single Question với chiều học linh hoạt

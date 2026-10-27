@@ -349,7 +349,7 @@
         font-size: var(--fs-sm);
         font-weight: 500;
         cursor: pointer;
-        transition: all 120ms ease;
+        transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
         text-align: center;
       }
       .preset-chip:hover {
@@ -390,7 +390,6 @@
         z-index: 100;
         background: var(--bg);
         border-bottom: 1px solid var(--border);
-        backdrop-filter: blur(8px);
       "
     >
       <div style="display: flex; align-items: center; gap: var(--s-4)">
@@ -410,6 +409,9 @@
           >
           <a href="/pages/grammar.html" class="btn btn-ghost btn-sm"
             >Ngữ pháp</a
+          >
+          <a href="/pages/custom-speech.html" class="btn btn-ghost btn-sm"
+            >Đọc văn bản</a
           >
         </div>
       </div>
@@ -632,6 +634,37 @@
               </div>
             </div>
           </a>
+
+          <a
+            href="/pages/custom-speech.html"
+            class="game-mode-card"
+          >
+            <div class="game-mode-icon-box">
+              <!-- Icon Text Speech / Audio Article -->
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </div>
+            <div class="game-mode-info">
+              <div class="game-mode-name">Đọc văn bản</div>
+              <div class="game-mode-desc">
+                Dán văn bản tự do, đọc chuẩn giọng Trung & Việt
+              </div>
+            </div>
+          </a>
         </div>
       </section>
 
@@ -849,10 +882,11 @@
           const isAdmin = Auth.isAdmin();
           const userName = user?.full_name || user?.username || "Bạn";
 
+          const gearIcon = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px; vertical-align:-2px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
           if (isAuth) {
             nav.innerHTML = `
               ${isAdmin ? `<a href="/pages/admin/quizzes.html" class="btn btn-ghost btn-sm" style="color:var(--text-2);">Quản trị</a>` : ""}
-              <button class="btn btn-secondary btn-sm" id="btnOpenConfig" title="Cấu hình số thẻ mỗi màn">⚙️ Cấu hình</button>
+              <button class="btn btn-secondary btn-sm" id="btnOpenConfig" title="Cấu hình số thẻ mỗi màn">${gearIcon}Cấu hình</button>
               <span style="color:var(--text-2); font-size:var(--fs-sm); font-weight:500;">${escapeHtml(userName)}</span>
               <button class="btn btn-ghost btn-sm" id="logoutBtn" title="Đăng xuất">Đăng xuất</button>
             `;
@@ -864,7 +898,7 @@
               });
           } else {
             nav.innerHTML = `
-              <button class="btn btn-ghost btn-sm" id="btnOpenConfig" title="Cấu hình số thẻ mỗi màn">⚙️ Cấu hình</button>
+              <button class="btn btn-ghost btn-sm" id="btnOpenConfig" title="Cấu hình số thẻ mỗi màn">${gearIcon}Cấu hình</button>
               <a href="/pages/login.html" class="btn btn-secondary btn-sm">Đăng nhập</a>
               <a href="/pages/register.html" class="btn btn-primary btn-sm">Đăng ký</a>
             `;

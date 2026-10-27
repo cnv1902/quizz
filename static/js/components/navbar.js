@@ -50,6 +50,7 @@
     const isHome = currentPath === "/" || currentPath.endsWith("/index.html") || currentPath === "";
     const isMeasureWords = currentPath.includes("measure-words");
     const isGrammar = currentPath.includes("grammar");
+    const isCustomSpeech = currentPath.includes("custom-speech");
     const isGameSetup = currentPath.includes("game-setup");
 
     const displayName = user?.full_name || user?.username || "Bạn";
@@ -105,6 +106,15 @@
             <line x1="12" y1="4" x2="12" y2="20"></line>
           </svg>
           <span>Cẩm nang ngữ pháp</span>
+        </a>
+
+        <a href="/pages/custom-speech.html" class="mobile-drawer-link ${isCustomSpeech ? 'active' : ''}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 18.5a6.5 6.5 0 0 0 6.5-6.5V6.5a6.5 6.5 0 0 0-13 0V12a6.5 6.5 0 0 0 6.5 6.5Z"></path>
+            <path d="M12 18.5V22"></path>
+            <path d="M8.5 22h7"></path>
+          </svg>
+          <span>Đọc văn bản</span>
         </a>
 
         <div class="mobile-drawer-divider"></div>

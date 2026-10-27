@@ -154,7 +154,7 @@
         cursor: pointer;
         text-decoration: none;
         color: var(--text);
-        transition: all 150ms cubic-bezier(0.2, 0.7, 0.2, 1);
+        transition: color 150ms cubic-bezier(0.2, 0.7, 0.2, 1), background-color 150ms cubic-bezier(0.2, 0.7, 0.2, 1), border-color 150ms cubic-bezier(0.2, 0.7, 0.2, 1), transform 150ms cubic-bezier(0.2, 0.7, 0.2, 1);
         user-select: none;
       }
 
@@ -166,7 +166,7 @@
 
       .game-btn.active {
         border-color: var(--accent);
-        background: rgba(30, 168, 150, 0.12);
+        background: var(--accent-soft);
         color: var(--accent);
         box-shadow: 0 0 0 2px var(--accent);
         font-weight: 700;
@@ -221,7 +221,7 @@
         color: var(--text);
         font-family: inherit;
         white-space: nowrap;
-        transition: all 150ms cubic-bezier(0.2, 0.7, 0.2, 1);
+        transition: color 150ms cubic-bezier(0.2, 0.7, 0.2, 1), background-color 150ms cubic-bezier(0.2, 0.7, 0.2, 1), border-color 150ms cubic-bezier(0.2, 0.7, 0.2, 1), transform 150ms cubic-bezier(0.2, 0.7, 0.2, 1);
       }
 
       .round-tile:hover {
@@ -243,7 +243,7 @@
         min-width: 100px;
         border: 1.5px dashed var(--border-strong);
         color: var(--text);
-        background: rgba(30, 168, 150, 0.04);
+        background: var(--surface-2);
       }
 
       .round-tile.practice-tile:hover {
@@ -268,23 +268,23 @@
         background: var(--accent);
         color: #fff;
         border: none;
-        border-radius: var(--r-md);
+        border-radius: var(--r-sm);
         font-size: clamp(1rem, 2vw, 1.15rem);
-        font-weight: 700;
+        font-weight: 600;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 10px;
         text-decoration: none;
-        transition: all 180ms ease;
-        box-shadow: 0 4px 16px rgba(30, 168, 150, 0.35);
+        transition: background-color 180ms ease, transform 180ms ease;
+        box-shadow: var(--shadow-1);
       }
 
       .btn-start-game:hover {
-        filter: brightness(1.08);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(30, 168, 150, 0.45);
+        background: var(--accent-hover);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-2);
       }
 
       /* === Responsive Breakpoints (3 dạng thiết bị) === */
@@ -363,7 +363,7 @@
         font-size: var(--fs-sm);
         font-weight: 500;
         cursor: pointer;
-        transition: all 120ms ease;
+        transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
         text-align: center;
       }
       .preset-chip:hover {
@@ -397,7 +397,7 @@
   </head>
   <body>
     <div class="setup-page">
-      <nav class="navbar" style="position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); backdrop-filter: blur(8px);">
+      <nav class="navbar" style="position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border);">
         <div style="display: flex; align-items: center; gap: var(--s-4);">
           <a href="/" class="navbar-brand">
             <img src="/static/img/HanziQuizz-Favicon.png" alt="HanziQuizz Logo" />
@@ -407,13 +407,14 @@
             <a href="/" class="btn btn-ghost btn-sm">Học từ</a>
             <a href="/pages/measure-words.html" class="btn btn-ghost btn-sm">Lượng từ</a>
             <a href="/pages/grammar.html" class="btn btn-ghost btn-sm">Ngữ pháp</a>
+            <a href="/pages/custom-speech.html" class="btn btn-ghost btn-sm">Đọc văn bản</a>
           </div>
         </div>
         <div
           id="navUser"
           style="display: flex; align-items: center; gap: var(--s-3);"
         >
-          <button class="btn btn-secondary btn-sm" id="btnNavConfig" title="Cấu hình số câu / thẻ mỗi màn">⚙️ Cấu hình</button>
+          <button class="btn btn-secondary btn-sm" id="btnNavConfig" title="Cấu hình số câu / thẻ mỗi màn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px; vertical-align:-2px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Cấu hình</button>
           <span id="navUserName" style="color: var(--text-2); font-size: var(--fs-sm)"></span>
         </div>
       </nav>
@@ -463,11 +464,11 @@
           </div>
           <div class="config-subtitle" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--s-2);">
             <span id="cardsPerRoundNotice">Mỗi màn gồm <strong id="cardsPerRoundDisplay" style="color:var(--text)">10</strong> mục. Bấm vào màn bạn muốn chơi hoặc chọn Luyện tập.</span>
-            <button type="button" class="btn btn-ghost btn-sm" id="btnOpenConfigInline" style="font-size: var(--fs-xs); color: var(--accent); text-decoration: underline; padding: 2px 8px; cursor: pointer;">⚙️ Đổi số lượng/màn</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="btnOpenConfigInline" style="font-size: var(--fs-xs); color: var(--accent); text-decoration: underline; padding: 2px 8px; cursor: pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px; vertical-align:-2px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Đổi số lượng/màn</button>
           </div>
 
           <div class="rounds-grid" id="roundsGrid">
-            <!-- Injected by JS: Màn 1, Màn 2... Màn M, 🎯 Luyện tập -->
+            <!-- Injected by JS: Màn 1, Màn 2... Màn M, Luyện tập -->
           </div>
         </div>
 
@@ -949,7 +950,7 @@
                 Màn 1
               </button>
               <button type="button" class="round-tile practice-tile ${isPractice ? 'active' : ''}" data-practice="true">
-                🎯 Luyện tập
+                Luyện tập
               </button>
             `;
             container.innerHTML = html;
@@ -974,7 +975,7 @@
             // Ô Luyện tập (luôn hiển thị cho cả từ vựng và ghép câu)
             html += `
               <button type="button" class="round-tile practice-tile ${isPractice ? 'active' : ''}" data-practice="true">
-                🎯 Luyện tập
+                Luyện tập
               </button>
             `;
 
@@ -1011,7 +1012,7 @@
             const quizParam = quizId ? `quiz_id=${quizId}&` : (sentenceSetId ? "" : "mode=all&");
             const typeParam = isSentenceContext ? "type=sentences&" : "type=cards&";
             
-            textEl.textContent = `Bắt đầu nghe: ${gameObj.name} · ${isPractice ? "🎯 Luyện tập" : "Màn " + selectedRound}`;
+            textEl.textContent = `Bắt đầu nghe: ${gameObj.name} · ${isPractice ? "Luyện tập" : "Màn " + selectedRound}`;
             const targetUrl = `/pages/games/listening.html?${typeParam}${isSentenceContext ? setParam : quizParam}cards=${cardsPerRound}&priority=${isPractice}&round=${selectedRound}`;
             btn.setAttribute("href", targetUrl);
             return;
@@ -1023,7 +1024,7 @@
           if (isSentenceContext || selectedGameId === "sentence") {
             const setParam = sentenceSetId ? `sentence_set_id=${sentenceSetId}&` : "";
             if (isPractice) {
-              textEl.textContent = `Bắt đầu chơi: ${gameObj.name} · 🎯 Luyện tập`;
+              textEl.textContent = `Bắt đầu chơi: ${gameObj.name} · Luyện tập`;
               targetUrl = `/pages/games/sentence.html?${setParam}priority=true&cards=${cardsPerRound}&dir=${dir}`;
             } else {
               textEl.textContent = `Bắt đầu chơi: ${gameObj.name} · Màn ${selectedRound}`;
@@ -1031,7 +1032,7 @@
             }
           } else {
             if (isPractice) {
-              textEl.textContent = `Bắt đầu chơi: ${gameObj.name} · 🎯 Luyện tập`;
+              textEl.textContent = `Bắt đầu chơi: ${gameObj.name} · Luyện tập`;
             } else {
               textEl.textContent = `Bắt đầu chơi: ${gameObj.name} · Màn ${selectedRound}`;
             }

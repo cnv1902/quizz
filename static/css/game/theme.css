@@ -597,8 +597,7 @@ p {
 .mobile-nav-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(18, 16, 15, 0.65);
-  backdrop-filter: blur(4px);
+  background: rgba(18, 16, 15, 0.7);
   z-index: 9998;
   opacity: 0;
   pointer-events: none;
@@ -679,7 +678,7 @@ p {
 .mobile-drawer-user {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
-  background: rgba(30, 168, 150, 0.04);
+  background: var(--surface-2);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -697,7 +696,7 @@ p {
   font-weight: 700;
   font-size: 1.1rem;
   flex-shrink: 0;
-  border: 1px solid rgba(30, 168, 150, 0.3);
+  border: 1px solid var(--border);
 }
 
 .mobile-drawer-user-info {

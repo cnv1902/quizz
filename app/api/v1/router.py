@@ -10,6 +10,7 @@ from app.api.v1.endpoints import (
     voice,
     sentences,
     sentence_sets,
+    custom_speech,
 )
 
 api_router = APIRouter(prefix="/api/v1")
@@ -24,3 +25,4 @@ api_router.include_router(grammar_points.router)
 api_router.include_router(sentences.router)
 api_router.include_router(sentence_sets.router)
 api_router.include_router(voice.router)
+api_router.include_router(custom_speech.router)

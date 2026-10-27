@@ -60,11 +60,11 @@
             font-weight: 700;
             padding: 2px 8px;
             border-radius: 4px;
-            background: rgba(30, 168, 150, 0.15);
+            background: var(--accent-soft);
             color: var(--accent);
             border: 1px solid var(--accent);
           "
-          >🎯 Bổ Túc</span
+          >Bổ túc</span
         >
         <span id="gameQuizTitle" style="display: none;">Đang tải...</span>
         <a href="#" id="btnExitGame" class="btn-text">Thoát</a>
@@ -476,7 +476,7 @@
 
             // Update HUD
             document.getElementById("gameRoundBadge").textContent = isPriority
-              ? "🎯 Luyện tập"
+              ? "Luyện tập"
               : isAllCards
                 ? "Màn 1 / 1 (Tất cả)"
                 : `Màn ${currentRound} / ${totalRounds}`;
@@ -660,22 +660,17 @@
               offset;
           }, 150);
 
-          // Danh hiệu / Icon
-          const overIcon = document.getElementById("overIcon");
+          // Danh hiệu
           const overTitle = document.getElementById("overTitle");
           if (accuracy === 100) {
-            overIcon.textContent = "🌟";
             overTitle.textContent = "Hoàn hảo tuyệt đối!";
             startConfetti();
           } else if (accuracy >= 80) {
-            overIcon.textContent = "🎉";
             overTitle.textContent = "Làm rất tốt!";
             startConfetti();
           } else if (accuracy >= 50) {
-            overIcon.textContent = "💪";
             overTitle.textContent = "Khá tốt! Hãy cố gắng thêm";
           } else {
-            overIcon.textContent = "📚";
             overTitle.textContent = "Cần luyện tập thêm!";
           }
 
@@ -704,7 +699,7 @@
           const btnStudyWrong = document.getElementById("btnStudyWrongCards");
           if (wrongCardsInRound.length > 0 && quizId) {
             btnStudyWrong.style.display = "block";
-            btnStudyWrong.textContent = `🔥 Bổ Túc ${wrongCardsInRound.length} từ chưa nhớ`;
+            btnStudyWrong.textContent = `Bổ túc ${wrongCardsInRound.length} từ chưa nhớ`;
             btnStudyWrong.onclick = () => {
               window.location.href =
                 window.location.pathname +

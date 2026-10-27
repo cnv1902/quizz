@@ -69,7 +69,7 @@
         <div class="admin-stat-card">
           <div class="admin-stat-top">
             <div class="admin-stat-value" id="statTotalUsers">0</div>
-            <div class="admin-stat-icon">👥</div>
+            <div class="admin-stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
           </div>
           <div class="admin-stat-label">Tổng số thành viên</div>
           <div class="admin-stat-action">
@@ -79,7 +79,7 @@
         <div class="admin-stat-card">
           <div class="admin-stat-top">
             <div class="admin-stat-value" id="statAdminUsers">0</div>
-            <div class="admin-stat-icon">🛡️</div>
+            <div class="admin-stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
           </div>
           <div class="admin-stat-label">Quản trị viên (Admin)</div>
           <div class="admin-stat-action">
@@ -89,7 +89,7 @@
         <div class="admin-stat-card">
           <div class="admin-stat-top">
             <div class="admin-stat-value" id="statActiveUsers">0</div>
-            <div class="admin-stat-icon">🟢</div>
+            <div class="admin-stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg></div>
           </div>
           <div class="admin-stat-label">Đang hoạt động</div>
           <div class="admin-stat-action">
@@ -102,7 +102,7 @@
       <!-- Toolbar -->
       <div class="toolbar">
         <div class="search-box">
-          <span class="search-icon">🔍</span>
+          <span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
           <input
             type="text"
             id="searchInput"
@@ -244,7 +244,7 @@
             document.getElementById("usersTableBody").innerHTML = `
             <tr>
               <td colspan="8" class="empty-table">
-                <span class="empty-icon">⚠️</span>
+                <span class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="color: var(--danger);"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></span>
                 <div>Lỗi: ${escapeHtml(err.message)}</div>
               </td>
             </tr>
@@ -294,7 +294,7 @@
             tbody.innerHTML = `
             <tr>
               <td colspan="8" class="empty-table">
-                <span class="empty-icon">👥</span>
+                <span class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="color: var(--text-3);"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
                 <div>Không tìm thấy người dùng nào phù hợp</div>
               </td>
             </tr>
@@ -324,12 +324,12 @@
               </td>
               <td style="text-align:center">
                 <span class="status-pill ${u.is_admin ? "status-role-admin" : "status-role-user"}">
-                  ${u.is_admin ? "🛡️ Admin" : "👤 User"}
+                  ${u.is_admin ? "Admin" : "User"}
                 </span>
               </td>
               <td style="text-align:center">
                 <span class="status-pill ${u.is_active ? "status-active" : "status-inactive"}">
-                  ${u.is_active ? "● Hoạt động" : "🔒 Đã khóa"}
+                  ${u.is_active ? "● Hoạt động" : "○ Đã khóa"}
                 </span>
               </td>
               <td style="text-align:center;color:var(--accent);font-weight:600">
@@ -342,13 +342,13 @@
                     !isSelf
                       ? `
                     <button class="btn-icon" title="${u.is_admin ? "Hạ quyền về User thường" : "Nâng quyền thành Admin"}" onclick="toggleAdminRole(${u.id}, ${!u.is_admin}, '${escapeAttr(u.username)}')">
-                       ${u.is_admin ? "⬇️" : "⬆️"}
+                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${u.is_admin ? '<polyline points="6 9 12 15 18 9"></polyline>' : '<polyline points="18 15 12 9 6 15"></polyline>'}</svg>
                     </button>
                     <button class="btn-icon" title="${u.is_active ? "Khóa tài khoản" : "Mở khóa tài khoản"}" onclick="toggleUserStatus(${u.id}, ${!u.is_active}, '${escapeAttr(u.username)}')">
-                      ${u.is_active ? "🔒" : "🔓"}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${u.is_active ? '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>' : '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path>'}</svg>
                     </button>
                     <button class="btn-icon btn-icon-danger" title="Xóa tài khoản" onclick="confirmDeleteUser(${u.id}, '${escapeAttr(u.username)}')">
-                      🗑️
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
                   `
                       : '<span style="color:var(--text-3);font-size:0.8rem;font-style:italic">Tài khoản này</span>'
