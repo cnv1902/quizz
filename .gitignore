@@ -1,5 +1,6 @@
 # Environment Variables (Bảo mật: Không commit lên Git)
 .env
+.env.bak
 .env.example
 
 .env.local
