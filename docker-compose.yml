@@ -1,12 +1,39 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: hanziquizz-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-quizz_secure_password_2024}
+      POSTGRES_DB: ${POSTGRES_DB:-hanziquizz}
+    volumes:
+      # Lưu trữ cơ sở dữ liệu PostgreSQL bền vững trên máy chủ
+      - ./postgres_data:/var/lib/postgresql/data
+    ports:
+      # Mở port 5432 nếu bạn muốn kết nối từ tool ngoài (DBeaver / DataGrip / pgAdmin)
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-hanziquizz}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
   hanziquizz:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: hanziquizz-app
     restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "8002:8000"
+    environment:
+      # Tự động kết nối tới container db qua mạng nội bộ Docker siêu tốc (~0ms latency)
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-quizz_secure_password_2024}@db:5432/${POSTGRES_DB:-hanziquizz}
     env_file:
       - path: .env
         required: false

@@ -27,6 +27,7 @@ Thumbs.db
 *.db
 *.sqlite
 *.sqlite3
+postgres_data/
 .env
 .env.*
 

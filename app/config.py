@@ -10,22 +10,16 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     SQL_ECHO: bool = False
 
-    # === Supabase Configuration ===
-    SUPABASE_URL: str = ""
-    SUPABASE_KEY: str = ""
-    SUPABASE_DB_PASSWORD: str = ""
-
     # === Database ===
-    # Mặc định có thể điền PostgreSQL connection URI từ Supabase hoặc dùng SQLite
-    DATABASE_URL: str = ""
+    # Kết nối trực tiếp PostgreSQL nội bộ Docker hoặc qua biến DATABASE_URL
+    DATABASE_URL: str = "postgresql://postgres:quizz_secure_password_2024@localhost:5432/hanziquizz"
 
     @property
     def effective_database_url(self) -> str:
         """
         Xác định URL kết nối database:
-        1. Nếu DATABASE_URL được cung cấp trực tiếp (postgresql / sqlite).
-        2. Nếu chỉ có SUPABASE_URL và SUPABASE_DB_PASSWORD thì tự động ghép thành PostgreSQL URI.
-        3. Nếu không có thì fallback về SQLite cục bộ.
+        - Chuẩn hóa postgres:// thành postgresql:// cho SQLAlchemy.
+        - Nếu rỗng thì fallback về SQLite.
         """
         raw_url = (self.DATABASE_URL or "").strip()
         if raw_url:
@@ -33,16 +27,6 @@ class Settings(BaseSettings):
                 raw_url = raw_url.replace("postgres://", "postgresql://", 1)
             return raw_url
 
-        if self.SUPABASE_URL and self.SUPABASE_DB_PASSWORD:
-            import urllib.parse
-            netloc = urllib.parse.urlparse(self.SUPABASE_URL).netloc
-            if "." in netloc:
-                project_ref = netloc.split(".")[0]
-                encoded_pwd = urllib.parse.quote_plus(self.SUPABASE_DB_PASSWORD)
-                # Kết nối trực tiếp qua db host của Supabase
-                return f"postgresql://postgres:{encoded_pwd}@db.{project_ref}.supabase.co:5432/postgres"
-
-        # Mặc định fallback SQLite
         return "sqlite:///./hanziquizz.db"
 
     # === JWT Authentication ===

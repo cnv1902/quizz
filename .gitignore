@@ -6,10 +6,11 @@
 .env.local
 .env.*.local
 
-# Database SQLite (Dữ liệu local cá nhân)
+# Database (Dữ liệu local cá nhân)
 *.db-journal
 *.sqlite
 *.sqlite3
+postgres_data/
 
 # Python Bytecode & Cache
 __pycache__/
