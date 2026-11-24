@@ -45,6 +45,26 @@ def download_sample_template():
 # === Admin Endpoints (Chỉ Quản trị viên) ===
 
 
+@router.get("/admin/export")
+def admin_export_grammar_points(
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """[Admin] Xuất danh mục ngữ pháp ra file Excel (chuẩn định dạng import)."""
+    excel_bytes = grammar_service.export_excel(db)
+    filename = "danh_sach_ngu_phap.xlsx"
+    headers = {
+        "Content-Disposition": f'attachment; filename="{filename}"',
+        "Access-Control-Expose-Headers": "Content-Disposition",
+    }
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
+
+
+
 @router.post("/admin", response_model=GrammarPointResponse, status_code=status.HTTP_201_CREATED)
 def admin_create_grammar_point(
     payload: GrammarPointCreate,

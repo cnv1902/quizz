@@ -163,6 +163,10 @@
           <button type="button" class="btn btn-secondary" id="btnOpenImport">
             Import Excel
           </button>
+          <button type="button" class="btn btn-secondary" id="btnExportGrammar" title="Xuất danh mục ngữ pháp ra file Excel">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="vertical-align: -2px; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Xuất Excel
+          </button>
           <a href="/api/v1/grammar/template" class="btn btn-secondary" title="Tải file Excel mẫu" download>
             Tải file mẫu
           </a>
@@ -516,6 +520,22 @@
         document.getElementById("logoutBtn").addEventListener("click", () => {
           Auth.clearSession();
           window.location.href = "/pages/login.html";
+        });
+
+        document.getElementById("btnExportGrammar").addEventListener("click", async () => {
+          const btn = document.getElementById("btnExportGrammar");
+          const originalHtml = btn.innerHTML;
+          btn.disabled = true;
+          btn.innerHTML = "Đang xuất...";
+          try {
+            const filename = await Api.download('/grammar/admin/export', 'danh_sach_ngu_phap.xlsx');
+            Toast.show(`Đã xuất danh mục ngữ pháp ra ${filename} thành công!`, "success");
+          } catch (err) {
+            Toast.show(err.message || "Lỗi khi xuất file Excel", "danger");
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+          }
         });
 
         async function loadItems() {

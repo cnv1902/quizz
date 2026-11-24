@@ -59,11 +59,7 @@ def get_puzzle_sentences(
                 r = max(1, round or 1)
                 start_idx = (r - 1) * k
                 end_idx = start_idx + k
-                sliced = sentences[start_idx:end_idx]
-                if sliced:
-                    selected = sliced
-                else:
-                    selected = sentences[:k]
+                selected = sentences[start_idx:end_idx]
             except Exception:
                 pass
     elif limit and limit > 0:

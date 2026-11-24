@@ -62,6 +62,12 @@
             kích hoạt tài khoản
           </p>
         </div>
+        <div class="header-actions">
+          <button type="button" class="btn btn-secondary" id="btnExportUsers" title="Xuất danh sách người dùng ra file Excel">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="vertical-align: -2px; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Xuất Excel
+          </button>
+        </div>
       </div>
 
       <!-- Stats -->
@@ -440,6 +446,24 @@
             } finally {
               btn.disabled = false;
               pendingAction = null;
+            }
+          });
+
+        document
+          .getElementById("btnExportUsers")
+          .addEventListener("click", async () => {
+            const btn = document.getElementById("btnExportUsers");
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = "Đang xuất...";
+            try {
+              const filename = await UserApi.adminExport();
+              Toast.show(`Đã xuất danh sách người dùng ra ${filename} thành công!`, "success");
+            } catch (err) {
+              Toast.show(err.message || "Lỗi khi xuất file Excel", "error");
+            } finally {
+              btn.disabled = false;
+              btn.innerHTML = originalHtml;
             }
           });
 

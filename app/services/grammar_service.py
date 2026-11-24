@@ -6,6 +6,7 @@ import openpyxl
 
 from app.crud import crud_grammar_point
 from app.models.grammar_point import GrammarPoint
+from app.services.excel_export_service import create_styled_excel
 
 
 def get_all(db: Session) -> List[GrammarPoint]:
@@ -140,3 +141,28 @@ def import_from_file(db: Session, filename: str, file_bytes: bytes) -> List[Gram
 
     created = crud_grammar_point.bulk_create(db, raw_cards)
     return created
+
+
+def export_excel(db: Session) -> bytes:
+    """Xuất danh sách điểm ngữ pháp ra file Excel (chuẩn 3 cột đầu để có thể tái import)."""
+    items = crud_grammar_point.get_all(db)
+    headers = ["Giải thích Công thức", "Pinyin", "Chữ Hán", "STT", "Thứ tự"]
+    col_alignments = ["left", "center", "center", "center", "center"]
+
+    data_rows = []
+    for idx, item in enumerate(items, start=1):
+        data_rows.append([
+            item.vietnamese or "",
+            item.pinyin or "",
+            item.hanzi or "",
+            idx,
+            item.order_index,
+        ])
+
+    return create_styled_excel(
+        sheet_title="Danh mục Ngữ Pháp",
+        headers=headers,
+        data_rows=data_rows,
+        col_alignments=col_alignments,
+    )
+

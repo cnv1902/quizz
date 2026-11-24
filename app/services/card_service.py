@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.crud import crud_card, crud_quiz
 from app.models.card import Card
 from app.services.voice_service import is_valid_audio_file
+from app.services.excel_export_service import create_styled_excel
 
 
 def enrich_audio_urls(item) -> None:
@@ -337,3 +338,56 @@ def generate_sample_excel_template() -> bytes:
     out = BytesIO()
     wb.save(out)
     return out.getvalue()
+
+
+def export_cards_for_quiz_excel(db: Session, quiz_id: int) -> bytes:
+    """Xuất danh sách thẻ của một Quiz ra file Excel (chuẩn 3 cột đầu để có thể tái import)."""
+    quiz = crud_quiz.get_by_id(db, quiz_id)
+    quiz_title = quiz.title if quiz else f"Quizz {quiz_id}"
+    cards = crud_card.get_by_quiz(db, quiz_id)
+
+    headers = ["Tiếng Việt", "Pinyin", "Chữ Hán", "STT", "Thứ tự"]
+    col_alignments = ["left", "center", "center", "center", "center"]
+
+    data_rows = []
+    for idx, c in enumerate(cards, start=1):
+        data_rows.append([
+            c.vietnamese or "",
+            c.pinyin or "",
+            c.hanzi or "",
+            idx,
+            c.order_index,
+        ])
+
+    return create_styled_excel(
+        sheet_title=f"The_Hoc_{quiz_id}",
+        headers=headers,
+        data_rows=data_rows,
+        col_alignments=col_alignments,
+    )
+
+
+def export_all_cards_excel(db: Session) -> bytes:
+    """Xuất toàn bộ thẻ trong hệ thống ra file Excel."""
+    cards = crud_card.get_all_cards(db)
+    headers = ["Tiếng Việt", "Pinyin", "Chữ Hán", "ID Quizz", "STT", "Thứ tự"]
+    col_alignments = ["left", "center", "center", "center", "center", "center"]
+
+    data_rows = []
+    for idx, c in enumerate(cards, start=1):
+        data_rows.append([
+            c.vietnamese or "",
+            c.pinyin or "",
+            c.hanzi or "",
+            c.quiz_id,
+            idx,
+            c.order_index,
+        ])
+
+    return create_styled_excel(
+        sheet_title="Tat_Ca_The_Hoc",
+        headers=headers,
+        data_rows=data_rows,
+        col_alignments=col_alignments,
+    )
+

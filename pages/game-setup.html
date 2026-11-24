@@ -813,6 +813,13 @@
             svg: '<svg class="game-btn-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>',
           },
           {
+            id: "handwriting",
+            name: "Tập viết",
+            desc: "Luyện viết tay từng từ",
+            type: "cards",
+            svg: '<svg class="game-btn-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>',
+          },
+          {
             id: "sentence",
             name: "Ghép câu",
             desc: "Xếp các khối từ",
@@ -1014,6 +1021,15 @@
             
             textEl.textContent = `Bắt đầu nghe: ${gameObj.name} · ${isPractice ? "Luyện tập" : "Màn " + selectedRound}`;
             const targetUrl = `/pages/games/listening.html?${typeParam}${isSentenceContext ? setParam : quizParam}cards=${cardsPerRound}&priority=${isPractice}&round=${selectedRound}`;
+            btn.setAttribute("href", targetUrl);
+            return;
+          }
+
+          if (selectedGameId === "handwriting") {
+            if (dirCard) dirCard.style.display = "none";
+            const quizParam = quizId ? `quiz_id=${quizId}&` : "mode=all&";
+            textEl.textContent = `Bắt đầu chơi: ${gameObj.name} · ${isPractice ? "Luyện tập" : "Màn " + selectedRound}`;
+            const targetUrl = `/pages/games/handwriting.html?${quizParam}cards=${cardsPerRound}&priority=${isPractice}&round=${selectedRound}`;
             btn.setAttribute("href", targetUrl);
             return;
           }

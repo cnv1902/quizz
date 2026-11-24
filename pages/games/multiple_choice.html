@@ -402,11 +402,6 @@
             } else {
               const startIdx = (round - 1) * K;
               quizQuestions = allCards.slice(startIdx, startIdx + K);
-              if (quizQuestions.length > 0 && quizQuestions.length < K && allCards.length > quizQuestions.length) {
-                const currentSet = new Set(quizQuestions.map((c) => c.id));
-                const pool = allCards.filter((c) => !currentSet.has(c.id));
-                quizQuestions = quizQuestions.concat(pool.slice(0, K - quizQuestions.length));
-              }
             }
           }
 

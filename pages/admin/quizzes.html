@@ -63,6 +63,10 @@
           </p>
         </div>
         <div class="header-actions">
+          <button class="btn btn-secondary" id="btnExportQuizzes" title="Xuất toàn bộ danh sách quizz ra file Excel">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="vertical-align: -2px; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Xuất Excel
+          </button>
           <button class="btn btn-secondary" id="btnDownloadTemplate">
             Tải mẫu Excel (3 cột)
           </button>
@@ -663,6 +667,24 @@
           });
 
         // 8. Download Sample Template Excel (.xlsx)
+        document
+          .getElementById("btnExportQuizzes")
+          .addEventListener("click", async () => {
+            const btn = document.getElementById("btnExportQuizzes");
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = "Đang xuất...";
+            try {
+              const filename = await QuizApi.adminExport();
+              Toast.show(`Đã xuất danh sách quizz ra ${filename} thành công!`, "success");
+            } catch (err) {
+              Toast.show(err.message || "Lỗi khi xuất file Excel", "error");
+            } finally {
+              btn.disabled = false;
+              btn.innerHTML = originalHtml;
+            }
+          });
+
         document
           .getElementById("btnDownloadTemplate")
           .addEventListener("click", async () => {

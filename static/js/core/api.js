@@ -124,6 +124,58 @@ async function apiPostForm(path, formData) {
   return data;
 }
 
+/**
+ * Tải file (Blob) từ API có kèm JWT auth header và kích hoạt lưu trên trình duyệt.
+ * @param {string} path - Đường dẫn API (không chứa tiền tố /api/v1)
+ * @param {string} defaultFilename - Tên file lưu nếu response header không chỉ định
+ */
+async function apiDownload(path, defaultFilename = 'export.xlsx') {
+  const token = getToken();
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: 'GET',
+    headers,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.detail || `Lỗi tải file (${response.status})`);
+  }
+
+  let filename = defaultFilename;
+  const disposition = response.headers.get('Content-Disposition');
+  if (disposition && disposition.includes('filename=')) {
+    const match = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+    if (match && match[1]) {
+      filename = match[1].replace(/['"]/g, '').trim();
+    }
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }, 300);
+  return filename;
+}
+
 // Export (dùng trong các file API layer)
-window.Api = { get: apiGet, post: apiPost, put: apiPut, delete: apiDelete, postForm: apiPostForm };
+window.Api = {
+  get: apiGet,
+  post: apiPost,
+  put: apiPut,
+  delete: apiDelete,
+  postForm: apiPostForm,
+  download: apiDownload,
+};
 window.ApiUtils = { getToken, setToken, clearToken };

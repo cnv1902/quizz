@@ -60,5 +60,21 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Tập viết chữ Hán",
+      "short_name": "Tập viết",
+      "description": "Luyện viết tay từng nét chữ Hán trên ô mễ",
+      "url": "/pages/game-setup.html?mode=all&game=handwriting",
+      "icons": [{ "src": "/static/img/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Lật thẻ Flashcard",
+      "short_name": "Lật thẻ",
+      "description": "Ôn tập từ vựng chữ Hán qua Flashcard",
+      "url": "/pages/game-setup.html?mode=all&game=flashcard",
+      "icons": [{ "src": "/static/img/icons/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }

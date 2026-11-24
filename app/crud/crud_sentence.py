@@ -8,7 +8,9 @@ def get_all(db: Session, set_id: Optional[int] = None, skip: int = 0, limit: Opt
     query = db.query(Sentence)
     if set_id is not None:
         query = query.filter(Sentence.set_id == set_id)
-    query = query.order_by(Sentence.order_index.asc(), Sentence.id.asc())
+        query = query.order_by(Sentence.order_index.asc(), Sentence.id.asc())
+    else:
+        query = query.order_by(Sentence.set_id.asc(), Sentence.order_index.asc(), Sentence.id.asc())
     if skip:
         query = query.offset(skip)
     if limit:

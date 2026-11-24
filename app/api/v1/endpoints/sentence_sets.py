@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, BackgroundTasks
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -31,6 +32,49 @@ def admin_list_sentence_sets(
 ):
     """[Admin] Danh sách tất cả bộ câu kể cả inactive."""
     return sentence_set_service.get_all_admin(db)
+
+
+@router.get("/admin/export")
+def admin_export_sentence_sets(
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """[Admin] Xuất danh sách tất cả các bộ câu ra file Excel."""
+    excel_bytes = sentence_set_service.export_sets_excel(db)
+    filename = "danh_sach_bo_cau.xlsx"
+    headers = {
+        "Content-Disposition": f'attachment; filename="{filename}"',
+        "Access-Control-Expose-Headers": "Content-Disposition",
+    }
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
+
+
+@router.get("/admin/{set_id}/export")
+def admin_export_set_sentences(
+    set_id: int,
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """[Admin] Xuất danh sách câu ghép trong bộ câu ra file Excel (chuẩn định dạng import)."""
+    s = sentence_set_service.get_by_id(db, set_id)
+    if not s:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy bộ câu")
+    excel_bytes = sentence_set_service.export_sentences_for_set_excel(db, set_id)
+    filename = f"cau_ghep_bo_{set_id}.xlsx"
+    headers = {
+        "Content-Disposition": f'attachment; filename="{filename}"',
+        "Access-Control-Expose-Headers": "Content-Disposition",
+    }
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
+
 
 
 @router.post("/admin", response_model=dict, status_code=status.HTTP_201_CREATED)

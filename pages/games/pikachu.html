@@ -338,13 +338,6 @@
               } else {
                 const startIdx = (currentRound - 1) * K;
                 roundCards = allCards.slice(startIdx, startIdx + K);
-
-                // Màn cuối cùng: nếu thiếu thẻ thì lấy thêm thẻ từ các màn trước để đủ K thẻ (cố định)
-                if (roundCards.length > 0 && roundCards.length < K && allCards.length > roundCards.length) {
-                  const currentSet = new Set(roundCards.map((c) => c.id));
-                  const pool = allCards.filter((c) => !currentSet.has(c.id));
-                  roundCards = roundCards.concat(pool.slice(0, K - roundCards.length));
-                }
               }
             }
 

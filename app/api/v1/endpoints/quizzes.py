@@ -40,13 +40,57 @@ def download_sample_template():
     excel_bytes = card_service.generate_sample_excel_template()
     filename = "hanziquizz_mau_3cot.xlsx"
     headers = {
-        "Content-Disposition": f'attachment; filename="{filename}"'
+        "Content-Disposition": f'attachment; filename="{filename}"',
+        "Access-Control-Expose-Headers": "Content-Disposition",
     }
     return Response(
         content=excel_bytes,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers=headers,
     )
+
+
+@router.get("/admin/export")
+def admin_export_quizzes(
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """[Admin] Xuất danh sách toàn bộ bộ quizz ra file Excel."""
+    excel_bytes = quiz_service.export_quizzes_excel(db)
+    filename = "danh_sach_bo_quizz.xlsx"
+    headers = {
+        "Content-Disposition": f'attachment; filename="{filename}"',
+        "Access-Control-Expose-Headers": "Content-Disposition",
+    }
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
+
+
+@router.get("/admin/{quiz_id}/export")
+def admin_export_quiz_cards(
+    quiz_id: int,
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """[Admin] Xuất danh sách thẻ học của 1 bộ quizz ra file Excel (chuẩn định dạng import)."""
+    quiz = quiz_service.get_quiz_detail(db, quiz_id)
+    if not quiz:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quiz không tồn tại")
+    excel_bytes = card_service.export_cards_for_quiz_excel(db, quiz_id)
+    filename = f"the_hoc_quizz_{quiz_id}.xlsx"
+    headers = {
+        "Content-Disposition": f'attachment; filename="{filename}"',
+        "Access-Control-Expose-Headers": "Content-Disposition",
+    }
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
+
 
 
 @router.post("/admin", response_model=dict, status_code=status.HTTP_201_CREATED)

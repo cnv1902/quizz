@@ -30,6 +30,12 @@ const QuizApi = {
   /** [Admin] Xóa quiz. */
   adminDelete: (id) => Api.delete(`/quizzes/admin/${id}`),
 
+  /** [Admin] Xuất danh sách tất cả bộ quizz ra file Excel. */
+  adminExport: () => Api.download('/quizzes/admin/export', 'danh_sach_bo_quizz.xlsx'),
+
+  /** [Admin] Xuất danh sách thẻ học của 1 quiz ra file Excel. */
+  adminExportCards: (quizId) => Api.download(`/quizzes/admin/${quizId}/export`, `the_hoc_quizz_${quizId}.xlsx`),
+
   /** [Admin] Import từ Excel hoặc CSV. */
   adminImportExcel: (quizId, formData) => Api.postForm(`/quizzes/admin/${quizId}/import`, formData),
 
@@ -87,6 +93,9 @@ const UserApi = {
 
   /** [Admin] Xóa user. */
   adminDelete: (id) => Api.delete(`/users/admin/${id}`),
+
+  /** [Admin] Xuất danh sách người dùng ra file Excel. */
+  adminExport: () => Api.download('/users/admin/export', 'danh_sach_nguoi_dung.xlsx'),
 };
 
 const SentenceSetApi = {
@@ -103,6 +112,12 @@ const SentenceSetApi = {
   /** [Admin] Danh sách tất cả bộ câu. */
   adminGetAll: () => Api.get('/sentence-sets/admin/all'),
 
+  /** [Admin] Xuất danh sách tất cả bộ câu ra file Excel. */
+  adminExport: () => Api.download('/sentence-sets/admin/export', 'danh_sach_bo_cau.xlsx'),
+
+  /** [Admin] Xuất danh sách câu trong một bộ câu ra file Excel. */
+  adminExportSentences: (setId) => Api.download(`/sentence-sets/admin/${setId}/export`, `cau_ghep_bo_${setId}.xlsx`),
+
   /** [Admin] Tạo bộ câu mới. */
   adminCreate: (data) => Api.post('/sentence-sets/admin', data),
 
@@ -116,8 +131,20 @@ const SentenceSetApi = {
   adminImportExcel: (setId, formData) => Api.postForm(`/sentence-sets/admin/${setId}/import`, formData),
 };
 
+const MeasureWordApi = {
+  /** [Admin] Xuất danh mục lượng từ ra file Excel. */
+  adminExport: () => Api.download('/measure-words/admin/export', 'danh_sach_luong_tu.xlsx'),
+};
+
+const GrammarApi = {
+  /** [Admin] Xuất danh mục ngữ pháp ra file Excel. */
+  adminExport: () => Api.download('/grammar/admin/export', 'danh_sach_ngu_phap.xlsx'),
+};
+
 window.QuizApi        = QuizApi;
 window.CardApi        = CardApi;
 window.SentenceSetApi = SentenceSetApi;
+window.MeasureWordApi = MeasureWordApi;
+window.GrammarApi     = GrammarApi;
 window.ProgressApi    = ProgressApi;
 window.UserApi        = UserApi;

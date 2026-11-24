@@ -795,9 +795,6 @@
               } else {
                 const startIdx = (round - 1) * K;
                 roundCards = allCards.slice(startIdx, startIdx + K);
-                if (roundCards.length === 0) {
-                  roundCards = allCards.slice(0, K);
-                }
               }
             }
 

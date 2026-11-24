@@ -3,6 +3,7 @@ from typing import List, Optional
 from app.crud import crud_quiz, crud_card
 from app.models.quiz import Quiz
 from app.schemas.quiz import QuizListResponse
+from app.services.excel_export_service import create_styled_excel
 
 
 def get_all_quizzes_with_count(db: Session) -> List[dict]:
@@ -82,3 +83,32 @@ def get_quiz_detail(db: Session, quiz_id: int) -> Optional[dict]:
         "created_at": quiz.created_at,
         "updated_at": quiz.updated_at,
     }
+
+
+def export_quizzes_excel(db: Session) -> bytes:
+    """Xuất danh sách tất cả bộ quiz ra file Excel."""
+    quizzes = get_all_quizzes_admin(db)
+    headers = ["ID", "Tên Bộ Quizz", "Mô tả", "Số Thẻ", "Trạng thái", "Ngày tạo"]
+    col_alignments = ["center", "left", "left", "center", "center", "center"]
+    
+    data_rows = []
+    for q in quizzes:
+        status_label = "Kích hoạt" if q.get("is_active") else "Tạm dừng"
+        created_dt = q.get("created_at")
+        created_str = created_dt.strftime("%d/%m/%Y %H:%M") if hasattr(created_dt, "strftime") else (str(created_dt) if created_dt else "")
+        data_rows.append([
+            q.get("id"),
+            q.get("title") or "",
+            q.get("description") or "",
+            q.get("card_count", 0),
+            status_label,
+            created_str,
+        ])
+
+    return create_styled_excel(
+        sheet_title="Danh sách Bộ Quizz",
+        headers=headers,
+        data_rows=data_rows,
+        col_alignments=col_alignments,
+    )
+

@@ -6,6 +6,7 @@ import re
 from app.models.sentence_set import SentenceSet
 from app.models.sentence import Sentence
 from app.services import sentence_service
+from app.services.excel_export_service import create_styled_excel
 
 
 def get_all_with_count(db: Session) -> List[Dict[str, Any]]:
@@ -132,3 +133,61 @@ def import_to_set(db: Session, set_id: int, filename: str, file_bytes: bytes) ->
     
     # Dùng sentence_service.import_from_file có hỗ trợ gán set_id
     return sentence_service.import_from_file(db, filename, file_bytes, set_id=set_id)
+
+
+def export_sets_excel(db: Session) -> bytes:
+    """Xuất danh sách tất cả các bộ câu ra file Excel."""
+    sets = get_all_admin(db)
+    headers = ["ID", "Tên Bộ Câu", "Mô tả", "Số Câu", "Trạng thái", "Thứ tự", "Ngày tạo"]
+    col_alignments = ["center", "left", "left", "center", "center", "center", "center"]
+
+    data_rows = []
+    for s in sets:
+        status_label = "Kích hoạt" if s.get("is_active") else "Tạm dừng"
+        created_str = s.get("created_at") or ""
+        if created_str and "T" in created_str:
+            created_str = created_str.replace("T", " ")[:16]
+        data_rows.append([
+            s.get("id"),
+            s.get("title") or "",
+            s.get("description") or "",
+            s.get("sentence_count", 0),
+            status_label,
+            s.get("order_index", 0),
+            created_str,
+        ])
+
+    return create_styled_excel(
+        sheet_title="Danh sách Bộ Câu",
+        headers=headers,
+        data_rows=data_rows,
+        col_alignments=col_alignments,
+    )
+
+
+def export_sentences_for_set_excel(db: Session, set_id: int) -> bytes:
+    """Xuất danh sách các câu ghép trong một bộ câu ra file Excel (chuẩn 3 cột đầu để có thể tái import)."""
+    target_set = get_by_id(db, set_id)
+    sentences = get_sentences_by_set(db, set_id)
+
+    headers = ["Tiếng Trung", "Pinyin", "Tiếng Việt", "STT", "Thứ tự"]
+    col_alignments = ["center", "center", "left", "center", "center"]
+
+    data_rows = []
+    for idx, s in enumerate(sentences, start=1):
+        data_rows.append([
+            s.chinese or "",
+            s.pinyin or "",
+            s.vietnamese or "",
+            idx,
+            s.order_index,
+        ])
+
+    sheet_name = f"Bo_Cau_{set_id}"
+    return create_styled_excel(
+        sheet_title=sheet_name,
+        headers=headers,
+        data_rows=data_rows,
+        col_alignments=col_alignments,
+    )
+

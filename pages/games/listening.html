@@ -811,12 +811,11 @@
                 const K = parseInt(cardsPerRound, 10) || 10;
                 totalRounds = Math.ceil(allCards.length / K) || 1;
                 let sliced = [];
+                const startIdx = (currentRound - 1) * K;
+                sliced = allCards.slice(startIdx, startIdx + K);
                 if (isPriority) {
-                  sliced = allCards.slice(0, K);
-                  elBadgeRound.textContent = "Luyện tập";
+                  elBadgeRound.textContent = "Bổ túc";
                 } else {
-                  const startIdx = (currentRound - 1) * K;
-                  sliced = allCards.slice(startIdx, startIdx + K);
                   elBadgeRound.textContent = `Màn ${currentRound}`;
                 }
                 itemsList = sliced.map((c) => ({

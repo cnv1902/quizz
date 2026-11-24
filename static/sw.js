@@ -1,5 +1,5 @@
-// HanziQuizz Service Worker v1.0
-const CACHE_NAME = "hanziquizz-cache-v1";
+// HanziQuizz Service Worker v1.1
+const CACHE_NAME = "hanziquizz-cache-v2";
 
 // Các tài nguyên tĩnh cốt lõi cần nạp vào bộ nhớ đệm
 const CORE_ASSETS = [
@@ -9,6 +9,8 @@ const CORE_ASSETS = [
   "/static/css/game/flashcard.css",
   "/static/css/game/pikachu.css",
   "/static/css/game/multiple_choice.css",
+  "/static/css/game/handwriting.css",
+  "/pages/games/handwriting.html",
   "/static/js/core/api.js",
   "/static/js/core/auth.js",
   "/static/js/components/navbar.js",
