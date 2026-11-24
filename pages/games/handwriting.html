@@ -133,6 +133,11 @@
           <div class="hw-viet-text" id="cardVietnamese">...</div>
         </div>
 
+        <!-- Thanh chọn chữ khi từ ghép có từ 2 chữ Hán trở lên (ví dụ: 苹果, 谢谢, 老师) -->
+        <div class="hw-char-selector" id="charSelectorWrap" style="display: none;">
+          <!-- Render động các tab chữ -->
+        </div>
+
         <!-- Khung vẽ chữ Hán (Mễ tự cách + nét mờ đen mặc định) -->
         <div class="hw-writing-area" id="canvasContainer">
           <div class="hw-mi-grid"></div>
@@ -386,11 +391,16 @@
         const ghostTrace = document.getElementById("ghostTrace");
         const btnSpeak = document.getElementById("btnSpeak");
         const canvasContainer = document.getElementById("canvasContainer");
+        const charSelectorWrap = document.getElementById("charSelectorWrap");
         const canvas = document.getElementById("drawingCanvas");
         const ctx = canvas.getContext("2d");
         const btnToggleGhost = document.getElementById("btnToggleGhost");
         const btnClearCanvas = document.getElementById("btnClearCanvas");
         const btnUndoCanvas = document.getElementById("btnUndoCanvas");
+
+        // Quản lý ký tự hiện tại của từ đang học
+        let currentCharIndex = 0;
+        let currentCharList = [];
 
         async function syncCurrentResults() {
           if (hasSynced || roundResults.length === 0) return;
@@ -441,6 +451,10 @@
         }
 
         window.addEventListener("resize", resizeCanvas);
+
+        // Chặn context menu / menu copy trên toàn bộ vùng canvas và thẻ
+        canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+        canvasContainer.addEventListener("contextmenu", (e) => e.preventDefault());
 
         function redrawAllStrokes() {
           const rect = canvasContainer.getBoundingClientRect();
@@ -612,7 +626,7 @@
           }
         }
 
-        // 7. Render Card
+        // 7. Render Card & Char Tabs
         function renderCurrentCard() {
           if (currentIndex >= roundCards.length) {
             finishRound();
@@ -622,7 +636,18 @@
           const card = roundCards[currentIndex];
           cardVietnamese.textContent = card.vietnamese || card.meaning || "...";
           cardPinyin.textContent = card.pinyin || "";
-          ghostTrace.textContent = card.hanzi || "字";
+
+          // Phân tích các chữ Hán trong từ (Lọc bỏ khoảng trắng, dấu câu nếu có)
+          const rawHanzi = (card.hanzi || "").trim();
+          const hanziChars = Array.from(rawHanzi).filter((ch) => ch.trim().length > 0);
+          currentCharList = hanziChars.length > 0 ? hanziChars : ["字"];
+          currentCharIndex = 0;
+
+          // Render thanh chọn chữ nếu từ có nhiều hơn 1 chữ Hán
+          renderCharTabs();
+
+          // Cập nhật chữ mẫu mờ
+          updateActiveChar();
 
           // Cập nhật tiến trình
           document.getElementById("progressCardIndex").textContent =
@@ -636,6 +661,46 @@
 
           // Tự động phát âm khi sang từ mới
           speakCard(card, btnSpeak);
+        }
+
+        function renderCharTabs() {
+          if (currentCharList.length <= 1) {
+            charSelectorWrap.style.display = "none";
+            charSelectorWrap.innerHTML = "";
+            return;
+          }
+
+          charSelectorWrap.style.display = "flex";
+          charSelectorWrap.innerHTML = "";
+
+          currentCharList.forEach((char, idx) => {
+            const tab = document.createElement("button");
+            tab.type = "button";
+            tab.className = `hw-char-tab ${idx === currentCharIndex ? "active" : ""}`;
+            tab.textContent = char;
+            tab.title = `Luyện chữ "${char}" (${idx + 1}/${currentCharList.length})`;
+            tab.addEventListener("click", () => {
+              if (currentCharIndex !== idx) {
+                currentCharIndex = idx;
+                updateCharTabsActive();
+                updateActiveChar();
+                clearCanvas();
+              }
+            });
+            charSelectorWrap.appendChild(tab);
+          });
+        }
+
+        function updateCharTabsActive() {
+          const tabs = charSelectorWrap.querySelectorAll(".hw-char-tab");
+          tabs.forEach((tab, idx) => {
+            tab.classList.toggle("active", idx === currentCharIndex);
+          });
+        }
+
+        function updateActiveChar() {
+          const char = currentCharList[currentCharIndex] || "字";
+          ghostTrace.textContent = char;
         }
 
         // 8. Answer Handlers
@@ -693,6 +758,12 @@
           } else if (e.key === "w" || e.key === "W" || e.key === "ArrowUp") {
             const card = roundCards[currentIndex];
             if (card) speakCard(card, btnSpeak);
+          } else if (e.key === "Tab" && currentCharList.length > 1) {
+            e.preventDefault();
+            currentCharIndex = (currentCharIndex + 1) % currentCharList.length;
+            updateCharTabsActive();
+            updateActiveChar();
+            clearCanvas();
           }
         });
 

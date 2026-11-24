@@ -91,6 +91,84 @@
   margin: 0 auto;
   background: #fffdfa;
   touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+
+/* Thanh chuyển ký tự khi từ vựng gồm nhiều chữ Hán (ví dụ: 谢谢, 老师, 苹果) */
+.hw-char-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 12px 2px;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.hw-char-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 34px;
+  padding: 0 10px;
+  font-family: var(--font-hanzi, "Noto Serif SC", "KaiTi", "SimSun", serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 150ms cubic-bezier(.2,.7,.2,1);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.hw-char-tab:hover {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.hw-char-tab.active {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+  box-shadow: 0 2px 6px rgba(179, 57, 57, 0.25);
+  transform: translateY(-1px);
+}
+
+.hw-char-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.hw-char-nav-btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.hw-char-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -127,8 +205,14 @@
   color: rgba(28, 26, 23, 0.14); /* Mờ đen thư pháp mặc định */
   pointer-events: none;
   user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
   line-height: 1;
   transition: opacity 150ms ease;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 @media (prefers-color-scheme: dark) {
