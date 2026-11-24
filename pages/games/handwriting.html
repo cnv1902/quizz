@@ -398,9 +398,10 @@
         const btnClearCanvas = document.getElementById("btnClearCanvas");
         const btnUndoCanvas = document.getElementById("btnUndoCanvas");
 
-        // Quản lý ký tự hiện tại của từ đang học
+        // Quản lý ký tự và nét vẽ độc lập cho từng ký tự trong từ
         let currentCharIndex = 0;
         let currentCharList = [];
+        let charStrokesMap = {}; // { [charIndex: number]: Array<Stroke> }
 
         async function syncCurrentResults() {
           if (hasSynced || roundResults.length === 0) return;
@@ -452,9 +453,13 @@
 
         window.addEventListener("resize", resizeCanvas);
 
-        // Chặn context menu / menu copy trên toàn bộ vùng canvas và thẻ
-        canvas.addEventListener("contextmenu", (e) => e.preventDefault());
-        canvasContainer.addEventListener("contextmenu", (e) => e.preventDefault());
+        // Chặn context menu / menu copy trên toàn bộ trang game
+        document.addEventListener("contextmenu", (e) => {
+          // Chỉ cho phép nếu người dùng click vào input hoặc textarea (nếu có)
+          if (e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+            e.preventDefault();
+          }
+        });
 
         function redrawAllStrokes() {
           const rect = canvasContainer.getBoundingClientRect();
@@ -522,6 +527,8 @@
             canvas.releasePointerCapture(e.pointerId);
           } catch (_) {}
           currentStroke = null;
+          // Lưu trạng thái nét vẽ hiện tại của chữ này
+          charStrokesMap[currentCharIndex] = [...strokes];
         }
 
         canvas.addEventListener("pointerup", endStroke);
@@ -530,6 +537,7 @@
 
         function clearCanvas() {
           strokes = [];
+          charStrokesMap[currentCharIndex] = [];
           currentStroke = null;
           redrawAllStrokes();
         }
@@ -537,6 +545,7 @@
         function undoStroke() {
           if (strokes.length > 0) {
             strokes.pop();
+            charStrokesMap[currentCharIndex] = [...strokes];
             redrawAllStrokes();
           }
         }
@@ -642,12 +651,15 @@
           const hanziChars = Array.from(rawHanzi).filter((ch) => ch.trim().length > 0);
           currentCharList = hanziChars.length > 0 ? hanziChars : ["字"];
           currentCharIndex = 0;
+          charStrokesMap = {}; // Khởi tạo bộ lưu nét vẽ cho từ mới
 
           // Render thanh chọn chữ nếu từ có nhiều hơn 1 chữ Hán
           renderCharTabs();
 
-          // Cập nhật chữ mẫu mờ
+          // Cập nhật chữ mẫu mờ & phục hồi nét vẽ của chữ đầu tiên
           updateActiveChar();
+          strokes = [];
+          redrawAllStrokes();
 
           // Cập nhật tiến trình
           document.getElementById("progressCardIndex").textContent =
@@ -681,14 +693,22 @@
             tab.title = `Luyện chữ "${char}" (${idx + 1}/${currentCharList.length})`;
             tab.addEventListener("click", () => {
               if (currentCharIndex !== idx) {
-                currentCharIndex = idx;
-                updateCharTabsActive();
-                updateActiveChar();
-                clearCanvas();
+                switchActiveChar(idx);
               }
             });
             charSelectorWrap.appendChild(tab);
           });
+        }
+
+        // Chuyển ký tự và phục hồi nét vẽ cũ của ký tự đó
+        function switchActiveChar(newIdx) {
+          currentCharIndex = newIdx;
+          updateCharTabsActive();
+          updateActiveChar();
+          // Phục hồi lại toàn bộ nét vẽ đã vẽ cho ký tự này (nếu có)
+          strokes = charStrokesMap[currentCharIndex] ? [...charStrokesMap[currentCharIndex]] : [];
+          currentStroke = null;
+          redrawAllStrokes();
         }
 
         function updateCharTabsActive() {
@@ -735,7 +755,7 @@
         // Phím tắt bàn phím
         window.addEventListener("keydown", (e) => {
           if (
-            document.getElementById("gameOverModal").classList.contains("active")
+            document.getElementById("gameOverModal").classList.contains("show")
           )
             return;
           if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")
@@ -760,10 +780,8 @@
             if (card) speakCard(card, btnSpeak);
           } else if (e.key === "Tab" && currentCharList.length > 1) {
             e.preventDefault();
-            currentCharIndex = (currentCharIndex + 1) % currentCharList.length;
-            updateCharTabsActive();
-            updateActiveChar();
-            clearCanvas();
+            const nextIdx = (currentCharIndex + 1) % currentCharList.length;
+            switchActiveChar(nextIdx);
           }
         });
 
@@ -822,7 +840,7 @@
             wrongBtn.style.display = "inline-flex";
             wrongBtn.textContent = `Luyện lại ${wrongCardsInRound.length} từ chưa nhớ`;
             wrongBtn.onclick = () => {
-              document.getElementById("gameOverModal").classList.remove("active");
+              document.getElementById("gameOverModal").classList.remove("show");
               roundCards = [...wrongCardsInRound];
               wrongCardsInRound.length = 0;
               currentIndex = 0;
@@ -841,7 +859,7 @@
 
           // Nút chơi lại màn này
           document.getElementById("btnReplayRound").onclick = () => {
-            document.getElementById("gameOverModal").classList.remove("active");
+            document.getElementById("gameOverModal").classList.remove("show");
             currentIndex = 0;
             correctCount = 0;
             wrongCount = 0;
@@ -851,8 +869,8 @@
             renderCurrentCard();
           };
 
-          // Hiển thị modal kết thúc
-          document.getElementById("gameOverModal").classList.add("active");
+          // Hiển thị modal Game Over (chuẩn class .show như Flashcard)
+          document.getElementById("gameOverModal").classList.add("show");
 
           // Sync kết quả
           await syncCurrentResults();

@@ -3,7 +3,31 @@
    Kế thừa 100% Design System & Layout từ flashcard.css (§5.4)
    Loại bỏ phần lật thẻ, tích hợp khung vẽ tay mễ tự cách với chữ mờ mặc định
    Tối ưu triệt để diện tích trên điện thoại (Mobile First)
+   Chặn triệt để chọn văn bản, menu copy và chạm giữ trên toàn giao diện
    ========================================================================== */
+
+/* Chặn toàn bộ thao tác chọn text / chạm giữ copy trên mọi thành phần của game */
+body.game-layout,
+.game-stage,
+.hw-card-arena,
+.hw-vocab-section,
+.hw-pinyin-pill,
+.hw-viet-text,
+.hw-writing-area,
+.hw-char-selector,
+.hw-char-tab,
+.game-controls,
+.btn-game-action,
+.game-hud,
+.hud-card,
+.keyboard-legend {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-drag: none !important;
+}
 
 .hw-card-arena {
   width: 100%;
